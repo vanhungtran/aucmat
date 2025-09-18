@@ -18,12 +18,11 @@ aucmat: Advanced AUC Analysis and Visualization for R
     Algorithms](#benchmarking-clustering-algorithms)
 - [Package Structure](#package-structure)
 - [Documentation](#documentation)
-- [Contributing](#contributing)
 - [License](#license)
 - [Citation](#citation)
 - [Support](#support)
 - [Acknowledgments](#acknowledgments)
-- [🤝 Contributing](#handshake-contributing)
+- [Contributing](#contributing)
 
 <!-- README.md is auto-generated from README.Rmd -->
 
@@ -241,15 +240,6 @@ Full documentation is available through R’s help system:
 ?benchmark_clusterings
 ```
 
-## Contributing
-
-Contributions to `aucmat` are welcome! Please feel free to:
-
-1.  Fork the repository
-2.  Create a feature branch
-3.  Make your changes
-4.  Submit a pull request
-
 ## License
 
 This package is released under the MIT License. See the `LICENSE` file
@@ -270,33 +260,15 @@ the [GitHub repository](https://github.com/vanhungtran/aucmat/issues).
 ## Acknowledgments
 
 This package was developed with support from CK-CARE (Christine Kühne -
-Center for Allergy Research and Education).
-
-
-    To render this README.Rmd to README.md, use:
-
-    ```r
-    rmarkdown::render("README.Rmd", output_format = "github_document")
-
-This README.Rmd provides: 1. A comprehensive introduction to the package
-2. Installation instructions 3. Examples of main functions 4. Advanced
-usage examples 5. Package structure overview 6. Documentation and
-contribution guidelines 7. License and citation information
-
-The document uses R code chunks with `eval=FALSE` to show the code
-without executing it, making it suitable for a GitHub README that
-displays code examples without requiring execution.
+Center for Allergy Research and Education). \`\`\`
 
 ------------------------------------------------------------------------
 
-## 🤝 Contributing
+## Contributing
 
-We welcome contributions! Please see our
-[CONTRIBUTING.md](CONTRIBUTING.md) guide for how to:
+Contributions to `aucmat` are welcome! Please feel free to:
 
-- Report bugs
-- Suggest features
-- Submit pull requests
-- Improve documentation
-
-------------------------------------------------------------------------
+1.  Fork the repository
+2.  Create a feature branch
+3.  Make your changes
+4.  Submit a pull request
