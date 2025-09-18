@@ -1,33 +1,29 @@
+aucmat: Advanced AUC Analysis and Visualization for R
+================
 
-- [Tutorial for R package ‘aucmat’](#tutorial-for-r-package-aucmat)
-  - [Introduction](#introduction)
+- [aucmat: Advanced AUC Analysis and Visualization for R (comming
+  soon!!!)](#aucmat-advanced-auc-analysis-and-visualization-for-r-comming-soon)
 - [🧬 aucmat](#dna-aucmat)
-  - [\_Work with AUC](#_work-with-auc)
+  - [Work with AUC](#work-with-auc)
 - [📖 Overview](#open_book-overview)
-  - [✅ Key Features](#white_check_mark-key-features)
 - [🚀 Installation](#rocket-installation)
-- [README.Rmd for aucmat Package](#readmermd-for-aucmat-package)
-  - [Features](#features)
-  - [Main Functions](#main-functions)
-    - [`plot_roc_with_combos()`](#plot_roc_with_combos)
-    - [`generate_data_analytical()`](#generate_data_analytical)
-    - [`tableroc()`](#tableroc)
-  - [Advanced Usage](#advanced-usage)
-    - [Customizing ROC Plots](#customizing-roc-plots)
-    - [Benchmarking Clustering
-      Algorithms](#benchmarking-clustering-algorithms)
-  - [Package Structure](#package-structure)
-  - [Documentation](#documentation)
-  - [Contributing](#contributing)
-  - [License](#license)
-  - [Citation](#citation)
-  - [Support](#support)
-  - [Acknowledgments](#acknowledgments)
-  - [🤝 Contributing](#handshake-contributing)
-  - [📜 License](#scroll-license)
-  - [❓ Need Help?](#question-need-help)
-  - [Reference](#reference)
-  - [🙏 Acknowledgements](#pray-acknowledgements)
+- [Features](#features)
+- [Main Functions](#main-functions)
+  - [`plot_roc_with_combos()`](#plot_roc_with_combos)
+  - [`generate_data_analytical()`](#generate_data_analytical)
+  - [`tableroc()`](#tableroc)
+- [Advanced Usage](#advanced-usage)
+  - [Customizing ROC Plots](#customizing-roc-plots)
+  - [Benchmarking Clustering
+    Algorithms](#benchmarking-clustering-algorithms)
+- [Package Structure](#package-structure)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [License](#license)
+- [Citation](#citation)
+- [Support](#support)
+- [Acknowledgments](#acknowledgments)
+- [🤝 Contributing](#handshake-contributing)
 
 <!-- README.md is auto-generated from README.Rmd -->
 
@@ -35,19 +31,22 @@
 
 <!-- README.md is auto-generated from README.Rmd -->
 
-# Tutorial for R package ‘aucmat’
+# aucmat: Advanced AUC Analysis and Visualization for R (comming soon!!!)
 
 Lucas TRAN 10/09/2025
 
-## Introduction
+The `aucmat` package provides comprehensive tools for ROC curve
+analysis, AUC calculation, and visualization in R. It’s designed for
+bioinformaticians, statisticians, and data scientists working with
+binary classification problems.
 
-*atcddd*
+*aucmat*
 
 <div align="center">
 
 # 🧬 aucmat
 
-### \_Work with AUC
+### Work with AUC
 
 [![Lifecycle:
 stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html)
@@ -58,8 +57,7 @@ MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.or
 
 <br>
 
-> *“Classify, validate, and explore drugs with WHO ATC codes — all in
-> R.”*
+> *“Work with AUC — all in R.”*
 
 </div>
 
@@ -68,20 +66,6 @@ MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.or
 ## 📖 Overview
 
 **`aucmat`** is an R package that simplifies working with
-
-### ✅ Key Features
-
-- ✔ Validate ATC code structure (L1 to L5)
-- ✔ Get official WHO descriptions for any code
-- ✔ Extract anatomical, therapeutic, or chemical groups
-- ✔ Navigate between ATC hierarchy levels
-- ✔ Fuzzy-search drug names → ATC codes
-- ✔ Access built-in reference tables (updated to latest WHO version)
-
-Perfect for **pharmacoepidemiology**, **health services research**,
-**drug utilization studies**, and **clinical data science**.
-
-------------------------------------------------------------------------
 
 ## 🚀 Installation
 
@@ -98,31 +82,6 @@ Load the package:
 
 ``` r
 library(aucmat)
-```
-
-# README.Rmd for aucmat Package
-
-``` r
----
-title: "aucmat: Advanced AUC Analysis and Visualization for R"
-output: github_document
----
-
-# aucmat: Advanced AUC Analysis and Visualization for R
-
-The `aucmat` package provides comprehensive tools for ROC curve analysis, AUC calculation, and visualization in R. It's designed for bioinformaticians, statisticians, and data scientists working with binary classification problems.
-
-## Installation
-
-You can install the development version of `aucmat` from GitHub:
-
-
-``` r
-# Install devtools if you haven't already
-if (!require("devtools")) install.packages("devtools")
-
-# Install aucmat from GitHub
-devtools::install_github("vanhungtran/aucmat")
 ```
 
 ## Features
@@ -341,83 +300,3 @@ We welcome contributions! Please see our
 - Improve documentation
 
 ------------------------------------------------------------------------
-
-## 📜 License
-
-MIT © 2025 \[Lucas VHH Tran\]
-
-> Permission is hereby granted, free of charge, to any person obtaining
-> a copy of this software…
-
-See [LICENSE.md](LICENSE.md) for full text.
-
-------------------------------------------------------------------------
-
-------------------------------------------------------------------------
-
-## ❓ Need Help?
-
-Open an issue on [GitHub](https://github.com/vanhungtran/atcddd/issues)
-or email \[<tranhungydhcm@gmail.com>\].
-
-------------------------------------------------------------------------
-
-<div align="center">
-
-<br> <em>Developed with 💊 and 🧬 for the R and health data science
-community.</em> <br><br>
-
-</div>
-
-------------------------------------------------------------------------
-
-<div align="center">
-
-<img src="man/figures/logo.png" width="220">
-
-</div>
-
-## Reference
-
-## 🙏 Acknowledgements
-
-- WHO Collaborating Centre for Drug Statistics Methodology — for
-  maintaining the ATC/DDD Index
-- Inspired by packages: `stringdist`, `dplyr`, `fuzzyjoin`, `rvest`
-- Hex sticker design: Use `hexSticker` package or
-  [hexb.in](https://hexb.in)
-
-<!---
-&#10;
-4. Commit both `README.Rmd` and `README.md` to GitHub.
-&#10;> 💡 Tip: Add `README.md` to `.Rbuildignore` if you don’t want it in the built package (optional).
-&#10;
-## 🖌️ Customize Further
-- Replace `yourusername` with your GitHub username
-- Replace `[Your Name or Organization]` and email
-- Add your hex sticker image under `man/figures/logo.png` and uncomment the image line if desired
-- Update example code to match your actual function names and outputs
-&#10;
-&#10;
-&#10;🎁 Bonus: Generate a Hex Sticker in R
-&#10;If you want to create a hex sticker, install `hexSticker` and run:
-&#10;
-library(ggplot2)
-library(hexSticker)
-&#10;# Just a centered "A" for ATC
-p <- ggplot() + 
-  annotate("text", x = 1, y = 1, label = "A", size = 20, fontface = "bold") +
-  xlim(0.5, 1.5) + ylim(0.5, 1.5) +
-  theme_void()
-&#10;sticker(
-  subplot = p,
-  package = "atcddd",
-  p_size = 20,
-  s_x = 1,
-  s_y = 0.8,
-  s_width = 1.3,
-  filename = "man/figures/logo.png",
-  h_fill = "#2a9d8f",
-  h_color = "#264653",
-&#10;)
- &#10;-->
