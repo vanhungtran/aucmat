@@ -1,62 +1,46 @@
-aucmat: Advanced AUC Analysis and Visualization for R
+aucmat: A Toolbox for Biomarkers Data Analysis
 ================
 
-- [aucmat: Advanced AUC Analysis and Visualization for R (comming
-  soon!!!)](#aucmat-advanced-auc-analysis-and-visualization-for-r-comming-soon)
 - [🧬 aucmat](#dna-aucmat)
-  - [Work with AUC](#work-with-auc)
+  - [A Toolbox for Biomarkers Data Analysis](#a-toolbox-for-biomarkers-data-analysis)
 - [📖 Overview](#open_book-overview)
 - [🚀 Installation](#rocket-installation)
-- [Features](#features)
-- [Main Functions](#main-functions)
+- [✨ Features](#features)
+- [📊 Main Functions](#main-functions)
+  - [`tableroc()`](#tableroc)
   - [`plot_roc_with_combos()`](#plot_roc_with_combos)
   - [`generate_data_analytical()`](#generate_data_analytical)
-  - [`tableroc()`](#tableroc)
-- [Advanced Usage](#advanced-usage)
+  - [`install_and_load()`](#install_and_load)
+- [💡 Usage Examples](#usage-examples)
+  - [Quick AUC Analysis](#quick-auc-analysis)
+  - [ROC Curves with Combinations](#roc-curves-with-combinations)
+  - [Synthetic Data Generation](#synthetic-data-generation)
+  - [Missing Data Handling](#missing-data-handling)
+- [🔧 Advanced Usage](#advanced-usage)
+  - [Multiple Imputation Methods](#multiple-imputation-methods)
   - [Customizing ROC Plots](#customizing-roc-plots)
-  - [Benchmarking Clustering
-    Algorithms](#benchmarking-clustering-algorithms)
-- [Package Structure](#package-structure)
-- [Documentation](#documentation)
-- [License](#license)
-- [Citation](#citation)
-- [Support](#support)
-- [Acknowledgments](#acknowledgments)
-- [Contributing](#contributing)
+- [📚 Documentation](#documentation)
+- [📄 License](#license)
+- [📖 Citation](#citation)
+- [🆘 Support](#support)
+- [🤝 Contributing](#contributing)
 
 <!-- README.md is auto-generated from README.Rmd -->
-
-<!-- README.md is generated from README.Rmd. Please edit that file -->
-
-<!-- README.md is auto-generated from README.Rmd -->
-
-# aucmat: Advanced AUC Analysis and Visualization for R (comming soon!!!)
-
-Lucas TRAN 10/09/2025
-
-The `aucmat` package provides comprehensive tools for ROC curve
-analysis, AUC calculation, and visualization in R. It’s designed for
-bioinformaticians, statisticians, and data scientists working with
-binary classification problems.
-
-*aucmat*
 
 <div align="center">
 
 # 🧬 aucmat
 
-### Work with AUC
+### A Toolbox for Biomarkers Data Analysis
 
 [![Lifecycle:
 stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html)
-[![R-CMD-check](https://github.com/yourusername/atcddd/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/yourusername/atcddd/actions)
-[![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/atcddd)](https://cran.r-project.org/package=atcddd)
 [![License:
 MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 <br>
 
-> *“Work with AUC — all in R.”*
+> *"Comprehensive ROC analysis and biomarker evaluation — all in R."*
 
 </div>
 
@@ -64,211 +48,332 @@ MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.or
 
 ## 📖 Overview
 
-**`aucmat`** is an R package that simplifies working with
+**`aucmat`** is a comprehensive R package designed for biomarker data analysis with a focus on ROC curve analysis, AUC calculation, and advanced visualization. The package provides robust tools for handling missing data, generating synthetic datasets with specified properties, and creating publication-ready ROC plots with confidence intervals.
+
+The package is particularly valuable for bioinformaticians, statisticians, and data scientists working with binary classification problems in biomedical research, offering both simple interfaces for quick analysis and advanced features for comprehensive biomarker evaluation.
 
 ## 🚀 Installation
 
-The code of *aucmat* is freely available at
-<https://github.com/vanhungtran/aucmat>.
+The code of *aucmat* is freely available at <https://github.com/vanhungtran/aucmat>.
 
-The following commands can be used to install this R package, and an R
-version \>= 4.2.3 is required.
+The following commands can be used to install this R package, and an R version >= 4.0.0 is required.
 
-    library(devtools)
-    install_github("vanhungtran/aucmat")
+```r
+# Install from GitHub
+library(devtools)
+install_github("vanhungtran/aucmat")
 
-Load the package:
-
-``` r
+# Load the package
 library(aucmat)
 ```
 
-## Features
+## ✨ Features
 
-- **ROC Curve Analysis**: Generate ROC curves with confidence intervals
-  for single predictors or combinations
-- **AUC Calculation**: Compute AUC values with various statistical
-  methods
-- **Data Simulation**: Generate synthetic datasets with specified AUC
-  characteristics
-- **Missing Data Handling**: Multiple imputation strategies for handling
-  missing values
-- **Comprehensive Visualization**: Professional-quality ROC plots with
-  customizable options
+- **📈 ROC Curve Analysis**: Generate ROC curves with confidence intervals for single predictors or combinations
+- **🎯 AUC Calculation**: Compute AUC values with DeLong or bootstrap confidence intervals
+- **🧬 Data Simulation**: Generate synthetic datasets with specified AUC characteristics and correlation structures
+- **🔧 Missing Data Handling**: Multiple imputation strategies including mean/median, KNN, MICE, and missForest
+- **📊 Comprehensive Visualization**: Professional-quality ROC plots with customizable options
+- **⚡ Package Management**: Intelligent package installation from CRAN, Bioconductor, and GitHub
 
-## Main Functions
+## 📊 Main Functions
+
+### `tableroc()`
+
+**Primary Function**: Compute ROC AUC and confidence intervals for each numeric column in a dataset against a binary outcome.
+
+This is the core function for quick biomarker screening and analysis.
+
+**Key Features:**
+- Supports multiple missing data imputation methods
+- Provides both DeLong and bootstrap confidence intervals
+- Handles various binary outcome formats (factor, logical, numeric 0/1)
+- Optional ranking by AUC performance
+- Comprehensive diagnostic information
+
+```r
+# Basic usage
+library(aucmat)
+
+# Create example data with missing values
+set.seed(123)
+X <- data.frame(
+  biomarker1 = c(rnorm(95, mean = 1), rep(NA, 5)),
+  biomarker2 = rnorm(100, mean = 0.5),
+  biomarker3 = c(rep(NA, 3), rnorm(97, mean = -0.2))
+)
+y <- factor(rbinom(100, 1, 0.4), labels = c("Control", "Case"))
+
+# Compute AUC table with median imputation
+auc_results <- tableroc(
+  X = X,
+  y = y,
+  na_impute = "median",
+  rank = TRUE,
+  ci_method = "delong"
+)
+
+print(auc_results)
+```
 
 ### `plot_roc_with_combos()`
 
-Generate ROC curves for single predictors or combinations with
-confidence intervals.
+**Advanced ROC Analysis**: Generate ROC curves for single predictors or combinations with confidence intervals.
 
-``` r
-library(aucmat)
+**Key Features:**
+- Supports combinations of multiple predictors using logistic regression
+- Bootstrap confidence intervals with ribbon visualization
+- Customizable plot aesthetics and color palettes
+- Option to skip CI computation for perfect classifiers (AUC = 1)
+- Professional ggplot2-based visualizations
 
-# Generate example data
+```r
+# Generate ROC curves for predictor combinations
 set.seed(42)
 data <- data.frame(
   M1 = rnorm(200, mean = 0, sd = 1),
-  M2 = rnorm(200, mean = 5, sd = 2),
-  M3 = rnorm(200, mean = 10, sd = 3),
-  M4 = rnorm(200, mean = 15, sd = 4),
-  Outcome = sample(c(0, 1), 200, replace = TRUE)
+  M2 = rnorm(200, mean = 0.5, sd = 1.2),
+  M3 = rnorm(200, mean = -0.3, sd = 0.8),
+  M4 = rnorm(200, mean = 0.8, sd = 1.5),
+  Outcome = sample(c(0, 1), 200, replace = TRUE, prob = c(0.6, 0.4))
 )
 
-# Generate ROC curves for all combinations of 1-4 predictors
+# Generate ROC curves for combinations of 1-3 predictors
 roc_results <- plot_roc_with_combos(
   data = data,
   outcome = "Outcome",
   predictors = c("M1", "M2", "M3", "M4"),
-  combo_sizes = 1:4,
+  combo_sizes = 1:3,
   add_ci = TRUE,
-  boot_n = 1000
+  boot_n = 1000,
+  reorder_by_auc = TRUE,
+  title = "ROC Analysis: Single and Combined Biomarkers"
 )
 
 # Display the plot
 print(roc_results$plot)
+
+# Access AUC values
+print(roc_results$auc)
 ```
 
 ### `generate_data_analytical()`
 
-Generate synthetic datasets with specified AUC values and correlation
-structure.
+**Synthetic Data Generation**: Create datasets with precise AUC values and correlation structures for simulation studies.
 
-``` r
-# Generate data with specific AUC targets
+**Key Features:**
+- Analytically generates data to match target AUC values exactly
+- Supports custom correlation matrices between predictors
+- Useful for method validation and simulation studies
+- Returns achieved vs. target metrics for verification
+
+```r
+# Generate synthetic data with specific properties
+target_aucs <- c(0.85, 0.75, 0.65, 0.55)
+corr_matrix <- matrix(c(
+  1.0, 0.4, 0.2, 0.1,
+  0.4, 1.0, 0.3, 0.2,
+  0.2, 0.3, 1.0, 0.4,
+  0.1, 0.2, 0.4, 1.0
+), nrow = 4)
+
 sim_data <- generate_data_analytical(
   n = 1000,
   prevalence = 0.3,
-  target_aucs = c(0.9, 0.85, 0.8, 0.75),
-  corr_matrix = matrix(c(
-    1.0, 0.6, 0.3, 0.1,
-    0.6, 1.0, 0.5, 0.2,
-    0.3, 0.5, 1.0, 0.4,
-    0.1, 0.2, 0.4, 1.0
-  ), nrow = 4)
+  target_aucs = target_aucs,
+  corr_matrix = corr_matrix
 )
 
-# Check achieved AUCs
-print(sim_data$achieved_aucs)
+# Verify achieved results
+cat("Target AUCs:", target_aucs, "\n")
+cat("Achieved AUCs:", round(sim_data$achieved_aucs, 3), "\n")
 ```
 
-### `tableroc()`
+### `install_and_load()`
 
-Compute AUC and confidence intervals for each numeric column in a data
-frame.
+**Package Management**: Intelligently install and load R packages from multiple sources.
 
-``` r
-# Create example data with missing values
-X <- data.frame(
-  M1 = c(rnorm(95), rep(NA, 5)),
-  M2 = rnorm(100),
-  M3 = c(rep(NA, 3), rnorm(97))
+**Key Features:**
+- Automatic source detection (CRAN, Bioconductor, GitHub)
+- Interactive GitHub repository search for unknown packages
+- Graceful error handling with informative messages
+- Support for direct GitHub installation (`username/repository`)
+
+```r
+# Install packages from various sources
+packages_needed <- c(
+  "ggplot2",              # CRAN
+  "limma",                # Bioconductor  
+  "tidyverse/dplyr",      # Direct from GitHub
+  "pROC"                  # CRAN
 )
-y <- factor(rbinom(100, 1, 0.5), labels = c("neg", "pos"))
 
-# Compute AUC table with median imputation
-auc_table <- tableroc(
-  X = X,
+install_and_load(packages_needed)
+```
+
+## 💡 Usage Examples
+
+### Quick AUC Analysis
+
+```r
+library(aucmat)
+
+# Load your biomarker data
+# X: matrix/data.frame with biomarkers as columns
+# y: binary outcome vector
+
+# Quick screening of all biomarkers
+results <- tableroc(X, y, rank = TRUE)
+head(results)
+```
+
+### ROC Curves with Combinations
+
+```r
+# Compare single biomarkers vs combinations
+roc_analysis <- plot_roc_with_combos(
+  data = your_data,
+  outcome = "disease_status", 
+  predictors = c("biomarker1", "biomarker2", "biomarker3"),
+  combo_sizes = 1:3,
+  add_ci = TRUE
+)
+
+# View results
+roc_analysis$plot
+```
+
+### Synthetic Data Generation
+
+```r
+# Create validation dataset
+validation_data <- generate_data_analytical(
+  n = 500,
+  prevalence = 0.25,
+  target_aucs = c(0.9, 0.8, 0.7),
+  corr_matrix = diag(3)  # Independent predictors
+)
+```
+
+### Missing Data Handling
+
+```r
+# Advanced missing data imputation
+results_knn <- tableroc(X, y, na_impute = "knn", knn_k = 5)
+results_mice <- tableroc(X, y, na_impute = "mice", mice_maxit = 10)
+results_forest <- tableroc(X, y, na_impute = "missForest")
+
+# Compare imputation methods
+rbind(
+  transform(results_knn, method = "KNN"),
+  transform(results_mice, method = "MICE"),
+  transform(results_forest, method = "missForest")
+)
+```
+
+## 🔧 Advanced Usage
+
+### Multiple Imputation Methods
+
+The `tableroc()` function supports various imputation strategies:
+
+```r
+# Available imputation methods:
+imputation_methods <- c(
+  "none",              # No imputation
+  "mean",              # Column means
+  "median",            # Column medians  
+  "constant",          # Constant value
+  "median_by_class",   # Class-specific medians
+  "halfmin",           # Half minimum positive value
+  "quantile",          # Specified quantile
+  "knn",               # K-nearest neighbors
+  "mice",              # Multiple imputation (requires mice package)
+  "missForest"         # Random forest (requires missForest package)
+)
+
+# Example with KNN imputation
+results <- tableroc(
+  X = X, 
   y = y,
-  na_impute = "median",
-  rank = TRUE
+  na_impute = "knn",
+  knn_k = 10,
+  knn_scale = TRUE,
+  knn_weighted = TRUE
 )
-
-print(auc_table)
 ```
-
-## Advanced Usage
 
 ### Customizing ROC Plots
 
-``` r
-# Customized ROC plot
-roc_results <- plot_roc_with_combos(
+```r
+# Customized ROC visualization
+custom_roc <- plot_roc_with_combos(
   data = data,
-  outcome = "Outcome",
-  predictors = c("M1", "M2", "M3", "M4"),
-  combo_sizes = 1:4,
+  outcome = "outcome",
+  predictors = biomarkers,
+  combo_sizes = 1:2,
   add_ci = TRUE,
   boot_n = 2000,
-  ci_points = 101,
-  palette = c("#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"),
-  title = "Custom ROC Analysis",
-  legacy_axes = FALSE
+  ci_points = 201,
+  palette = c("#E31A1C", "#1F78B4", "#33A02C", "#FF7F00"),
+  title = "Biomarker Performance Comparison",
+  ribbon_alpha = 0.15,
+  line_size = 1.2
 )
 
-print(roc_results$plot)
+# Further customize with ggplot2
+library(ggplot2)
+custom_roc$plot + 
+  theme_classic() +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(hjust = 0.5)
+  )
 ```
 
-### Benchmarking Clustering Algorithms
+## 📚 Documentation
 
-``` r
-# Benchmark different clustering algorithms
-cluster_results <- benchmark_clusterings(
-  data = iris,
-  features = c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width"),
-  ks = 2:4,
-  algorithms = c("kmeans", "hclust_complete", "hclust_average"),
-  distances = c("euclidean", "manhattan"),
-  status_col = "Species"
-)
+Full documentation is available through R's help system:
 
-print(cluster_results$plot)
-```
-
-## Package Structure
-
-The package includes the following main components:
-
-- **ROC Analysis**: Functions for generating and analyzing ROC curves
-- **Data Simulation**: Tools for creating synthetic datasets with known
-  properties
-- **Statistical Utilities**: Helper functions for imputation,
-  normalization, and statistical testing
-- **Visualization**: Custom plotting functions for professional-quality
-  graphics
-
-## Documentation
-
-Full documentation is available through R’s help system:
-
-``` r
+```r
 # View function documentation
+?tableroc
 ?plot_roc_with_combos
 ?generate_data_analytical
-?tableroc
-?benchmark_clusterings
+?install_and_load
+
+# Browse package vignettes
+browseVignettes("aucmat")
 ```
 
-## License
+## 📄 License
 
-This package is released under the MIT License. See the `LICENSE` file
-for details.
+This package is released under the MIT License. See the `LICENSE` file for details.
 
-## Citation
+## 📖 Citation
 
 If you use `aucmat` in your research, please cite it as:
 
-    Tran, L. V. H. H. (2025). aucmat: Advanced AUC Analysis and Visualization for R. 
-    R package version 0.1.0. https://github.com/vanhungtran/aucmat
+```
+Tran, L. V. H. H. (2025). aucmat: A Toolbox for Biomarkers Data Analysis. 
+R package version 0.0.0.9000. https://github.com/vanhungtran/aucmat
+```
 
-## Support
+## 🆘 Support
 
-For bug reports, feature requests, or questions, please open an issue on
-the [GitHub repository](https://github.com/vanhungtran/aucmat/issues).
+For bug reports, feature requests, or questions, please open an issue on the [GitHub repository](https://github.com/vanhungtran/aucmat/issues).
 
-## Acknowledgments
-
-This package was developed with support from CK-CARE (Christine Kühne -
-Center for Allergy Research and Education). \`\`\`
-
-------------------------------------------------------------------------
-
-## Contributing
+## 🤝 Contributing
 
 Contributions to `aucmat` are welcome! Please feel free to:
 
-1.  Fork the repository
-2.  Create a feature branch
-3.  Make your changes
-4.  Submit a pull request
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Commit your changes (`git commit -m 'Add amazing feature'`)
+5. Push to the branch (`git push origin feature/amazing-feature`)
+6. Open a Pull Request
+
+---
+
+**Acknowledgments**: This package was developed with support from CK-CARE (Christine Kühne - Center for Allergy Research and Education).
