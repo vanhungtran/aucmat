@@ -83,7 +83,7 @@ tableroc(
 }
 \value{
 data.frame with rows = numeric predictors; columns:
-biomarker, auc, ci_low, ci_high, ci_level, ci_method, n_pos, n_neg, direction,
+biomarker, auc, ci_low, ci_high, p_value, ci_level, ci_method, n_pos, n_neg, direction,
 na_handling, n_na, n_imputed, and rank (if rank=TRUE).
 }
 \description{

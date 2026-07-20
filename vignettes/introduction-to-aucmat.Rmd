@@ -1,9 +1,8 @@
-
 ---
-title: "introduction-to-aucmat"
+title: "Introduction to aucmat"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{introduction-to-aucmat}
+  %\VignetteIndexEntry{Introduction to aucmat}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -17,4 +16,118 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(aucmat)
+```
+
+## Generating Simulated Data
+
+The `aucmat` package provides a function called `generate_data_analytical` to create synthetic datasets with known properties. This is useful for testing and validating analysis methods.
+
+In this example, we'll generate a dataset with 500 samples, a 30% prevalence of the positive class, and three biomarkers with target AUC values of 0.9, 0.8, and 0.7. We'll also specify a correlation matrix for the biomarkers.
+
+```{r generate_data}
+# Define the target AUCs and correlation matrix
+target_aucs <- c(0.9, 0.8, 0.7)
+corr_matrix <- matrix(c(
+  1.0, 0.3, 0.1,
+  0.3, 1.0, 0.2,
+  0.1, 0.2, 1.0
+), nrow = 3)
+
+# Generate the synthetic data
+sim_data <- generate_data_analytical(
+  n = 5000,
+  prevalence = 0.3,
+  target_aucs = target_aucs,
+  corr_matrix = corr_matrix
+)
+
+# Inspect the generated data
+head(sim_data$data)
+```
+
+## Analyzing the Simulated Data
+
+Now that we have a simulated dataset, we can use the `tableroc` function to analyze the biomarkers and see how well they perform.
+
+```{r analyze_data}
+# Extract the data and outcome
+# The generated data has predictor columns `X1..Xp` and a final `truth` column.
+X <- subset(sim_data$data, select = -truth) # Predictors
+y <- sim_data$data$truth  # Outcome
+
+# Run the tableroc function
+results <- tableroc(X, y)
+
+# Print the results
+print(results)
+```
+
+## Plotting ROC curves for predictor combinations
+
+The `plot_roc_with_combos()` helper builds ROC curves for all combinations
+of predictors (or a restricted set via `combo_sizes`) and returns a **list**
+containing:
+
+- `plot`: the ggplot2 object with ROC curves and legend
+- `roc_list`: list of pROC ROC objects for each combination
+- `auc`: vector of AUC values
+- `auc_sd`: vector of AUC standard deviations (when `add_ci = TRUE`)
+- `ci_df`: data frame with confidence interval data
+- `skipped_ci`: names of curves that skipped CI computation (e.g., perfect AUC)
+
+Below we call it on the simulated dataset and render the plot. Note that we
+access the plot via `res_plot$plot` and the legend automatically displays
+on the right side, showing each model with its AUC ± SD.
+
+```{r plot_combos, fig.width=6, fig.height=6}
+# Build predictors vector (all X* columns)
+preds <- setdiff(names(sim_data$data), "truth")
+
+# Create the plot for all single and multi-variable combinations
+res_plot <- plot_roc_with_combos(
+  data = sim_data$data,
+  outcome = "truth",
+  predictors = preds,
+  combo_sizes = 1:3,
+  add_ci = TRUE,
+  conf_level = 0.95,
+  boot_n = 500,      # smaller boot for vignette speed
+  seed = 123,
+  auc_digits = 4,
+   sd_digits = 4, 
+  show_auc_labels = TRUE,
+  title = "ROC curves for predictor combinations (simulated data)"
+)
+
+# Print ggplot
+print(res_plot$plot)
+
+# Show AUCs for reference
+res_plot$auc
+```
+
+## Correlation heatmap of predictors
+
+It's often useful to inspect pairwise correlations between predictors. The
+chunk below computes the correlation matrix for the predictor columns and
+renders a heatmap with values.
+
+```{r corr_heatmap, fig.width=6, fig.height=5}
+# Predictor names
+preds <- setdiff(names(sim_data$data), "truth")
+
+# Compute correlation matrix (pairwise complete observations)
+cor_mat <- stats::cor(sim_data$data[, preds], use = "pairwise.complete.obs")
+cor_df <- as.data.frame(as.table(cor_mat))
+
+# Plot heatmap with ggplot2
+p_cor <- ggplot2::ggplot(cor_df, ggplot2::aes(Var1, Var2, fill = Freq)) +
+  ggplot2::geom_tile() +
+  ggplot2::scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0) +
+  ggplot2::geom_text(ggplot2::aes(label = sprintf("%.2f", Freq)), size = 3) +
+  ggplot2::theme_minimal() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)) +
+  ggplot2::labs(title = "Correlation heatmap of predictors", x = NULL, y = NULL)
+
+print(p_cor)
 ```

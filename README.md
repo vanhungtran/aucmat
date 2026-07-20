@@ -16,6 +16,7 @@ aucmat: A Toolbox for Biomarkers Data Analysis
   - [ROC Curves with Combinations](#roc-curves-with-combinations)
   - [Synthetic Data Generation](#synthetic-data-generation)
   - [Missing Data Handling](#missing-data-handling)
+- [🧠 Theory](#theory)
 - [🔧 Advanced Usage](#advanced-usage)
   - [Multiple Imputation Methods](#multiple-imputation-methods)
   - [Customizing ROC Plots](#customizing-roc-plots)
@@ -125,7 +126,8 @@ print(auc_results)
 - Bootstrap confidence intervals with ribbon visualization
 - Customizable plot aesthetics and color palettes
 - Option to skip CI computation for perfect classifiers (AUC = 1)
-- Professional ggplot2-based visualizations
+- Professional ggplot2-based visualizations with legend showing AUC ± SD
+- Returns a list containing the plot, ROC objects, AUC values, AUC SDs, and CI data
 
 ```r
 # Generate ROC curves for predictor combinations
@@ -150,11 +152,15 @@ roc_results <- plot_roc_with_combos(
   title = "ROC Analysis: Single and Combined Biomarkers"
 )
 
-# Display the plot
+# Display the plot with legend (legend shows Model names with AUC ± SD)
 print(roc_results$plot)
 
-# Access AUC values
+# Access AUC values and standard deviations
 print(roc_results$auc)
+print(roc_results$auc_sd)
+
+# Access other components
+names(roc_results)  # "plot", "roc_list", "auc", "auc_sd", "ci_df", "skipped_ci"
 ```
 
 ### `generate_data_analytical()`
@@ -205,7 +211,7 @@ packages_needed <- c(
   "ggplot2",              # CRAN
   "limma",                # Bioconductor  
   "tidyverse/dplyr",      # Direct from GitHub
-  "pROC"                  # CRAN
+  "hrbrthemes"            # CRAN
 )
 
 install_and_load(packages_needed)
@@ -253,6 +259,28 @@ validation_data <- generate_data_analytical(
   target_aucs = c(0.9, 0.8, 0.7),
   corr_matrix = diag(3)  # Independent predictors
 )
+
+## 🧠 Theory
+
+For the new `generate_auc_cor_vector()` helper, the key idea is that **AUC and correlation measure different aspects of the score vector**.
+
+- **AUC is rank-based**: it depends only on whether positive samples tend to have larger scores than negative samples.
+- **Pearson correlation is value-based**: it depends on the actual numeric spacing of the score values.
+
+This lets us separate the problem into two steps:
+
+1. Build a base score vector with the requested empirical AUC.
+2. Apply a **strictly increasing** transform to that score vector so the rank order stays the same but the numeric spacing changes.
+
+Because a strictly increasing transform preserves order, it preserves AUC. But it can still change the Pearson correlation with the binary outcome. The `generate_auc_cor_vector()` function uses a Box-Cox transform for this second step and tunes its parameter to get as close as possible to the requested correlation.
+
+Important limitation:
+
+- Not every `(AUC, correlation)` pair is achievable for a fixed `y`.
+- The monotone transform can change spacing, but it cannot change ordering.
+- So for a fixed outcome vector and fixed AUC, there is only a limited achievable range of correlations.
+
+In short: `generate_auc_cor_vector()` works by **fixing AUC through ranks** and **tuning correlation through spacing**.
 ```
 
 ### Missing Data Handling
@@ -344,6 +372,44 @@ Full documentation is available through R's help system:
 
 # Browse package vignettes
 browseVignettes("aucmat")
+```
+
+## 📜 Vignettes
+
+The `aucmat` package comes with a vignette that provides a more detailed introduction to the package and its functionalities. You can access the vignette with the following command:
+
+```r
+vignette("introduction-to-aucmat")
+```
+
+The vignette includes examples on how to:
+
+- Generate synthetic data with specific properties using `generate_data_analytical()`.
+- Analyze the generated data with `tableroc()`.
+
+Here is a small example from the vignette:
+
+```r
+# Generate synthetic data
+target_aucs <- c(0.9, 0.8, 0.7)
+corr_matrix <- matrix(c(
+  1.0, 0.3, 0.1,
+  0.3, 1.0, 0.2,
+  0.1, 0.2, 1.0
+), nrow = 3)
+
+sim_data <- generate_data_analytical(
+  n = 5000,
+  prevalence = 0.3,
+  target_aucs = target_aucs,
+  corr_matrix = corr_matrix
+)
+
+# Analyze the data
+X <- sim_data$data[, -1]
+y <- sim_data$data[, 1]
+results <- tableroc(X, y)
+print(results)
 ```
 
 ## 📄 License

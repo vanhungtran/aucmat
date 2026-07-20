@@ -12,6 +12,14 @@ library(mvtnorm)
 # target_aucs: a vector of p target AUC values
 # corr_matrix: a p x p target correlation matrix
 
+#' Generate Synthetic Data with Specific AUC and Correlation
+#'
+#' This function analytically generates a dataset with specified properties.
+#' @param n number of rows (observations)
+#' @param prevalence the proportion of the positive class for the binary outcome
+#' @param target_aucs a vector of p target AUC values
+#' @param corr_matrix a p x p target correlation matrix
+#' @export
 generate_data_analytical <- function(n, prevalence, target_aucs, corr_matrix) {
 
   # Sort target_aucs and reorder corr_matrix to process from highest AUC to lowest

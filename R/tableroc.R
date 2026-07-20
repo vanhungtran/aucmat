@@ -177,6 +177,7 @@ tableroc <- function(
       res[[j]] <- data.frame(
         biomarker   = cn[j],
         auc         = NA_real_, ci_low = NA_real_, ci_high = NA_real_,
+        p_value     = NA_real_,
         ci_level    = ci_level, ci_method = ci_method,
         n_pos       = 0L, n_neg = 0L,
         direction   = NA_character_,
@@ -201,6 +202,7 @@ tableroc <- function(
       res[[j]] <- data.frame(
         biomarker   = cn[j],
         auc         = NA_real_, ci_low = NA_real_, ci_high = NA_real_,
+         p_value     = NA_real_,
         ci_level    = ci_level, ci_method = ci_method,
         n_pos       = 0L, n_neg = 0L,
         direction   = NA_character_,
@@ -229,11 +231,15 @@ tableroc <- function(
       ci_low <- unname(ci_obj[1L]); ci_high <- unname(ci_obj[3L])
     }
 
+    p_val_obj <- try(stats::wilcox.test(roc_obj$cases, roc_obj$controls), silent = TRUE)
+    p_value <- if (inherits(p_val_obj, "try-error")) NA_real_ else p_val_obj$p.value
+
     res[[j]] <- data.frame(
       biomarker   = cn[j],
       auc         = auc_val,
       ci_low      = ci_low,
       ci_high     = ci_high,
+      p_value     = p_value,
       ci_level    = ci_level,
       ci_method   = ci_method,
       n_pos       = used_cases,
@@ -255,7 +261,7 @@ tableroc <- function(
     rownames(out) <- NULL
   }
 
-  cols_to_round <- intersect(c("auc", "ci_low", "ci_high"), names(out))
+  cols_to_round <- intersect(c("auc", "ci_low", "ci_high", "p_value"), names(out))
   if (length(cols_to_round)) {
     out[cols_to_round] <- lapply(out[cols_to_round], function(col) {
       ifelse(is.na(col), NA, round(col, digits = round.digit))
@@ -275,7 +281,7 @@ normalize_binary_response <- function(y, positive) {
   }
   if (is.numeric(y)) {
     u <- unique(y); u <- u[!is.na(u)]
-    if (length(u) > 0L && all(u %in% c(0, 1))) {
+    if (length(u) == 2L && all(u %in% c(0, 1))) {
       return(factor(y, levels = c(0, 1), labels = c("neg", "pos")))
     }
   }

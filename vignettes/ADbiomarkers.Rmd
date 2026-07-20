@@ -1,0 +1,313 @@
+---
+date: "`r Sys.Date()`"
+author: "Your Name"
+title: "Comprehensive T-Helper Cell Pathway Biomarkers in Atopic Dermatitis"
+output: 
+  officedown::rdocx_document:
+    mapstyles:
+      Normal: ['First Paragraph']
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.cap = TRUE)
+library(officedown)
+library(officer)
+
+fp <- fp_par(
+  text.align = "center", 
+  padding.bottom = 20, padding.top = 120, 
+  border.bottom = fp_border())
+
+ft <- fp_text(shading.color='#EFEFEF', bold = TRUE)
+```
+
+
+
+
+## Overview
+
+This document provides detailed tables of biomarkers across four major T-helper cell pathways implicated in atopic dermatitis (AD): **Th2, Th1, Th17, and Th22**. Each table includes information on Olink proteomics panel coverage, biomarker class, directional changes with disease severity and treatment, cross-references to related tables, and clinical utility notes.
+
+---
+
+## Key Pathways in Atopic Dermatitis (AD) Pathogenesis
+
+Atopic dermatitis is a heterogeneous inflammatory skin disease driven by **keratinocyte differentiation/barrier defects** together with strong type 2 immune responses, with variable contributions of Th22, Th17/IL‑23, and Th1 pathways depending on disease subtype and stage.
+
+Transcriptomic studies support a model in which immune activation generally **intensifies from acute to chronic lesions** (rather than a simple "Th2-to-Th1 switch").
+
+### 1. T-Helper cell pathways (core immune axes)
+
+| Pathway | Typical role in AD lesions | Key cytokines / markers (examples) |
+|--------|-----------------------------|------------------------------------|
+| **Th2** | Prominent in acute lesions and persists/intensifies in chronic lesions | IL‑4, IL‑5, IL‑13, IL‑31; Th2-associated chemokines used clinically include CCL17 (TARC) and CCL22 (MDC) |
+| **Th22** | Strongly activated in acute lesions and further intensified in chronic lesions; linked to epidermal hyperplasia and keratinocyte programs | IL‑22; downstream keratinocyte markers include S100A7/A8/A9 (often induced with IL‑22/IL‑17) |
+| **Th17 / IL‑23** | Variable across endotypes; often smaller than Th2/Th22 in classic adult AD but measurable and can rise in chronic lesions/subtypes | IL‑17 (e.g., IL‑17A), IL‑23 axis markers, CCL20; S100A7/A8/A9 can accompany Th17/Th22 activity |
+| **Th1 / IFN** | Less prominent in acute lesions but more apparent in chronic lesions, contributing to sustained inflammation | IFN‑γ and IFN‑inducible chemokines such as CXCL9 and CXCL10 |
+
+**Disease-phase dynamics (molecular):**  
+- **Acute lesions** show strong Th2 and Th22 activation, with smaller increases in IL‑17 and comparatively less Th1 activity  
+- **Chronic lesions** show further intensification of Th2/Th22 cytokines along with greater activation of Th1 (and sometimes Th17) programs
+
+### 2. Epithelial barrier dysfunction
+
+Inflammation and barrier dysfunction reinforce each other: Th2 cytokines (IL‑4/IL‑13) reduce expression of barrier genes such as filaggrin (FLG) and related differentiation proteins, even in individuals without FLG mutations.
+
+In chronic disease, expansion of Th2 together with Th22/Th17 activity contributes to barrier deterioration, including cytokine-mediated suppression of filaggrin by IL‑4, IL‑13, and IL‑22.
+
+### 3. Epithelial "alarmins" (innate initiation)
+
+Keratinocytes can produce alarmins including TSLP, IL‑25, and IL‑33, which amplify type 2 inflammation in skin. This provides a mechanistic bridge from barrier disruption to innate activation and downstream Th2-polarized inflammation.
+
+### 4. JAK–STAT signaling (central hub)
+
+Multiple AD-relevant cytokines signal through JAK–STAT pathways, including canonical IL‑4 signaling via JAK1/JAK3 and STAT6 activation.
+
+Clinically, current targeted systemic strategies commonly fall into (i) IL‑4/IL‑13 axis blockade vs (ii) broader JAK/STAT pathway inhibition.
+
+### 5. IL‑31 / neuroimmune pruritus axis
+
+IL‑31 is linked to pruritus biology in inflammatory dermatoses, and IL‑31 receptors are expressed on keratinocytes and small-diameter neurons. IL‑31RA expression in AD lesions has been reported to be higher than in normal skin, supporting pathway relevance in AD.
+
+### 6. Microbiome dysbiosis (S. aureus)
+
+Most individuals with active AD are colonized or infected with *Staphylococcus aureus*, which is associated with worsening dermatitis. *Staphylococcus aureus* superantigens (e.g., staphylococcal enterotoxins, TSST‑1) can contribute to AD pathophysiology through effects on keratinocytes and cytokine responses.
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+zip_file <- "AD_Biomarkers_8_Tables_Complete.zip"
+if (file.exists(zip_file)) { utils::unzip(zip_file, overwrite = TRUE) }
+needed <- paste0("Table_", 1:8, ".csv")
+missing <- needed[!file.exists(needed)]
+if (length(missing) > 0) stop(paste("Missing:", paste(missing, collapse=", ")))
+read_table <- function(path) {
+  df <- read.csv(path, stringsAsFactors = FALSE, check.names = FALSE)
+  if ("Direction vs Severity / Treatment Response" %in% names(df) && !("Direction vs Severity" %in% names(df))) {
+    names(df)[names(df) == "Direction vs Severity / Treatment Response"] <- "Direction vs Severity"
+  }
+  want <- c("Biomarker","Olink Panel(s)","Class / Type","Cross-Reference","Direction vs Severity","Key Notes","References")
+  if (all(want %in% names(df))) df <- df[, want]
+  df
+}
+```
+
+## Table 1. Serum Th2-pathway biomarkers suitable for routine or registry use
+
+```{r table1}
+df <- read_table("Table_1.csv")
+knitr::kable(df)
+```
+
+## Table 2. Th2-related tissue / mechanistic biomarkers (mainly lesional skin or advanced assays)
+
+```{r table2}
+df <- read_table("Table_2.csv")
+knitr::kable(df)
+```
+
+## Table 3. Serum Th1-pathway biomarkers relevant for registry-level use
+
+```{r table3}
+df <- read_table("Table_3.csv")
+knitr::kable(df)
+```
+
+## Table 4. Th1-related tissue / mechanistic biomarkers (mainly lesional skin)
+
+```{r table4}
+df <- read_table("Table_4.csv")
+knitr::kable(df)
+```
+
+## Table 5. Serum Th17-pathway biomarkers relevant for registry-level use
+
+```{r table5}
+df <- read_table("Table_5.csv")
+knitr::kable(df)
+```
+
+## Table 6. Th17-related tissue / mechanistic biomarkers (mainly lesional skin)
+
+```{r table6}
+df <- read_table("Table_6.csv")
+knitr::kable(df)
+```
+
+## Table 7. Serum Th22-pathway biomarkers relevant for registry-level use
+
+```{r table7}
+df <- read_table("Table_7.csv")
+knitr::kable(df)
+```
+
+## Table 8. Th22-related tissue / mechanistic biomarkers (mainly lesional skin)
+
+```{r table8}
+df <- read_table("Table_8.csv")
+knitr::kable(df)
+```
+
+---
+
+## Biomarker Cross-Reference Summary
+
+### Most Connected Biomarkers (appearing in ≥3 tables):
+
+1. **IL‑22** - Tables 5, 6, 7, 8 (Th17 and Th22 pathways; serum + tissue)
+2. **CCL20** - Tables 5, 6, 7, 8 (Th17 and Th22 pathways; serum + tissue)
+3. **S100A7/A8/A9** - Tables 2, 5, 6, 7, 8 (Th2, Th17, and Th22 pathways; mixed)
+4. **TNF‑α** - Tables 3, 4, 7, 8 (Th1 and Th22 pathways; serum + tissue)
+5. **IL‑12/23p40** - Tables 3, 4, 5, 6 (Th1 and Th17 pathways; shared subunit)
+
+### Pathway Overlap Patterns:
+
+- **Th2 ↔ Th22 overlap**: CCL22, CCL27, S100 family, barrier genes (FLG/LOR/IVL), TSLP
+- **Th17 ↔ Th22 overlap**: IL‑22, CCL20, S100A7/A8/A9, STAT3
+- **Th1 ↔ Th17 overlap**: IL‑12/23p40, TNF‑α
+- **Multi-pathway markers**: S100 family (all pathways), TNF‑α (Th1 + Th22)
+
+---
+
+## References
+
+The following references were used to compile the biomarker tables:
+
+1. Weidinger S, Novak N. Atopic dermatitis. *Lancet*. 2016;387(10023):1109–1122.
+
+2. Gittler JK, Shemer A, Suárez-Fariñas M, et al. Progressive activation of T(H)2/T(H)22 cytokines and selective epidermal proteins characterizes acute and chronic atopic dermatitis. *J Allergy Clin Immunol*. 2012;130(6):1344–1354.
+
+3. Brunner PM, Guttman-Yassky E, Leung DY. The immunology of atopic dermatitis and its reversibility with broad-spectrum and targeted therapies. *J Allergy Clin Immunol*. 2017;139(4S):S65–S76.
+
+4. Tokura Y. Extrinsic and intrinsic types of atopic dermatitis. *J Dermatol Sci*. 2010;58(1):1–7.
+
+5. Nakahara T, Koga T, Fukagawa S, et al. Head and neck dermatitis: an important clinical subtype of atopic dermatitis. *Allergol Int*. 2020;69(2):185–191.
+
+6. Hülpüsch C, Tremmel K, Hamm H, Weins AB, Nasorri F, Gisondi P. Skin pH and *Staphylococcus aureus* in atopic dermatitis. *J Dtsch Dermatol Ges*. 2020;18(7):697–704.
+
+7. Chiesa Fuxench ZC, Block JK, Boguniewicz M, et al. Atopic dermatitis in America study: a cross-sectional study examining the prevalence and disease burden of atopic dermatitis in the US adult population. *J Invest Dermatol*. 2019;139(3):583–590.
+
+8. Langan SM, Irvine AD, Weidinger S. Atopic dermatitis. *Lancet*. 2020;396(10247):345–360.
+
+9. Silverberg JI. Comorbidities and the impact of atopic dermatitis. *Ann Allergy Asthma Immunol*. 2019;123(2):144–151.
+
+10. Biomarkers in Atopic Dermatitis. *PMC*. 2024. https://pmc.ncbi.nlm.nih.gov/articles/PMC11264653/
+
+11. Potential biomarkers of atopic dermatitis. *Frontiers in Medicine*. 2022. https://www.frontiersin.org/journals/medicine/articles/10.3389/fmed.2022.1028694/full
+
+12. Th2 Cytokines and Atopic Dermatitis. *PMC*. 2011. https://pmc.ncbi.nlm.nih.gov/articles/PMC3189506/
+
+13. Serum levels of Th2 chemokines, CCL17, CCL22, and CCL27, were the important markers of severity in infantile atopic dermatitis. *Wiley Online Library*. 2007. https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1399-3038.2007.00692.x
+
+14. CC chemokines as potential immunologic markers correlated with clinical improvement of atopic dermatitis patients by immunotherapy. *PubMed*. 2010. https://pubmed.ncbi.nlm.nih.gov/19758316/
+
+15. Atopic Dermatitis: Striving for Reliable Biomarkers. *PMC*. 2022. https://pmc.ncbi.nlm.nih.gov/articles/PMC9410433/
+
+16. CCL18 Is Expressed in Atopic Dermatitis and Mediates Skin Homing of Human Memory T Cells. *The Journal of Immunology*. 2005. https://journals.aai.org/jimmunol/article/174/3/1723/72438/CCL18-Is-Expressed-in-Atopic-Dermatitis-and
+
+17. The ability of biomarkers to assess the severity of atopic dermatitis. *ScienceDirect*. 2023.
+
+18. SCCA2 & PERIOSTIN biomarker information. *IBL International*. 2025.
+
+19. Olink Target 96 Inflammation panel. *TATAA Biocenter*. 2025. https://tataa.com/technologies/olink-proteomics/olink-target-96/olink-target-96-inflammation/
+
+20. Olink Explore 384 Inflammation panel. *TATAA Biocenter*. 2025. https://tataa.com/technologies/olink-proteomics/olink-explore-384/olink-explore-384-inflammation/
+
+21. Olink proteomics analysis in atopic dermatitis. *PMC*. 2023. https://pmc.ncbi.nlm.nih.gov/articles/PMC10691257/
+
+22. Proteomic characterization of atopic dermatitis blood from infancy to adulthood. *Olink*. 2024. https://olink.com/publication/proteomic-characterization-of-atopic-dermatitis-blood-from-infancy-to-adulthood
+
+23. Systemic Inflammatory Proteomic Biomarkers in Atopic Dermatitis. *PMC*. 2024. https://pmc.ncbi.nlm.nih.gov/articles/PMC11319106/
+
+24. IL‐13, periostin and dipeptidyl‐peptidase‐4 reveal distinct phenotypes of atopic dermatitis. *Wiley Online Library*. 2022. https://onlinelibrary.wiley.com/doi/10.1111/all.15647
+
+25. Immunoassay-based biomarkers in atopic dermatitis. *Elsevier Pure*. 2024. https://nchr.elsevierpure.com/en/publications/immunoassay-based-biomarkers-in-atopic-dermatitis/
+
+26. IL-22 in Atopic Dermatitis. *PMC*. 2024. https://pmc.ncbi.nlm.nih.gov/articles/PMC11353104/
+
+27. Expression of IL-22 in the Skin Causes Th2-Biased Immunity. *PMC*. 2017. https://pmc.ncbi.nlm.nih.gov/articles/PMC5360537/
+
+28. S100 Proteins in the Pathogenesis of Psoriasis and Atopic Dermatitis. *PMC*. 2023. https://pmc.ncbi.nlm.nih.gov/articles/PMC10606049/
+
+29. IL-22 producing "T22" T-cells account for up-regulated IL-22 in atopic dermatitis. *PMC*. 2009. https://pmc.ncbi.nlm.nih.gov/articles/PMC2874584/
+
+30. Epidermal CD147 expression plays a key role in IL-22-induced psoriatic dermatitis. *Nature*. 2017. https://www.nature.com/articles/srep44172
+
+31. CCL22 produced by monocyte derived dendritic cells reflects disease activity in AD patients. *PubMed*. 2006. https://pubmed.ncbi.nlm.nih.gov/17008059/
+
+32. Allergen-specific circulating CLA+ memory T cells stratify IL-22 producers. *Frontiers*. 2025. https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2025.1599892/full
+
+33. Distinct Roles of IL-4, IL-13, and IL-22 in Human Skin Barrier. *Wiley*. 2025. https://onlinelibrary.wiley.com/doi/10.1111/all.70060
+
+34. Progressive activation of Th2/Th22 cytokines and selective epidermal proteins. *PMC*. 2012. https://pmc.ncbi.nlm.nih.gov/articles/PMC3991245/
+
+35. Progression of acute-to-chronic atopic dermatitis is associated with quantitative changes. *PMC*. 2019. https://pmc.ncbi.nlm.nih.gov/articles/PMC7214216/
+
+36. The immunology of atopic dermatitis and its reversibility with therapies. *PMC*. 2017. https://pmc.ncbi.nlm.nih.gov/articles/PMC5405702/
+
+37. Restoration of Skin Barrier Abnormalities with IL4/13 Inhibitors. *PMC*. 2024. https://pmc.ncbi.nlm.nih.gov/articles/PMC11356372/
+
+38. Interplay of cytokines in the pathophysiology of atopic dermatitis. *PMC*. 2024. https://pmc.ncbi.nlm.nih.gov/articles/PMC10999685/
+
+39. Alarmin Cytokines as Central Regulators of Cutaneous Immunity. *PMC*. 2022. https://pmc.ncbi.nlm.nih.gov/articles/PMC9005840/
+
+40. Interleukin-31 as a Clinical Target for Pruritus Treatment. *PMC*. 2021. https://pmc.ncbi.nlm.nih.gov/articles/PMC7906974/
+
+41. Toxic interaction between Th2 cytokines and Staphylococcus aureus. *PMC*. 2009. https://pmc.ncbi.nlm.nih.gov/articles/PMC4101911/
+
+42. Role of Staphylococcal Superantigen in Atopic Dermatitis. *PMC*. 2006. https://pmc.ncbi.nlm.nih.gov/articles/PMC2734011/
+
+43. JAK-STAT signaling pathway in the pathogenesis of atopic dermatitis. *PMC*. 2022. https://pmc.ncbi.nlm.nih.gov/articles/PMC9773077/
+
+44. Blocking the IL-4/IL-13 Axis versus the JAK/STAT Pathway in Atopic Dermatitis. *PMC*. 2024. https://pmc.ncbi.nlm.nih.gov/articles/PMC11278138/
+
+---
+
+## Notes on Olink Panel Coverage
+
+### Olink Target 96 Inflammation Panel
+This panel includes key biomarkers across all four pathways:
+- **Th2**: IL-4, IL-5, IL-13, CCL11 (eotaxin-1), TSLP, IL-33
+- **Th1**: IFN-γ, IL-12B (p40), IL-18, TNF-α, CXCL9, CXCL10, CXCL11
+- **Th17**: IL-17A, CCL20, IL-8 (CXCL8), S100A12
+- **Th22**: TNF-α, CCL20, S100A12 (shared with Th17)
+
+### Olink Explore 384 Inflammation Panel
+This expanded panel adds:
+- **Th2**: CCL18 (PARC), CCL26 (eotaxin-3)
+- Additional inflammatory markers not in Target 96
+
+### Biomarkers NOT in Standard Olink Panels
+Many clinically important biomarkers require alternative assays:
+- **ELISA/ImmunoCAP**: Total IgE, allergen-specific IgE, periostin, SCCA1/SCCA2, ECP
+- **Clinical chemistry**: LDH
+- **Hematology**: Peripheral eosinophil count
+- **Custom assays**: TARC/CCL17, MDC/CCL22, CTACK/CCL27, IL-31, IL-22, IL-17F, IL-23
+- **Specialized assays**: S1P (lipid mass spectrometry), ceramides, NMF, GRP
+- **Tissue-only**: Barrier genes (FLG, LOR, IVL), transcription factors (STAT1, T-bet, RORC, STAT3), Th22 cells, CD147
+
+---
+
+## Application to PRORAD Study
+
+These tables can be integrated into the PRORAD manuscript baseline characteristics section to:
+
+1. **Define measured vs planned biomarkers**: Cross-reference with actual Olink panels used in PRORAD
+2. **Support endotyping**: Classify patients into Th2-high, Th1/Th17-mixed, Th22-dominant, or intrinsic phenotypes
+3. **Establish baseline signatures**: Document which pathway biomarkers are elevated at baseline
+4. **Guide longitudinal analyses**: Identify which biomarkers to track for remission/relapse prediction
+5. **Inform treatment stratification**: Use baseline biomarker profiles to guide targeted therapy selection
+6. **Identify pathway overlaps**: Use cross-reference column to understand shared biology between pathways
+
+For manuscript integration, consider:
+- Including Tables 1, 3, 5, 7 (serum markers) in main Methods section under "Biomarker Assessments"
+- Moving Tables 2, 4, 6, 8 (tissue markers) to Supplementary Materials or dedicated "Mechanistic Profiling" subsection
+- Creating summary figure mapping PRORAD's actual measured analytes to pathway classifications
+- Using cross-reference data to create pathway interaction diagrams
+
+---
+
+*Document prepared: February 11, 2026*
+*For: PRORAD Study Baseline Characteristics Manuscript*
+*Version: 2.0 - Complete 8-table version with cross-references*
