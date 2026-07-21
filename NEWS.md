@@ -10,9 +10,16 @@
 - New `compare_auc_global()`: omnibus Wald test for equality of multiple correlated AUCs via joint DeLong covariance
 - Structured condition classes for errors and RNG safety (`with_seed`)
 
+### Simulation Engine
+- New `simulate_auc_matrix()`: class-conditional multivariate normal biomarker simulator with closed-form binormal mean-shift calibration to target AUCs
+- Parametrized correlation structures: `user` (full matrix), `exchangeable`, `ar1`, `block`
+- Feasibility diagnostics with `error`/`nearest` handling and nearest positive-definite projection for infeasible correlation targets
+- New `validate_simulation()`: repeated-draw calibration harness reporting bias, RMSE, Monte Carlo standard error, and target-interval hit rates for both AUCs and pairwise correlations
+
 ### Shared Engines
 - Joint DeLong covariance engine for correlated full-AUC inference
 - Unified stratified resampling engine with minimum-success rules and failure accounting
+- Shared nearest positive-definite correlation projection (`R/pd-projection.R`)
 
 # aucmat 0.1.0
 

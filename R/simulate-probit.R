@@ -50,9 +50,14 @@
 
     if (np < 2L || nn < 2L) return(NA_real_)
 
+    # np * nn can exceed .Machine$integer.max for large n_cal near
+    # prevalence = 0.5 (e.g. 50000 * 50000); force double arithmetic.
+    np_d <- as.double(np)
+    nn_d <- as.double(nn)
+
     r <- rank(x, ties.method = "average")
-    U <- sum(r[pos]) - np * (np + 1L) / 2L
-    as.numeric(U / (np * nn))
+    U <- sum(r[pos]) - np_d * (np_d + 1) / 2
+    as.numeric(U / (np_d * nn_d))
   }
 
   # Find rho via bisection on monotone auc(rho)

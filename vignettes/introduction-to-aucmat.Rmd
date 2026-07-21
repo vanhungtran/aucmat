@@ -68,11 +68,19 @@ mean is about 1.19 standard deviations above the negative class mean.
 
 ### Adding correlation between biomarkers
 
-`aucmat` provides two approaches:
+`aucmat` provides three approaches:
+
+- **`simulate_auc_matrix()`**: biomarkers are drawn class-conditionally
+  (`X | Y ~ MVN(mu_class, R)`) with a named correlation `structure`
+  (`exchangeable`, `ar1`, `block`, or a hand-supplied `user` matrix) instead
+  of a full latent matrix, plus feasibility diagnostics. Fast (closed-form
+  calibration, no numerical search) and the recommended starting point for
+  most use cases — see the
+  [Simulating Biomarker Data](simulating-biomarker-data.html) vignette.
 
 - **`generate_data_probit()`**: all biomarkers + a latent outcome variable
   come from one big multivariate normal distribution. AUCs and correlations
-  are both free parameters. This is the recommended method.
+  are both free parameters, at the cost of numerical calibration.
 
 - **`generate_data_analytical()`**: biomarkers are built one at a time from
   highest to lowest AUC, each inheriting correlation from previous ones
@@ -137,6 +145,24 @@ sim_mc <- simulate_auc_correlation(y, target_auc = c(0.7, 0.8, 0.9),
                                     n_sim = 200, seed = 123)
 head(sim_mc$results, 6)
 ```
+
+### 2.6 General-Purpose Matrix Simulator (Recommended)
+
+```{r sim_matrix}
+sim_matrix <- simulate_auc_matrix(
+  n = 500, prevalence = 0.3,
+  target_aucs = c(0.9, 0.8, 0.7, 0.65),
+  correlation = 0.3, structure = "exchangeable", seed = 1
+)
+data.frame(target = sim_matrix$target_aucs,
+           achieved = round(sim_matrix$achieved_aucs, 4))
+```
+
+`structure` also accepts `"ar1"`, `"block"`, or a hand-supplied `"user"`
+matrix, and `validate_simulation()` repeats a spec across many draws to
+confirm it's calibrated (bias, RMSE, hit rate) — see the
+[Simulating Biomarker Data](simulating-biomarker-data.html) vignette for
+details.
 
 ---
 
@@ -242,6 +268,17 @@ print(cmp_adj)
 The output includes: `auc_a`, `auc_b`, `auc_diff`, `std_error`, `conf_low`,
 `conf_high`, `p_value`, `q_value`, and common sample counts per pair.
 
+### 5.5 Global Test: Are All AUCs Equal?
+
+`compare_auc_global()` complements the pairwise comparisons above with an
+omnibus Wald test of H0: AUC_1 = AUC_2 = ... = AUC_p on a common subject
+set, using the joint DeLong covariance matrix:
+
+```{r compare_global}
+global_test <- compare_auc_global(fit, X, y)
+print(global_test)
+```
+
 ---
 
 ## 6. Rank Stability
@@ -300,8 +337,11 @@ identical(fit1$results$auc_raw, fit2$results$auc_raw)
 
 ```r
 ?aucmat
+?simulate_auc_matrix
+?validate_simulation
 ?generate_data_probit
 ?compare_auc
+?compare_auc_global
 ?auc_stability
 ?plot_auc_rank
 ```

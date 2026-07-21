@@ -111,3 +111,50 @@ print.aucmat_stability <- function(x, n = 10L, ...) {
   print(top, row.names = FALSE)
   invisible(x)
 }
+
+# ---- aucmat_simulation -------------------------------------------------------
+
+#' @export
+print.aucmat_simulation <- function(x, ...) {
+  cat("<aucmat_simulation>  n =", x$n, " p =", length(x$target_aucs), "\n")
+  cat("  Prevalence:  ", round(x$prevalence, 4), "\n", sep = "")
+  cat("  Feasibility: ", x$feasibility$status, sep = "")
+  if (isTRUE(x$feasibility$adjusted)) {
+    cat(sprintf(" (Frobenius adjustment = %.4g)", x$feasibility$frobenius_adjustment))
+  }
+  cat("\n\n")
+  cat("Target vs. achieved AUC:\n")
+  print(data.frame(
+    biomarker = names(x$achieved_aucs),
+    target    = x$target_aucs,
+    achieved  = round(unname(x$achieved_aucs), 4)
+  ), row.names = FALSE)
+  invisible(x)
+}
+
+# ---- aucmat_simulation_validation --------------------------------------------
+
+#' @export
+print.aucmat_simulation_validation <- function(x, ...) {
+  cat("<aucmat_simulation_validation>  ", x$n_ok, "/", x$n_requested,
+      " successful replicates", sep = "")
+  if (x$n_failed > 0L) cat(" (", x$n_failed, " failed)", sep = "")
+  cat("\n\n")
+
+  cat("AUC calibration:\n")
+  print(data.frame(
+    biomarker = names(x$auc_bias),
+    bias      = round(x$auc_bias, 4),
+    rmse      = round(x$auc_rmse, 4),
+    mc_se     = round(x$auc_mc_se, 4),
+    hit_rate  = round(x$auc_hit_rate, 3)
+  ), row.names = FALSE)
+
+  if (!is.null(x$correlation)) {
+    cat("\nCorrelation calibration (upper triangle):\n")
+    cat("  Mean bias:     ", round(mean(x$correlation$bias), 4), "\n", sep = "")
+    cat("  Mean RMSE:     ", round(mean(x$correlation$rmse), 4), "\n", sep = "")
+    cat("  Mean hit rate: ", round(mean(x$correlation$hit_rate), 3), "\n", sep = "")
+  }
+  invisible(x)
+}

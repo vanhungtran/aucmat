@@ -61,8 +61,17 @@ shifted by about 1.19 standard deviations: `delta = sqrt(2) * qnorm(AUC)`.
 
 | Function | AUC + Correlation | Speed |
 |----------|-------------------|-------|
+| `simulate_auc_matrix()` | **Independent** (closed-form mean-shift + named correlation structures) | Fast (no calibration) |
 | `generate_data_probit()` | **Independent** (both free) | Slower (calibration) |
 | `generate_data_analytical()` | **Linked** (binormal constraint) | Fast |
+
+`simulate_auc_matrix()` is the recommended general-purpose simulator: it
+takes a named correlation `structure` (`"exchangeable"`, `"ar1"`, `"block"`,
+or a hand-supplied `"user"` matrix) instead of a full latent matrix, reports
+feasibility diagnostics with an optional nearest positive-definite fallback,
+and `validate_simulation()` repeats it across many draws to confirm the
+achieved AUCs and correlations track their targets (bias, RMSE, Monte Carlo
+SE, hit rate).
 
 ## Plots
 
@@ -96,6 +105,17 @@ Bootstrap rank distributions with median and IQR:
 ### Simulation
 
 ```r
+# Class-conditional matrix simulator: named correlation structures,
+# feasibility diagnostics, fast closed-form calibration (recommended)
+simulate_auc_matrix(n = 500, prevalence = 0.3,
+  target_aucs = c(0.9, 0.8, 0.7), correlation = 0.4, structure = "exchangeable")
+
+# Validate a simulate_auc_matrix() spec across repeated draws:
+# bias, RMSE, Monte Carlo SE, target-interval hit rate
+validate_simulation(n = 500, prevalence = 0.3,
+  target_aucs = c(0.9, 0.8, 0.7), correlation = 0.4, structure = "exchangeable",
+  times = 100, seed = 1)
+
 # Latent probit: independent AUC + correlation control
 generate_data_probit(n = 500, target_aucs = c(0.9, 0.8, 0.7),
   corr_matrix = diag(3), prevalence = 0.3)
@@ -157,6 +177,15 @@ compare_auc(fit, X, y, biomarkers = c("IL13", "CCL17", "CCL22"))
 
 # With multiplicity adjustment
 compare_auc(fit, X, y, top_n = 5, adjust = "BH")
+```
+
+### Global Test
+
+Omnibus Wald test for equality of multiple correlated AUCs (H0: all equal),
+via the joint DeLong covariance matrix:
+
+```r
+compare_auc_global(fit, X, y, biomarkers = c("IL13", "CCL17", "CCL22"))
 ```
 
 ### Stability

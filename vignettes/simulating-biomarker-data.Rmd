@@ -29,12 +29,14 @@ library(aucmat)
 
 ## Overview
 
-`aucmat` provides three simulation engines for generating biomarker data
-with controlled properties.  This vignette explains the mathematical
-foundations, strengths, and limitations of each.
+`aucmat` provides several simulation engines for generating biomarker data
+with controlled properties, plus a validation harness to confirm a given
+specification is actually calibrated.  This vignette explains the
+mathematical foundations, strengths, and limitations of each.
 
 | Function | Approach | AUC | Correlation | Distribution |
 |----------|----------|-----|-------------|-------------|
+| `simulate_auc_matrix()` | Class-conditional multivariate normal | Target AUC via closed-form mean shift | Named structure (`exchangeable`/`ar1`/`block`/`user`) | Multivariate normal |
 | `generate_data_probit()` | Latent multivariate normal | Target AUC via calibrated $\rho$ | Directly specified in $\Sigma$ | Multivariate normal |
 | `generate_data_analytical()` | Sequential binormal decomposition | Target AUC via mean separation | Approximately achieved | Normal per class |
 | `generate_auc_vector()` | Rank construction | Exact empirical AUC | Not controlled (post-hoc via Box-Cox) | Normal quantile scores |
@@ -249,11 +251,142 @@ range $[r_{\min}, r_{\max}]$.
 
 ---
 
+## 4. Class-Conditional Matrix Simulator (`simulate_auc_matrix`)
+
+### Mathematical Foundation
+
+Rather than deriving the outcome from a thresholded latent variable,
+`simulate_auc_matrix()` fixes the outcome $Y$ first — supplied directly, or
+generated with exact or Bernoulli class counts — and draws biomarkers
+**conditional on class**:
+
+$$X \mid Y = 0 \sim \mathcal{N}_p(\mu_0, \mathbf{R}), \qquad
+X \mid Y = 1 \sim \mathcal{N}_p(\mu_1, \mathbf{R})$$
+
+Both classes share the same correlation matrix $\mathbf{R}$; only the mean
+vectors differ. The per-biomarker mean shift $\delta_k = \mu_{1k} - \mu_{0k}$
+uses the same closed-form binormal calibration as
+`generate_data_analytical()`:
+
+$$\delta_k = \sqrt{2} \cdot \Phi^{-1}(\text{AUC}_k)$$
+
+Because $Y$ is fixed *before* any biomarker is drawn, a supplied `y` keeps
+its exact values and row order, and a generated `y` gets exact class counts
+under the default `outcome_mode = "exact"` (or independent Bernoulli draws
+under `outcome_mode = "bernoulli"`) — neither is achievable when the outcome
+is instead re-derived by thresholding a fresh latent draw.
+
+### Correlation Structures
+
+Instead of hand-building a full $p \times p$ matrix, `structure` names one of:
+
+| `structure` | Parameters | Off-diagonal entries |
+|---|---|---|
+| `"user"` | `correlation` = full matrix | as supplied |
+| `"exchangeable"` | `correlation` = single value | constant $\rho$ everywhere |
+| `"ar1"` | `correlation` = single value | $\rho^{|i-j|}$ |
+| `"block"` | `block_sizes`, `rho_within`, `rho_between` | block-diagonal |
+
+```{r matrix_ar1}
+set.seed(1)
+sim_ar1 <- simulate_auc_matrix(
+  n = 500, prevalence = 0.3,
+  target_aucs = c(0.9, 0.85, 0.8, 0.75),
+  correlation = 0.6, structure = "ar1"
+)
+round(sim_ar1$achieved_correlation, 2)
+```
+
+```{r matrix_block}
+sim_block <- simulate_auc_matrix(
+  n = 500, prevalence = 0.3,
+  target_aucs = c(0.9, 0.85, 0.75, 0.7),
+  structure = "block", block_sizes = c(2, 2),
+  rho_within = 0.6, rho_between = 0.1, seed = 1
+)
+round(sim_block$achieved_correlation, 2)
+```
+
+### Feasibility Diagnostics
+
+Not every requested correlation matrix is positive definite (e.g. an
+exchangeable matrix needs `correlation > -1/(p-1)`). `feasibility` controls
+what happens when it isn't:
+
+- **`"error"`** (default): stops with a structured `aucmat_infeasible_targets`
+  condition.
+- **`"nearest"`**: projects to the nearest positive-semidefinite matrix
+  (eigenvalue clipping, rescaled back to a unit diagonal) and proceeds,
+  reporting the adjustment in `$feasibility`.
+
+```{r matrix_infeasible}
+sim_adj <- simulate_auc_matrix(
+  n = 200, prevalence = 0.3,
+  target_aucs = c(0.8, 0.7, 0.6, 0.55),
+  correlation = -0.5, structure = "exchangeable",
+  feasibility = "nearest", seed = 1
+)
+sim_adj$feasibility
+```
+
+### A Note on Achieved Correlation
+
+`$achieved_correlation` is computed on **within-class centred** residuals
+(each class centred on its own empirical mean before correlating), matching
+what `$requested_correlation` (`R`) actually parametrizes. The raw pooled
+correlation of the returned columns — ignoring `truth` — is *not* a
+consistent estimate of `R` whenever an AUC differs from 0.5: mixing two
+subpopulations with different means systematically inflates the pooled
+correlation (a mixture / Simpson's-paradox effect), independently of the
+within-class dependence structure.
+
+### Advantages
+
+- **Fast** — closed-form mean shift, no numerical calibration
+- **Named correlation structures** — exchangeable, AR(1), block, or a
+  hand-supplied matrix
+- **Feasibility diagnostics** — structured errors or automatic nearest-PD
+  repair, with the adjustment magnitude reported
+- **Outcome-preserving** — a supplied `y` is never altered; a generated `y`
+  gets exact class counts by default
+
+### Limitations
+
+- Equal-variance binormal assumption, like `generate_data_analytical()`
+- Correlation structure is limited to `user`/`exchangeable`/`ar1`/`block`
+- Non-normal marginals are not yet supported
+
+---
+
+## 5. Validating a Simulator (`validate_simulation`)
+
+A single simulated draw is not evidence that a simulator is calibrated.
+`validate_simulation()` repeats a `simulate_auc_matrix()` call many times
+with independent seeds and reports bias, RMSE, Monte Carlo standard error,
+and target-interval hit rates for both AUCs and pairwise correlations.
+
+```{r validate}
+val <- validate_simulation(
+  n = 300, prevalence = 0.3,
+  target_aucs = c(0.85, 0.75, 0.65), correlation = 0.3, structure = "exchangeable",
+  times = 100, seed = 1
+)
+print(val)
+```
+
+Bias should be small relative to the Monte Carlo SE (`auc_mc_se`); a bias
+that stays large across replicates relative to `auc_mc_se` signals a
+calibration bug rather than sampling noise.
+
+---
+
 ## Choosing a Simulator
 
 | Goal | Recommended Function |
 |------|---------------------|
-| Independent control of AUC and correlations | `generate_data_probit()` |
+| General-purpose matrix simulation with named correlation structures | `simulate_auc_matrix()` |
+| Checking that a simulation spec is actually calibrated | `validate_simulation()` |
+| Independent control of AUC and a fully custom correlation matrix | `generate_data_probit()` |
 | Fast, simple binormal simulation | `generate_data_analytical()` |
 | Exact empirical AUC for a single biomarker | `generate_auc_vector()` |
 | Exact AUC + approximate Pearson correlation | `generate_auc_cor_vector()` |

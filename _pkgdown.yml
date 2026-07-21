@@ -23,6 +23,8 @@ reference:
 - title: Data Simulation
   desc: Generate synthetic biomarker data with controlled AUC and correlation
   contents:
+  - simulate_auc_matrix
+  - validate_simulation
   - generate_data_probit
   - generate_data_analytical
   - generate_auc_vector
@@ -33,6 +35,7 @@ reference:
   desc: Compare biomarker AUCs and assess ranking stability
   contents:
   - compare_auc
+  - compare_auc_global
   - auc_stability
 
 - title: Visualization

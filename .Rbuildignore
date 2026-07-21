@@ -18,6 +18,7 @@
 ^outputs$
 ^run_documentation_and_test\.R$
 ^test_legend\.R$
+^generate_readme_plots\.R$
 ^doc$
 ^Meta$
 ^docs$

@@ -10,7 +10,7 @@ Description: Matrix-first ROC analysis for high-dimensional molecular biomarker 
     common subjects, and bootstrap rank-stability analysis. Designed for univariate
     screening and ranking of genes, proteins, and metabolites measured on the same subjects.
 License: MIT + file LICENSE
-URL: https://github.com/vanhungtran/aucmat
+URL: https://github.com/vanhungtran/aucmat, https://vanhungtran.github.io/aucmat
 BugReports: https://github.com/vanhungtran/aucmat/issues
 Depends:
     R (>= 4.0.0)

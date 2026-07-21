@@ -61,3 +61,13 @@
   lev <- levels(y)
   as.integer(y == lev[2L])
 }
+
+#' NULL-coalescing infix operator
+#'
+#' Defined locally rather than relying on base R's `%||%` (only available
+#' from R 4.4.0) since the package supports R >= 4.0.0.
+#'
+#' @param x,y Values; `y` is returned when `x` is `NULL`.
+#' @noRd
+#' @keywords internal
+`%||%` <- function(x, y) if (is.null(x)) y else x
