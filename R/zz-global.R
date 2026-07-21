@@ -9,7 +9,7 @@ if (getRversion() >= "2.15.1") {
     # plot_auc_stability
     "rank_median", "rank_q25", "rank_q75",
     # plot_roc_top (inherited from pROC::ggroc)
-    "fpr", "lower", "upper", "name",
+    "fpr", "lower", "upper", "name", "x", "ymin", "ymax",
     # deprecated plot_roc_with_combos
     "colour", "fill"
   ))

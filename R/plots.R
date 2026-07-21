@@ -39,7 +39,7 @@ plot_auc_rank <- function(fit, n_label = 20L, show_ci = TRUE) {
   if (show_ci && "conf_low" %in% names(df) && any(!is.na(df$conf_low))) {
     p <- p + ggplot2::geom_errorbar(
       ggplot2::aes(ymin = .data$conf_low, ymax = .data$conf_high),
-      alpha = 0.15, width = 0
+      alpha = 0.50, linewidth = 0.5, width = 0, colour = "grey40"
     )
   }
 
@@ -181,11 +181,15 @@ plot_auc_stability <- function(stability, n_label = 25L) {
 #' @param biomarkers Character vector of biomarker names.  Default: top 6
 #'   by `auc_strength`.
 #' @param show_auc Add AUC values to the legend.  Default `TRUE`.
+#' @param add_ci Add confidence ribbons to ROC curves via bootstrap.
+#'   Default `FALSE`.
+#' @param boot_n Number of bootstrap replicates for CI ribbons.  Default 500.
 #'
 #' @return A `ggplot2` object.
 #' @export
 plot_roc_top <- function(fit, X = NULL, y = NULL,
-                          biomarkers = NULL, show_auc = TRUE) {
+                          biomarkers = NULL, show_auc = TRUE,
+                          add_ci = FALSE, boot_n = 500) {
   # Resolve data
   if (!is.null(fit$X) && !is.null(fit$y)) {
     X <- fit$X; y <- fit$y
@@ -237,6 +241,31 @@ plot_roc_top <- function(fit, X = NULL, y = NULL,
   }
 
   ggroc_obj <- pROC::ggroc(roc_list, legacy.axes = FALSE, size = 0.9)
+
+  # CI ribbons via bootstrap
+  if (isTRUE(add_ci)) {
+    spec_grid <- seq(1, 0, length.out = 101)
+    ci_list <- lapply(names(roc_list), function(nm) {
+      ci <- try(pROC::ci.se(roc_list[[nm]], specificities = spec_grid,
+                            boot.n = boot_n), silent = TRUE)
+      if (inherits(ci, "try-error")) return(NULL)
+      spec <- as.numeric(rownames(ci))
+      data.frame(name = nm, x = spec, lower = ci[, 1], upper = ci[, 3])
+    })
+    ci_df <- do.call(rbind, ci_list)
+    if (!is.null(ci_df) && nrow(ci_df) > 0) {
+      ci_df$name <- factor(ci_df$name, levels = names(roc_list))
+      ggroc_obj <- ggroc_obj +
+        ggplot2::geom_ribbon(
+          data = ci_df,
+          ggplot2::aes(x = .data$x, ymin = .data$lower, ymax = .data$upper,
+                       fill = .data$name),
+          alpha = 0.18, inherit.aes = FALSE
+        ) +
+        ggplot2::scale_fill_manual(values = palette, guide = "none")
+    }
+  }
+
   p <- ggroc_obj +
     ggplot2::theme_minimal() +
     ggplot2::coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) +
