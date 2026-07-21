@@ -1,6 +1,11 @@
 ---
 title: "Simulating Biomarker Data in aucmat"
-output: rmarkdown::html_vignette
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+    includes:
+      in_header: lightbox.html
 vignette: >
   %\VignetteIndexEntry{Simulating Biomarker Data in aucmat}
   %\VignetteEngine{knitr::rmarkdown}
@@ -9,10 +14,12 @@ vignette: >
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
+  collapse  = TRUE,
+  comment   = "#>",
   fig.width  = 7,
-  fig.height = 5
+  fig.height = 5,
+  message    = FALSE,
+  warning    = FALSE
 )
 ```
 

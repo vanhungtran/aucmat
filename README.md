@@ -10,8 +10,7 @@
 
 `aucmat` is a matrix-first R package for univariate screening and ranking of
 molecular biomarkers (genes, proteins, metabolites) measured on the same
-subjects.  It reports **direction-preserving AUCs** — never silently
-reversing a biomarker to force its AUC above 0.5 — with proper multiplicity
+subjects.  It reports **direction-preserving AUCs** with proper multiplicity
 adjustment and bootstrap rank-stability assessment.
 
 ## Installation
@@ -20,54 +19,130 @@ adjustment and bootstrap rank-stability assessment.
 remotes::install_github("vanhungtran/aucmat")
 ```
 
-## In 30 Seconds
+## Quick Start
 
 ```r
 library(aucmat)
 
-# Generate correlated biomarkers with controlled AUCs
+# 1. Generate correlated biomarkers with controlled AUCs
 sim <- generate_data_probit(
   n = 500, prevalence = 0.3,
   target_aucs = c(0.90, 0.80, 0.70),
   corr_matrix  = matrix(c(1, 0.3, 0.1, 0.3, 1, 0.2, 0.1, 0.2, 1), 3, 3)
 )
 
-# Screen all biomarkers
+# 2. Screen all biomarkers
 fit <- aucmat(sim$data[, 1:3], sim$data$truth)
 print(fit)
+summary(fit)
 
-# Plot discrimination strengths
-plot_auc_rank(fit)
+# 3. Visualize
+plot_auc_rank(fit)       # ordered discrimination strengths
+plot_auc_volcano(fit)    # effect vs evidence
+plot_auc_forest(fit)     # multiple AUCs with CIs
+plot_roc_top(fit, X = sim$data[, 1:3], y = sim$data$truth)
 
-# Compare top biomarkers
-compare_auc(fit, sim$data[, 1:3], sim$data$truth, top_n = 3)
+# 4. Compare AUCs - three approaches
+compare_auc(fit, sim$data[, 1:3], sim$data$truth, top_n = 3)          # all pairs
+compare_auc(fit, sim$data[, 1:3], sim$data$truth, reference = "X1")   # vs reference
+compare_auc(fit, sim$data[, 1:3], sim$data$truth,
+            biomarkers = c("X1", "X2"))                                 # specific set
 
-# Assess rank stability
+# 5. Assess rank stability
 stab <- auc_stability(sim$data[, 1:3], sim$data$truth, times = 500, seed = 42)
 plot_auc_stability(stab)
 ```
 
-## Features
+## How Simulation Works
 
-| Category | Functions | Description |
-|----------|-----------|-------------|
-| **Matrix Screening** | `aucmat()` | Screen thousands of biomarkers with DeLong or bootstrap CIs |
-| **Direction-Preserving** | `auc_raw`, `auc_strength` | Raw AUC on observed scale; discrimination strength always ≥ 0.5 |
-| **Multiplicity** | BH, Holm, Bonferroni | Adjust p-values across all screened biomarkers |
-| **Simulation** | `generate_data_probit()`, `generate_data_analytical()` | Latent probit (AUC + correlation independent) or binormal |
-| **Comparisons** | `compare_auc()` | Paired DeLong comparisons on common subjects with safety limits |
-| **Stability** | `auc_stability()` | Bootstrap rank distributions and top-k selection probabilities |
-| **Visualization** | `plot_auc_rank()`, `plot_auc_volcano()`, `plot_auc_forest()`, `plot_auc_stability()`, `plot_roc_top()` | Publication-quality ggplot2 graphics |
+AUC measures: if you pick one positive and one negative subject at random,
+how often does the positive have a higher biomarker value?
 
-## Two Simulation Engines
+Under the binormal model, biomarker values are normally distributed in each
+class with a mean shift. For target AUC = 0.8, the shift delta is about 1.19
+standard deviations: `delta = sqrt(2) * qnorm(AUC)`.
 
-| | `generate_data_probit()` | `generate_data_analytical()` |
-|---|---|---|
-| **Approach** | Latent multivariate normal | Sequential binormal decomposition |
-| **AUC control** | Target AUC via calibrated ρ | Target AUC via mean separation |
-| **Correlation control** | Directly specified in Σ | Approximately achieved |
-| **AUC–correlation link** | **Decoupled** (both free) | Linked (binormal constraint) |
-| **Speed** | Slower (calibration) | Fast (closed form) |
+| Function | AUC + Correlation | Speed |
+|----------|-------------------|-------|
+| `generate_data_probit()` | **Independent** (both free) | Slower (calibration) |
+| `generate_data_analytical()` | **Linked** (binormal constraint) | Fast |
+
+## All Functions
+
+### Simulation
+
+```r
+# Latent probit: independent AUC + correlation control
+generate_data_probit(n = 500, target_aucs = c(0.9, 0.8, 0.7),
+  corr_matrix = diag(3), prevalence = 0.3)
+
+# Binormal sequential: fast, AUC-correlation linked
+generate_data_analytical(n = 500, target_aucs = c(0.85, 0.75, 0.65),
+  corr_matrix = diag(3), prevalence = 0.3)
+
+# Single score with exact empirical AUC
+generate_auc_vector(y, target_auc = 0.80)
+
+# Single score with exact AUC + approximate Pearson r
+generate_auc_cor_vector(y, target_auc = 0.80, target_cor = 0.45)
+
+# Monte Carlo sampling distribution of (AUC, r)
+simulate_auc_correlation(y, target_auc = c(0.7, 0.8, 0.9), n_sim = 500)
+```
+
+### Screening
+
+```r
+fit <- aucmat(X, y)                              # default: DeLong, BH
+fit <- aucmat(X, y, ci = "bootstrap", boot_n = 2000)  # bootstrap CIs
+fit <- aucmat(X, y, adjust = "bonferroni")       # stricter adjustment
+fit <- aucmat(X, y, na_action = "complete")       # complete-case only
+```
+
+### S3 Methods
+
+```r
+print(fit)          # compact top-N display
+summary(fit)        # class counts, missingness, multiplicity
+as.data.frame(fit)  # raw results table
+plot(fit)           # same as plot_auc_rank(fit)
+subset(fit, q_value < 0.05)  # filter by q-value
+```
+
+### Visualization
+
+```r
+plot_auc_rank(fit)       # rank plot with CI error bars
+plot_auc_volcano(fit)    # effect size vs -log10(q)
+plot_auc_forest(fit)     # forest plot of multiple AUCs with CIs
+plot_auc_stability(stab) # bootstrap rank distributions
+plot_roc_top(fit, X, y)  # ROC curves for selected biomarkers
+```
+
+### Comparisons - Three Approaches
+
+```r
+# 1. All pairwise among top N
+compare_auc(fit, X, y, top_n = 3)
+
+# 2. All vs a reference biomarker
+compare_auc(fit, X, y, reference = "IL13")
+
+# 3. A specific named set
+compare_auc(fit, X, y, biomarkers = c("IL13", "CCL17", "CCL22"))
+
+# With multiplicity adjustment
+compare_auc(fit, X, y, top_n = 5, adjust = "BH")
+```
+
+### Stability
+
+```r
+stab <- auc_stability(X, y, times = 1000, top_k = c(10, 25, 50), seed = 42)
+print(stab)          # median ranks, top-1 frequencies
+stab$top_k_probs     # top-k selection probabilities
+stab$coselection     # pairwise co-selection frequencies
+```
 
 ## Vignettes
 
@@ -89,4 +164,4 @@ plot_auc_stability(stab)
 
 ## License
 
-MIT © Lucas VHH Tran
+MIT (c) Lucas VHH Tran

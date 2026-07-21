@@ -16,4 +16,8 @@ JSS_PROPOSAL.md
 SIMULATION_IDEA.md
 /doc/
 /Meta/
+/docs/
 /docs/superpowers/
+vignettes/*.html
+vignettes/*.R
+!vignettes/lightbox.html
