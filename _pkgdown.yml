@@ -1,0 +1,69 @@
+url: https://vanhungtran.github.io/aucmat
+template:
+  bootstrap: 5
+  bootswatch: flatly
+  light-switch: true
+
+title: aucmat
+subtitle: Scalable ROC Analysis for High-Dimensional Biomarker Matrices
+
+authors:
+  Lucas VHH TRAN:
+    href: https://github.com/vanhungtran
+
+development:
+  mode: auto
+
+reference:
+- title: Matrix Screening
+  desc: Screen a biomarker matrix against a binary outcome
+  contents:
+  - aucmat
+
+- title: Data Simulation
+  desc: Generate synthetic biomarker data with controlled AUC and correlation
+  contents:
+  - generate_data_probit
+  - generate_data_analytical
+  - generate_auc_vector
+  - generate_auc_cor_vector
+  - simulate_auc_correlation
+
+- title: Comparisons & Stability
+  desc: Compare biomarker AUCs and assess ranking stability
+  contents:
+  - compare_auc
+  - auc_stability
+
+- title: Visualization
+  desc: Publication-quality graphics
+  contents:
+  - plot_auc_rank
+  - plot_auc_volcano
+  - plot_auc_forest
+  - plot_auc_stability
+  - plot_roc_top
+
+- title: Deprecated
+  desc: Functions retained for backward compatibility
+  contents:
+  - tableroc
+  - plot_roc_with_combos
+
+articles:
+- title: Get Started
+  navbar: ~
+  contents:
+  - introduction-to-aucmat
+
+- title: Tutorials
+  desc: In-depth guides
+  contents:
+  - simulating-biomarker-data
+
+home:
+  links:
+  - text: pROC package
+    href: https://xrobin.github.io/pROC/
+  - text: JSS (target journal)
+    href: https://www.jstatsoft.org/

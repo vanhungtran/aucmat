@@ -1,26 +1,34 @@
 Package: aucmat
-Title: A Toolbox for Biomarkers Data Analysis
-Version: 0.0.0.9000
-Date: 2025-09-18
-Authors@R: 
+Title: Scalable and Statistically Principled ROC Analysis for High-Dimensional Biomarker Matrices
+Version: 0.1.0
+Date: 2026-07-20
+Authors@R:
     person("Lucas", "VHH Tran", email = "tranhungydhcm@gmail.com", role = c("aut", "cre"))
-Description: This package provides functions to download, process, and analyze biomarkers data with a focus on ROC analysis and visualization.
+Description: Matrix-first ROC analysis for high-dimensional molecular biomarker data.
+    Provides fast, direction-preserving AUC estimation over biomarker matrices with DeLong
+    and stratified-bootstrap inference, multiplicity adjustment, paired comparisons on
+    common subjects, and bootstrap rank-stability analysis. Designed for univariate
+    screening and ranking of genes, proteins, and metabolites measured on the same subjects.
 License: MIT + file LICENSE
 URL: https://github.com/vanhungtran/aucmat
 BugReports: https://github.com/vanhungtran/aucmat/issues
 Depends:
     R (>= 4.0.0)
 Imports:
-    dplyr,
     ggplot2,
-    BiocManager,
-    GEOquery
+    mvtnorm,
+    pROC,
+    rlang
 Suggests:
     knitr,
+    mice,
+    missForest,
     rmarkdown,
+    scales,
     testthat (>= 3.0.0),
     ggrepel
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
+Encoding: UTF-8

@@ -10,7 +10,9 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.width  = 7,
+  fig.height = 5
 )
 ```
 
@@ -18,116 +20,255 @@ knitr::opts_chunk$set(
 library(aucmat)
 ```
 
-## Generating Simulated Data
+## Overview
 
-The `aucmat` package provides a function called `generate_data_analytical` to create synthetic datasets with known properties. This is useful for testing and validating analysis methods.
+`aucmat` is a matrix-first R package for scalable and statistically principled
+ROC analysis of high-dimensional molecular biomarker data.  Its primary task is
+**univariate screening and ranking** of genes, proteins, and metabolites
+measured on the same subjects.
 
-In this example, we'll generate a dataset with 500 samples, a 30% prevalence of the positive class, and three biomarkers with target AUC values of 0.9, 0.8, and 0.7. We'll also specify a correlation matrix for the biomarkers.
+Key features:
 
-```{r generate_data}
-# Define the target AUCs and correlation matrix
-target_aucs <- c(0.9, 0.8, 0.7)
-corr_matrix <- matrix(c(
-  1.0, 0.3, 0.1,
-  0.3, 1.0, 0.2,
-  0.1, 0.2, 1.0
-), nrow = 3)
+- **Direction-preserving AUC** — never silently reverses biomarkers to force
+  AUC above 0.5
+- **Matrix-native computation** — screen thousands of biomarkers in one call
+- **DeLong and bootstrap inference** with multiplicity adjustment
+- **Paired comparisons** on common subjects with safety limits
+- **Bootstrap rank stability** — quantify reproducibility of top biomarkers
+- **Two simulation engines** — binormal (sequential) and latent probit
+  (joint multivariate normal)
+- **Publication-quality visualizations** via `ggplot2`
 
-# Generate the synthetic data
-sim_data <- generate_data_analytical(
-  n = 5000,
+---
+
+## 1. Generating Simulated Biomarker Data
+
+### 1.1 Latent Probit Model (Recommended)
+
+The `generate_data_probit()` function models biomarkers and outcome through a
+**joint multivariate normal** distribution with a thresholded latent variable.
+This simultaneously controls **both** the between-biomarker correlations
+**and** each biomarker's AUC against the outcome.
+
+```{r sim_probit}
+set.seed(42)
+
+# Four biomarkers with decreasing AUCs, moderate correlations
+sim <- generate_data_probit(
+  n = 500,
+  target_aucs = c(0.90, 0.80, 0.70, 0.65),
+  corr_matrix = matrix(c(
+    1.0, 0.4, 0.2, 0.1,
+    0.4, 1.0, 0.3, 0.2,
+    0.2, 0.3, 1.0, 0.3,
+    0.1, 0.2, 0.3, 1.0
+  ), 4, 4),
+  prevalence = 0.3
+)
+
+# Compare targets to achieved values
+data.frame(
+  Target   = sim$target_aucs,
+  Achieved = round(sim$achieved_aucs, 4)
+)
+
+# Achieved correlation matrix
+round(sim$achieved_correlations, 3)
+```
+
+### 1.2 Binormal Sequential Model
+
+`generate_data_analytical()` uses the equal-variance binormal model,
+building biomarkers sequentially from highest to lowest AUC.
+Here AUC determines the mean separation; correlation is inherited
+through sequential decomposition.
+
+```{r sim_binormal}
+sim2 <- generate_data_analytical(
+  n = 500,
   prevalence = 0.3,
-  target_aucs = target_aucs,
-  corr_matrix = corr_matrix
+  target_aucs = c(0.85, 0.75, 0.65),
+  corr_matrix = matrix(c(
+    1.0, 0.3, 0.1,
+    0.3, 1.0, 0.2,
+    0.1, 0.2, 1.0
+  ), 3, 3)
 )
 
-# Inspect the generated data
-head(sim_data$data)
+round(sim2$achieved_aucs, 4)
 ```
 
-## Analyzing the Simulated Data
+### 1.3 Single AUC Vector
 
-Now that we have a simulated dataset, we can use the `tableroc` function to analyze the biomarkers and see how well they perform.
+`generate_auc_vector()` constructs a score vector whose **exact empirical AUC**
+matches a target value (up to the discrete grid of attainable AUCs).
 
-```{r analyze_data}
-# Extract the data and outcome
-# The generated data has predictor columns `X1..Xp` and a final `truth` column.
-X <- subset(sim_data$data, select = -truth) # Predictors
-y <- sim_data$data$truth  # Outcome
-
-# Run the tableroc function
-results <- tableroc(X, y)
-
-# Print the results
-print(results)
+```{r sim_auc_vec}
+y <- rbinom(200, 1, 0.3)
+out <- generate_auc_vector(y, target_auc = 0.80)
+out$achieved_auc
 ```
 
-## Plotting ROC curves for predictor combinations
+---
 
-The `plot_roc_with_combos()` helper builds ROC curves for all combinations
-of predictors (or a restricted set via `combo_sizes`) and returns a **list**
-containing:
+## 2. Matrix Screening
 
-- `plot`: the ggplot2 object with ROC curves and legend
-- `roc_list`: list of pROC ROC objects for each combination
-- `auc`: vector of AUC values
-- `auc_sd`: vector of AUC standard deviations (when `add_ci = TRUE`)
-- `ci_df`: data frame with confidence interval data
-- `skipped_ci`: names of curves that skipped CI computation (e.g., perfect AUC)
+The primary function `aucmat()` screens every biomarker in a numeric matrix
+against a binary outcome, reporting direction-preserving AUCs, confidence
+intervals, and multiplicity-adjusted p-values.
 
-Below we call it on the simulated dataset and render the plot. Note that we
-access the plot via `res_plot$plot` and the legend automatically displays
-on the right side, showing each model with its AUC ± SD.
+```{r screen}
+# Extract predictor matrix and outcome
+X <- as.matrix(sim$data[, 1:4])
+y <- sim$data$truth
 
-```{r plot_combos, fig.width=6, fig.height=6}
-# Build predictors vector (all X* columns)
-preds <- setdiff(names(sim_data$data), "truth")
+# Screen with DeLong CIs and BH adjustment
+fit <- aucmat(X, y, ci = "delong", adjust = "BH")
 
-# Create the plot for all single and multi-variable combinations
-res_plot <- plot_roc_with_combos(
-  data = sim_data$data,
-  outcome = "truth",
-  predictors = preds,
-  combo_sizes = 1:3,
-  add_ci = TRUE,
-  conf_level = 0.95,
-  boot_n = 500,      # smaller boot for vignette speed
-  seed = 123,
-  auc_digits = 4,
-   sd_digits = 4, 
-  show_auc_labels = TRUE,
-  title = "ROC curves for predictor combinations (simulated data)"
-)
-
-# Print ggplot
-print(res_plot$plot)
-
-# Show AUCs for reference
-res_plot$auc
+# Compact display
+print(fit)
 ```
 
-## Correlation heatmap of predictors
+The `summary()` method provides a detailed overview:
 
-It's often useful to inspect pairwise correlations between predictors. The
-chunk below computes the correlation matrix for the predictor columns and
-renders a heatmap with values.
+```{r summary}
+summary(fit)
+```
 
-```{r corr_heatmap, fig.width=6, fig.height=5}
-# Predictor names
-preds <- setdiff(names(sim_data$data), "truth")
+### Result columns
 
-# Compute correlation matrix (pairwise complete observations)
-cor_mat <- stats::cor(sim_data$data[, preds], use = "pairwise.complete.obs")
-cor_df <- as.data.frame(as.table(cor_mat))
+| Column | Description |
+|--------|-------------|
+| `auc_raw` | AUC on the observed direction (may be < 0.5) |
+| `auc_strength` | $0.5 + |\text{auc\_raw} - 0.5|$ — discrimination strength |
+| `effect_direction` | `higher_in_positive` or `lower_in_positive` |
+| `std_error` | DeLong or bootstrap standard error |
+| `conf_low`, `conf_high` | Confidence interval for `auc_raw` |
+| `p_value`, `q_value` | Raw and multiplicity-adjusted p-values |
+| `rank` | Rank by `auc_strength` (descending) |
+| `status` | `ok`, `constant`, `insufficient_positive`, etc. |
 
-# Plot heatmap with ggplot2
-p_cor <- ggplot2::ggplot(cor_df, ggplot2::aes(Var1, Var2, fill = Freq)) +
-  ggplot2::geom_tile() +
-  ggplot2::scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0) +
-  ggplot2::geom_text(ggplot2::aes(label = sprintf("%.2f", Freq)), size = 3) +
-  ggplot2::theme_minimal() +
-  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)) +
-  ggplot2::labs(title = "Correlation heatmap of predictors", x = NULL, y = NULL)
+---
 
-print(p_cor)
+## 3. Visualization
+
+### 3.1 Rank Plot
+
+Ordered discrimination strengths with optional CI error bars:
+
+```{r plot_rank, fig.width=7, fig.height=4}
+plot_auc_rank(fit, n_label = 4)
+```
+
+### 3.2 Volcano Plot
+
+Effect magnitude versus statistical evidence:
+
+```{r plot_volcano, fig.width=7, fig.height=4}
+plot_auc_volcano(fit, q_cutoff = 0.05)
+```
+
+### 3.3 Forest Plot
+
+Selected AUCs with confidence intervals:
+
+```{r plot_forest, fig.width=7, fig.height=3}
+plot_auc_forest(fit, n = 4)
+```
+
+### 3.4 ROC Curves
+
+ROC curves for selected top biomarkers:
+
+```{r plot_roc, fig.width=5, fig.height=5}
+plot_roc_top(fit, X = X, y = y, biomarkers = head(fit$results$biomarker, 3))
+```
+
+---
+
+## 4. Paired Comparisons
+
+`compare_auc()` compares biomarkers on the **same subjects** using DeLong's
+test for paired AUCs.  It enforces a safety limit on the number of pairs
+to prevent accidental quadratic computation.
+
+```{r compare}
+# Compare top 3 biomarkers (3 choose 2 = 3 pairs)
+cmp <- compare_auc(fit, X, y, top_n = 3)
+print(cmp)
+```
+
+```{r compare_ref}
+# Or compare all others to a reference biomarker
+cmp_ref <- compare_auc(fit, X, y, reference = "X1")
+print(cmp_ref)
+```
+
+---
+
+## 5. Rank Stability
+
+`auc_stability()` uses stratified bootstrap resampling to assess how
+stable the rankings are under sampling variability.
+
+```{r stability, fig.width=8, fig.height=4}
+set.seed(123)
+stab <- auc_stability(X, y, times = 200, top_k = c(3, 5), seed = 42)
+
+# Top-k probabilities
+head(stab$top_k_probs, 10)
+
+# Stability plot
+plot_auc_stability(stab, n_label = 8)
+```
+
+The plot shows median bootstrap ranks with interquartile ranges.
+Narrow intervals indicate stable rankings; wide intervals suggest
+the biomarker's rank depends heavily on the specific sample.
+
+---
+
+## 6. Missing Data
+
+`aucmat()` handles missing biomarker values via two strategies:
+
+- **`featurewise`** (default): each biomarker uses all subjects with
+  observed values for that biomarker — maximises available data
+- **`complete`**: uses only subjects with complete observations across
+  **all** biomarkers — ensures directly comparable sample sizes
+
+```{r missing}
+# Introduce missing values
+X_na <- X
+X_na[sample(length(X_na), 50)] <- NA
+
+fit_na <- aucmat(X_na, y, ci = "none", na_action = "featurewise")
+head(fit_na$results[, c("biomarker", "n_used", "n_missing", "missing_fraction")])
+```
+
+Outcome-dependent imputation is not performed internally — impute your
+data before calling `aucmat()`.
+
+---
+
+## 7. Reproducibility
+
+All functions accept a `seed` argument for reproducibility:
+
+```{r repro}
+fit1 <- aucmat(X, y, ci = "bootstrap", boot_n = 500, seed = 123)
+fit2 <- aucmat(X, y, ci = "bootstrap", boot_n = 500, seed = 123)
+identical(fit1$results$auc_raw, fit2$results$auc_raw)
+```
+
+---
+
+## Getting Help
+
+```r
+?aucmat
+?generate_data_probit
+?compare_auc
+?auc_stability
+?plot_auc_rank
 ```

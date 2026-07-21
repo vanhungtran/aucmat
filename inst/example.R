@@ -1,21 +1,20 @@
 
-# --- Define Simulation Parameters ---
-set.seed(42) # For reproducibility
+# ==============================================================================
+# aucmat: Example usage
+# ==============================================================================
 
-# Set the desired number of rows (n) and variables (p)
+library(aucmat)
+
+# --- Define Simulation Parameters ---
+set.seed(42)
+
 n_rows <- 5000
 p_variables <- 5
-
-# Set the prevalence of the positive class
 prevalence <- 0.25
 
-# --- Generate Targets for p Variables ---
-
-# Create a vector of p target AUCs
+# Generate target AUCs and correlation matrix
 target_aucs <- round(seq(from = 0.90, to = 0.70, length.out = p_variables), 2)
 
-# Create a p x p target correlation matrix
-# Here, we use a common structure where correlation decays exponentially
 rho <- 0.6
 corr_matrix <- matrix(nrow = p_variables, ncol = p_variables)
 for (i in 1:p_variables) {
@@ -24,7 +23,7 @@ for (i in 1:p_variables) {
   }
 }
 
-# --- Run the Simulation ---
+# --- Run Simulation ---
 simulated_dataset <- generate_data_analytical(
   n = n_rows,
   prevalence = prevalence,
@@ -32,7 +31,7 @@ simulated_dataset <- generate_data_analytical(
   corr_matrix = corr_matrix
 )
 
-# --- Check the Results ---
+# --- Check Results ---
 cat("--- TARGETS ---\n")
 cat("Target AUCs:\n")
 print(target_aucs)
@@ -45,90 +44,60 @@ print(round(simulated_dataset$achieved_aucs, 3))
 cat("\nAchieved Correlation Matrix:\n")
 print(round(simulated_dataset$achieved_correlations, 3))
 
-cat("\n\n--- SAMPLE OF GENERATED DATA ---\n")
-print(head(simulated_dataset$data))
 
+# ==============================================================================
+# plot_roc_with_combos example
+# ==============================================================================
 
-
-
-
-
-
-
-
-
-
-
-
-
-######     plot_roc_with_combos ####################################
-
-
-
-
-
-# Set seed for reproducibility
 set.seed(42)
 
-# Number of samples
-n <- 200
-
-# Generate synthetic data
-data <- data.frame(
-  M1 = rnorm(n, mean = 0, sd = 1),
-  M2 = rnorm(n, mean = 5, sd = 2),
-  M3 = rnorm(n, mean = 10, sd = 3),
-  M4 = rnorm(n, mean = 15, sd = 4),
-  Outcome = sample(c(0, 1), n, replace = TRUE)
+# Generate data with known AUC properties
+sim_data <- generate_data_analytical(
+  n = 200,
+  prevalence = 0.3,
+  target_aucs = c(0.85, 0.75, 0.65),
+  corr_matrix = diag(3)
 )
 
-# Split into training (80%) and validation (20%) sets
-train_indices <- sample(1:n, size = 0.8 * n)
-train_data <- data[train_indices, ]
-valid_data <- data[-train_indices, ]
-
-# View first few rows
-head(train_data)
-head(valid_data)
-
+preds <- setdiff(names(sim_data$data), "truth")
 
 res <- plot_roc_with_combos(
-  train = train_data,
-  valid = valid_data,
-  outcome = "Outcome",
-  positive = 1,            # <- adjust to your dataset
-  predictors = c("M1", "M2", "M3", "M4"),
-  use_predictor_pool = 10,      # mimic your vars[1:10] pool
-  combo_sizes = 1:4,            # singles through 5-way combos
-  unify_valid_rows = FALSE,     # set TRUE for identical VALID rows across curves
+  data = sim_data$data,
+  outcome = "truth",
+  predictors = preds,
+  combo_sizes = 1:2,
   add_ci = TRUE,
   boot_n = 1500,
-  ci_points = 201,
-  skip_ci_for_auc1 = TRUE,
-  smooth = FALSE,
-  title = "Endo: ROC (VALID) for single biomarkers and combinations"
+  title = "ROC curves for single biomarkers and pairs"
 )
 
+print(res$plot)
+cat("\nAUC values:\n")
+print(res$auc)
 
 
+# ==============================================================================
+# tableroc example
+# ==============================================================================
+
+set.seed(123)
+X <- data.frame(
+  M1 = c(rnorm(95), rep(NA, 5)),
+  M2 = rnorm(100),
+  M3 = c(rep(NA, 3), rnorm(97))
+)
+y <- factor(rbinom(100, 1, 0.5), labels = c("neg", "pos"))
+
+auc_table <- tableroc(X = X, y = y, na_impute = "median", rank = TRUE)
+print(auc_table)
 
 
+# ==============================================================================
+# generate_auc_vector example
+# ==============================================================================
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+set.seed(1)
+y <- rbinom(200, size = 1, prob = 0.3)
+out <- generate_auc_vector(y, target_auc = 0.8)
+cat("\ngenerate_auc_vector:\n")
+cat("Achieved AUC:", out$achieved_auc, "\n")

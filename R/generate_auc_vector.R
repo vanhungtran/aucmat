@@ -8,7 +8,7 @@
 #'
 #' @param y Binary outcome vector. Accepted inputs are logical, numeric 0/1,
 #'   factor, or character with exactly two non-missing classes.
-#' @param target_auc Target empirical AUC in [0, 1].
+#' @param target_auc Target empirical AUC in `[0, 1]`.
 #' @param positive Optional positive class label when `y` is a factor or
 #'   character vector. By default, the second factor level is treated as the
 #'   positive class.
@@ -69,7 +69,7 @@ generate_auc_vector <- function(
   keep <- !is.na(y)
   if (!any(keep)) stop("y contains only NA values.")
 
-  y_used <- .normalize_binary_y_for_auc(y[keep], positive = positive)
+  y_used <- .normalize_binary_y(y[keep], positive = positive)
   lev <- levels(y_used)
   pos_idx_used <- which(y_used == lev[2L])
   neg_idx_used <- which(y_used == lev[1L])
@@ -172,7 +172,7 @@ generate_auc_vector <- function(
 #'
 #' @param y Binary outcome vector. Accepted inputs are logical, numeric 0/1,
 #'   factor, or character with exactly two non-missing classes.
-#' @param target_auc Target empirical AUC in [0, 1].
+#' @param target_auc Target empirical AUC in `[0, 1]`.
 #' @param target_cor Target Pearson correlation between `y` and the generated
 #'   score vector.
 #' @param positive Optional positive class label when `y` is a factor or
@@ -261,7 +261,7 @@ generate_auc_cor_vector <- function(
   )
 
   keep <- !is.na(base_vector$x)
-  y_used <- .normalize_binary_y_for_auc(y[keep], positive = positive)
+  y_used <- .normalize_binary_y(y[keep], positive = positive)
   y_num <- .binary_factor_to_numeric(y_used)
   x_base <- base_vector$x[keep]
   x_shifted <- x_base - min(x_base) + 1
@@ -358,7 +358,7 @@ generate_auc_cor_vector <- function(
 #' @param y Binary outcome vector. Accepted inputs are logical, numeric 0/1,
 #'   factor, or character with exactly two non-missing classes.
 #' @param target_auc One target AUC or a numeric vector of target AUC values in
-#'   [0, 1].
+#'   `[0, 1]`.
 #' @param n_sim Number of simulations. Default 10000.
 #' @param positive Optional positive class label when `y` is a factor or
 #'   character vector. By default, the second factor level is treated as the
@@ -370,18 +370,18 @@ generate_auc_cor_vector <- function(
 #'   matrix with one column per simulation. Default `FALSE`.
 #'
 #' @return A list with components:
-#'   \\item{results}{A data.frame with one row per simulation per requested
-#'   target and columns `target_auc`, `sim`, `auc`, and `correlation`.}
-#'   \\item{target_auc}{The requested target AUC value(s).}
-#'   \\item{mean_shift}{A data.frame with columns `target_auc` and
+#' * `results` — A data.frame with one row per simulation per requested
+#'   target and columns `target_auc`, `sim`, `auc`, and `correlation`.
+#' * `target_auc` — The requested target AUC value(s).
+#' * `mean_shift` — A data.frame with columns `target_auc` and
 #'   `mean_shift`. For `target_auc = 1`, `mean_shift` is reported as `Inf` because
 #'   perfect separation is handled as a special case rather than a finite normal
-#'   shift.}
-#'   \\item{n_sim}{Number of simulations performed per target AUC.}
-#'   \\item{x_matrix}{Optional matrix of simulated predictors if `keep_x = TRUE`
-#'   and `length(target_auc) == 1`.}
-#'   \\item{x_matrix_list}{Optional named list of simulated predictor matrices if
-#'   `keep_x = TRUE` and multiple target AUC values are supplied.}
+#'   shift.
+#' * `n_sim` — Number of simulations performed per target AUC.
+#' * `x_matrix` — Optional matrix of simulated predictors if `keep_x = TRUE`
+#'   and `length(target_auc) == 1`.
+#' * `x_matrix_list` — Optional named list of simulated predictor matrices if
+#'   `keep_x = TRUE` and multiple target AUC values are supplied.
 #'
 #' @examples
 #' set.seed(1)
@@ -426,7 +426,7 @@ simulate_auc_correlation <- function(
   keep <- !is.na(y)
   if (!any(keep)) stop("y contains only NA values.")
 
-  y_used <- .normalize_binary_y_for_auc(y[keep], positive = positive)
+  y_used <- .normalize_binary_y(y[keep], positive = positive)
   y_num <- .binary_factor_to_numeric(y_used)
   pos <- y_num == 1
   neg <- !pos
@@ -542,42 +542,6 @@ simulate_auc_correlation <- function(
     mean_shift = mean_shift,
     x_matrix = x_matrix
   )
-}
-
-#' @noRd
-.normalize_binary_y_for_auc <- function(y, positive = NULL) {
-  if (is.logical(y)) {
-    return(factor(y, levels = c(FALSE, TRUE), labels = c("neg", "pos")))
-  }
-
-  if (is.numeric(y)) {
-    unique_values <- unique(y)
-    unique_values <- unique_values[!is.na(unique_values)]
-    if (length(unique_values) == 2L && all(unique_values %in% c(0, 1))) {
-      return(factor(y, levels = c(0, 1), labels = c("neg", "pos")))
-    }
-  }
-
-  if (!is.factor(y)) y <- factor(y)
-  if (nlevels(y) != 2L) {
-    stop("y must have exactly 2 unique non-missing values/classes.")
-  }
-
-  lev <- levels(y)
-  if (is.null(positive)) {
-    return(factor(y, levels = lev))
-  }
-
-  if (!(positive %in% lev)) stop("positive must be one of levels(y).")
-  negative <- setdiff(lev, positive)
-  if (length(negative) != 1L) stop("Could not infer the negative class from y.")
-  factor(y, levels = c(negative, positive))
-}
-
-#' @noRd
-.binary_factor_to_numeric <- function(y) {
-  lev <- levels(y)
-  as.integer(y == lev[2L])
 }
 
 #' @noRd

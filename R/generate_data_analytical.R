@@ -1,10 +1,4 @@
 
-
-# Load necessary packages
-# Ensure you have these installed: install.packages(c("pROC", "mvtnorm"))
-library(pROC)
-library(mvtnorm)
-
 # This function analytically generates a dataset with specified properties.
 # n: number of rows (observations)
 # p: number of variables (determined by the inputs)
@@ -19,6 +13,7 @@ library(mvtnorm)
 #' @param prevalence the proportion of the positive class for the binary outcome
 #' @param target_aucs a vector of p target AUC values
 #' @param corr_matrix a p x p target correlation matrix
+#' @importFrom stats cor qnorm rbinom rnorm
 #' @export
 generate_data_analytical <- function(n, prevalence, target_aucs, corr_matrix) {
 

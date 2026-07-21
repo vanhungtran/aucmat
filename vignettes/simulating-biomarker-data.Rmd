@@ -1,0 +1,262 @@
+---
+title: "Simulating Biomarker Data in aucmat"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Simulating Biomarker Data in aucmat}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width  = 7,
+  fig.height = 5
+)
+```
+
+```{r setup}
+library(aucmat)
+```
+
+## Overview
+
+`aucmat` provides three simulation engines for generating biomarker data
+with controlled properties.  This vignette explains the mathematical
+foundations, strengths, and limitations of each.
+
+| Function | Approach | AUC | Correlation | Distribution |
+|----------|----------|-----|-------------|-------------|
+| `generate_data_probit()` | Latent multivariate normal | Target AUC via calibrated $\rho$ | Directly specified in $\Sigma$ | Multivariate normal |
+| `generate_data_analytical()` | Sequential binormal decomposition | Target AUC via mean separation | Approximately achieved | Normal per class |
+| `generate_auc_vector()` | Rank construction | Exact empirical AUC | Not controlled (post-hoc via Box-Cox) | Normal quantile scores |
+
+---
+
+## 1. Latent Probit Model (`generate_data_probit`)
+
+### Mathematical Foundation
+
+The binary outcome $Y$ is modelled as arising from a latent continuous
+variable $Y^*$ with a threshold:
+
+$$Y^* \sim \mathcal{N}(0, 1), \qquad
+Y = \mathbf{1}\{Y^* > \tau\}, \qquad
+\tau = \Phi^{-1}(1 - \pi)$$
+
+where $\pi$ is the prevalence.
+
+Biomarkers $(X_1, \ldots, X_p, Y^*)$ are jointly multivariate normal:
+
+$$\begin{pmatrix} X_1 \\ \vdots \\ X_p \\ Y^* \end{pmatrix} \sim
+\mathcal{N}_{p+1}\left(
+\mathbf{0},
+\begin{pmatrix}
+\mathbf{R} & \boldsymbol{\rho} \\
+\boldsymbol{\rho}^\top & 1
+\end{pmatrix}
+\right)$$
+
+where $\mathbf{R}$ is the $p \times p$ between-biomarker correlation
+matrix and $\rho_k = \text{Cor}(X_k, Y^*)$ governs the biomarker-outcome
+relationship.
+
+### AUC–$\rho$ Relationship
+
+For a given prevalence $\pi$, the resulting AUC is a strictly increasing
+function of the latent correlation $\rho_k$:
+
+$$\text{AUC}(\rho_k, \pi) = f(\rho_k, \pi)$$
+
+The function $f$ involves the bivariate normal CDF — not available in
+closed form.  `generate_data_probit()` calibrates $\rho_k$ numerically
+via bisection over a large calibration sample ($n = 100,000$ by default).
+
+### Advantages
+
+- **Both AUC and correlation are free parameters** — decoupled unlike
+  the equal-variance binormal model
+- **Positive definiteness** is checked and repaired automatically
+- **Natural framework** — the full $(p+1) \times (p+1)$ matrix
+  captures all relationships in one coherent structure
+
+### Example
+
+```{r probit_example}
+set.seed(42)
+sim_p <- generate_data_probit(
+  n = 500,
+  target_aucs = c(0.90, 0.80, 0.70, 0.65),
+  corr_matrix = matrix(c(
+    1.0, 0.4, 0.2, 0.1,
+    0.4, 1.0, 0.3, 0.2,
+    0.2, 0.3, 1.0, 0.3,
+    0.1, 0.2, 0.3, 1.0
+  ), 4, 4),
+  prevalence = 0.3
+)
+
+# Achieved AUCs closely match targets
+data.frame(
+  Target   = sim_p$target_aucs,
+  Achieved = round(sim_p$achieved_aucs, 4)
+)
+```
+
+```{r probit_latent}
+# The calibrated latent correlations
+sim_p$latent_rhos
+```
+
+### Limitations
+
+- Requires `mvtnorm` for multivariate normal generation
+- Calibration is computationally expensive (large $n_{\text{cal}}$)
+- Not every $(p+1) \times (p+1)$ correlation matrix is positive definite —
+  incompatible (AUC, correlation) specifications trigger nearest-PD repair
+
+---
+
+## 2. Sequential Binormal Model (`generate_data_analytical`)
+
+### Mathematical Foundation
+
+Under the **equal-variance binormal model**:
+
+$$X_k \mid Y = 0 \sim \mathcal{N}(\mu_{k0}, \sigma^2), \qquad
+X_k \mid Y = 1 \sim \mathcal{N}(\mu_{k1}, \sigma^2)$$
+
+The AUC is determined by the standardized mean separation:
+
+$$\text{AUC}_k = \Phi\!\left(\frac{\mu_{k1} - \mu_{k0}}{\sigma\sqrt{2}}\right)$$
+
+### Sequential Construction
+
+Biomarkers are generated from **highest to lowest AUC**.
+For each biomarker $X_k$:
+
+1. **Correlated component** $X_k^{\text{(corr)}}$ is constructed from
+   the $k-1$ previously generated biomarkers to achieve the target
+   correlations $\rho_{k,1}, \ldots, \rho_{k,k-1}$
+
+2. **Residual component** $X_k^{\text{(res)}}$ carries the remaining
+   mean separation needed to hit the target AUC, after accounting for
+   the separation already present in the correlated component
+
+3. $X_k = X_k^{\text{(corr)}} + X_k^{\text{(res)}}$, then standardized
+
+### AUC–Correlation Link
+
+In this model, for a given prevalence $\pi$, the Pearson correlation
+between $X_k$ and $Y$ is **determined** by the AUC:
+
+$$r_{pb} = \frac{\delta_k \cdot \sqrt{\pi(1-\pi)}}
+                {\sqrt{\delta_k^2 \cdot \pi(1-\pi) + 1}}$$
+
+where $\delta_k = \sqrt{2} \cdot \Phi^{-1}(\text{AUC}_k)$.
+
+| AUC | $r_{pb}$ at $\pi = 0.3$ | $r_{pb}$ at $\pi = 0.5$ |
+|-----|--------------------------|--------------------------|
+| 0.60 | 0.12 | 0.16 |
+| 0.70 | 0.23 | 0.31 |
+| 0.80 | 0.36 | 0.47 |
+| 0.90 | 0.51 | 0.64 |
+| 0.95 | 0.60 | 0.73 |
+
+### Advantages
+
+- **Fast** — no numerical calibration needed, closed-form $\delta_k$
+- **Simple** — interpretable two-class normal model
+- **Good for method validation** — commonly used in biomarker simulation
+  literature (Hanley & McNeil, 1982; Obuchowski, 1997)
+
+### Limitations
+
+- **AUC and correlation are linked** — cannot independently specify both
+- **Equal variance assumption** may be restrictive for heteroscedastic
+  biomarkers
+- Sequential construction means biomarkers with lower AUC "inherit"
+  residuals from higher-AUC biomarkers
+
+### Example
+
+```{r binormal_example}
+set.seed(42)
+sim_b <- generate_data_analytical(
+  n = 500,
+  prevalence = 0.3,
+  target_aucs = c(0.85, 0.75, 0.65),
+  corr_matrix = matrix(c(
+    1.0, 0.3, 0.1,
+    0.3, 1.0, 0.2,
+    0.1, 0.2, 1.0
+  ), 3, 3)
+)
+
+data.frame(
+  Biomarker = paste0("X", 1:3),
+  Target_AUC = c(0.85, 0.75, 0.65),
+  Achieved_AUC = round(sim_b$achieved_aucs, 4)
+)
+```
+
+---
+
+## 3. Rank-Based Construction (`generate_auc_vector`)
+
+### Mathematical Foundation
+
+The empirical AUC depends **only on the rank ordering** of scores.
+On a finite sample with $n_1$ positives and $n_0$ negatives, the
+achievable AUC values form a discrete grid:
+
+$$\Delta_{\text{AUC}} = \frac{1}{n_1 \cdot n_0}$$
+
+Given a target AUC $\theta$, we find the subset of $n_1$ ranks (from
+$\{1, \ldots, n\}$) whose sum produces the required Mann-Whitney
+U-statistic $U = \theta \cdot n_1 n_0$, then assign normal quantile
+scores $\Phi^{-1}((R_i - 0.5)/n)$ to each observation.
+
+### AUC–Correlation Decoupling
+
+`generate_auc_cor_vector()` extends this by applying a strictly
+increasing Box-Cox transformation after rank construction.
+This preserves the AUC (ranks unchanged) while tuning the Pearson
+correlation toward a target value.
+
+```{r auc_cor}
+y <- rbinom(200, 1, 0.3)
+out <- generate_auc_cor_vector(
+  y, target_auc = 0.80, target_cor = 0.45,
+  shuffle_within_class = FALSE
+)
+
+c(AUC = out$achieved_auc, Correlation = out$achieved_cor)
+```
+
+The Box-Cox parameter $\lambda$ is found by grid search followed by
+local optimization.  Not every (AUC, correlation) pair is achievable —
+the monotone transform can only move the correlation within a bounded
+range $[r_{\min}, r_{\max}]$.
+
+---
+
+## Choosing a Simulator
+
+| Goal | Recommended Function |
+|------|---------------------|
+| Independent control of AUC and correlations | `generate_data_probit()` |
+| Fast, simple binormal simulation | `generate_data_analytical()` |
+| Exact empirical AUC for a single biomarker | `generate_auc_vector()` |
+| Exact AUC + approximate Pearson correlation | `generate_auc_cor_vector()` |
+| Monte Carlo sampling distribution of (AUC, r) | `simulate_auc_correlation()` |
+
+## References
+
+- Hanley JA, McNeil BJ (1982). The meaning and use of the area under a
+  receiver operating characteristic (ROC) curve. *Radiology*, 143(1), 29–36.
+- DeLong ER, DeLong DM, Clarke-Pearson DL (1988). Comparing the areas
+  under two or more correlated ROC curves. *Biometrics*, 44(3), 837–845.
+- Obuchowski NA (1997). Nonparametric analysis of clustered ROC curve
+  data. *Biometrics*, 53(2), 567–578.

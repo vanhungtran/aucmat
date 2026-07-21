@@ -3,7 +3,7 @@
 .RData
 .Ruserdata
 
-# AI session notes
+# Session notes
 AI_AGENT_SESSION_SUMMARY.md
 AI_AGENT_TECHNICAL_NOTE.md
 AUC_SD_LEGEND_FEATURE.md
@@ -12,3 +12,8 @@ FINAL_SUMMARY.md
 LEGEND_FIX_SUMMARY.md
 NEXT_STEPS.md
 README_old.md
+JSS_PROPOSAL.md
+SIMULATION_IDEA.md
+/doc/
+/Meta/
+/docs/superpowers/
