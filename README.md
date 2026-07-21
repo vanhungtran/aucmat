@@ -10,7 +10,7 @@
 
 `aucmat` is a matrix-first R package for univariate screening and ranking of
 molecular biomarkers (genes, proteins, metabolites) measured on the same
-subjects.  It reports **direction-preserving AUCs** with proper multiplicity
+subjects. It reports **direction-preserving AUCs** with proper multiplicity
 adjustment and bootstrap rank-stability assessment.
 
 ## Installation
@@ -34,7 +34,6 @@ sim <- generate_data_probit(
 # 2. Screen all biomarkers
 fit <- aucmat(sim$data[, 1:3], sim$data$truth)
 print(fit)
-summary(fit)
 
 # 3. Visualize
 plot_auc_rank(fit)       # ordered discrimination strengths
@@ -45,8 +44,6 @@ plot_roc_top(fit, X = sim$data[, 1:3], y = sim$data$truth)
 # 4. Compare AUCs - three approaches
 compare_auc(fit, sim$data[, 1:3], sim$data$truth, top_n = 3)          # all pairs
 compare_auc(fit, sim$data[, 1:3], sim$data$truth, reference = "X1")   # vs reference
-compare_auc(fit, sim$data[, 1:3], sim$data$truth,
-            biomarkers = c("X1", "X2"))                                 # specific set
 
 # 5. Assess rank stability
 stab <- auc_stability(sim$data[, 1:3], sim$data$truth, times = 500, seed = 42)
@@ -59,13 +56,40 @@ AUC measures: if you pick one positive and one negative subject at random,
 how often does the positive have a higher biomarker value?
 
 Under the binormal model, biomarker values are normally distributed in each
-class with a mean shift. For target AUC = 0.8, the shift delta is about 1.19
-standard deviations: `delta = sqrt(2) * qnorm(AUC)`.
+class with a mean shift. For target AUC = 0.8, the positive class mean is
+shifted by about 1.19 standard deviations: `delta = sqrt(2) * qnorm(AUC)`.
 
 | Function | AUC + Correlation | Speed |
 |----------|-------------------|-------|
 | `generate_data_probit()` | **Independent** (both free) | Slower (calibration) |
 | `generate_data_analytical()` | **Linked** (binormal constraint) | Fast |
+
+## Plots
+
+### Rank Plot
+Ordered discrimination strengths with CI error bars:
+
+![Rank plot](man/figures/README-rank.png)
+
+### Volcano Plot
+Effect magnitude vs statistical evidence (-log10 q-value):
+
+![Volcano plot](man/figures/README-volcano.png)
+
+### Forest Plot
+Multiple AUCs with DeLong confidence intervals:
+
+![Forest plot](man/figures/README-forest.png)
+
+### ROC Curves
+ROC curves for selected biomarkers overlaid:
+
+![ROC curves](man/figures/README-roc.png)
+
+### Stability Plot
+Bootstrap rank distributions with median and IQR:
+
+![Stability plot](man/figures/README-stability.png)
 
 ## All Functions
 
