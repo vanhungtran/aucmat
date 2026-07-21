@@ -5,7 +5,7 @@ output:
     toc: true
     toc_depth: 3
     includes:
-      in_header: lightbox.html
+      before_body: lightbox.html
 vignette: >
   %\VignetteIndexEntry{Introduction to aucmat}
   %\VignetteEngine{knitr::rmarkdown}

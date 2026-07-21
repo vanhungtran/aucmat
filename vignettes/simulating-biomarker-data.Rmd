@@ -5,7 +5,7 @@ output:
     toc: true
     toc_depth: 3
     includes:
-      in_header: lightbox.html
+      before_body: lightbox.html
 vignette: >
   %\VignetteIndexEntry{Simulating Biomarker Data in aucmat}
   %\VignetteEngine{knitr::rmarkdown}
