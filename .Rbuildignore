@@ -28,3 +28,4 @@
 ^cran-comments\.md$
 ^manuscript$
 ^\.zenodo\.json$
+^design$

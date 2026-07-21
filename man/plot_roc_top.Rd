@@ -4,7 +4,15 @@
 \alias{plot_roc_top}
 \title{ROC curves for a small set of biomarkers}
 \usage{
-plot_roc_top(fit, X = NULL, y = NULL, biomarkers = NULL, show_auc = TRUE)
+plot_roc_top(
+  fit,
+  X = NULL,
+  y = NULL,
+  biomarkers = NULL,
+  show_auc = TRUE,
+  add_ci = FALSE,
+  boot_n = 500
+)
 }
 \arguments{
 \item{fit}{An \code{aucmat_screen} object (may not retain data).}
@@ -17,6 +25,11 @@ plot_roc_top(fit, X = NULL, y = NULL, biomarkers = NULL, show_auc = TRUE)
 by \code{auc_strength}.}
 
 \item{show_auc}{Add AUC values to the legend.  Default \code{TRUE}.}
+
+\item{add_ci}{Add confidence ribbons to ROC curves via bootstrap.
+Default \code{FALSE}.}
+
+\item{boot_n}{Number of bootstrap replicates for CI ribbons.  Default 500.}
 }
 \value{
 A \code{ggplot2} object.

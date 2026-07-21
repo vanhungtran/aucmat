@@ -1,3 +1,19 @@
+# aucmat 0.2.0
+
+## New Features
+
+### Inference Extensions
+- `compare_auc()` now supports superiority, non-inferiority, and equivalence (TOST) hypotheses
+- Configurable `alternative` (two.sided, greater, less) and `conf_level`
+- DeLong and bootstrap methods for paired comparisons
+- Post-selection warning when `top_n` is used from the same data
+- New `compare_auc_global()`: omnibus Wald test for equality of multiple correlated AUCs via joint DeLong covariance
+- Structured condition classes for errors and RNG safety (`with_seed`)
+
+### Shared Engines
+- Joint DeLong covariance engine for correlated full-AUC inference
+- Unified stratified resampling engine with minimum-success rules and failure accounting
+
 # aucmat 0.1.0
 
 ## New Features

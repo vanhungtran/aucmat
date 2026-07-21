@@ -5,50 +5,66 @@
 \title{Compare AUCs of selected biomarkers (paired, common-subject)}
 \usage{
 compare_auc(
-  fit,
+  fit = NULL,
   X,
   y,
   reference = NULL,
   biomarkers = NULL,
   top_n = NULL,
   max_pairs = 100,
+  alternative = c("two.sided", "greater", "less"),
+  hypothesis = c("superiority", "noninferiority", "equivalence"),
+  margin = NULL,
+  conf_level = 0.95,
+  method = c("delong", "bootstrap"),
+  boot_n = 2000,
+  seed = NULL,
   adjust = c("none", "BH", "holm", "bonferroni")
 )
 }
 \arguments{
-\item{fit}{An \code{aucmat_screen} object.}
+\item{fit}{An \code{aucmat_screen} object (optional; stores outcome encoding).}
 
 \item{X}{Numeric matrix (same as passed to \code{\link[=aucmat]{aucmat()}}).}
 
-\item{y}{Binary outcome (same as passed to \code{\link[=aucmat]{aucmat()}}).}
+\item{y}{Binary outcome.}
 
 \item{reference}{Single biomarker name to compare all others against.}
 
-\item{biomarkers}{Character vector of biomarker names.  If length > 2,
-all pairwise comparisons among the set are computed.}
+\item{biomarkers}{Character vector of biomarker names.}
 
-\item{top_n}{Take the top \code{top_n} biomarkers by \code{auc_strength} from
-\code{fit} and compare all pairs.  Requires \code{fit} to have a \verb{$results}
-table.}
+\item{top_n}{Take the top \code{top_n} biomarkers by \code{auc_strength} from \code{fit}.
+Post-selection inference is flagged as exploratory.}
 
-\item{max_pairs}{Safety limit on the number of pairwise comparisons.
-Default 100.  An error is raised if more pairs would be computed.}
+\item{max_pairs}{Safety limit.  Default 100.}
 
-\item{adjust}{Multiplicity adjustment for the comparison p-values:
-\code{"BH"}, \code{"holm"}, \code{"bonferroni"}, or \code{"none"} (default).}
+\item{alternative}{\code{"two.sided"} (default), \code{"greater"}, or \code{"less"}.
+\code{greater} means AUC_a > AUC_b; \code{less} means AUC_a < AUC_b.}
+
+\item{hypothesis}{\code{"superiority"} (default), \code{"noninferiority"}, or
+\code{"equivalence"}.}
+
+\item{margin}{Positive numeric margin for non-inferiority / equivalence.}
+
+\item{conf_level}{Confidence level in (0, 1).  Default 0.95.}
+
+\item{method}{\code{"delong"} (default) or \code{"bootstrap"}.}
+
+\item{boot_n}{Bootstrap replicates.  Default 2000.}
+
+\item{seed}{Optional integer seed.}
+
+\item{adjust}{Multiplicity adjustment: \code{"BH"}, \code{"holm"}, \code{"bonferroni"},
+or \code{"none"} (default).}
 }
 \value{
-A data.frame of class \code{aucmat_compare} with columns:
-\code{biomarker_a}, \code{biomarker_b}, \code{auc_a}, \code{auc_b}, \code{auc_diff},
-\code{std_error}, \code{conf_low}, \code{conf_high}, \code{p_value}, \code{q_value},
-\code{n_common}, \code{n_pos}, \code{n_neg}.
+A data.frame of class \code{aucmat_compare}.
 }
 \description{
-Performs DeLong-based paired comparisons of AUC between biomarkers.
-Each pair is recomputed on the subjects with observed values for both
-biomarkers, ensuring a common analysis population.
+Performs DeLong-based or bootstrap paired comparisons of AUC between
+biomarkers measured on the same subjects.  Supports superiority,
+non-inferiority, and equivalence (TOST) hypotheses.
 }
 \details{
-The function refuses unbounded all-pairs comparisons.  Users must
-explicitly select biomarkers or increase \code{max_pairs}.
+The function refuses unbounded all-pairs comparisons.
 }
