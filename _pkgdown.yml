@@ -57,6 +57,10 @@ reference:
   - cv_aucmat
   - fit_auc_panel
   - power_auc_matrix
+  - aucmat_by
+  - aucmat_multiclass
+  - roc_test
+  - plot_roc_smooth
 
 - title: Deprecated
   desc: Functions retained for backward compatibility
