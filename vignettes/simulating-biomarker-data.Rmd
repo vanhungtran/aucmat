@@ -29,43 +29,259 @@ library(aucmat)
 
 ## Overview
 
-`aucmat` provides several simulation engines for generating biomarker data
-with controlled properties, plus a validation harness to confirm a given
-specification is actually calibrated.  This vignette explains the
-mathematical foundations, strengths, and limitations of each.
+`aucmat` provides seven simulation functions for generating biomarker data
+with controlled properties. This vignette explains the mathematical
+foundations, strengths, and limitations of each.
 
-| Function | Approach | AUC | Correlation | Distribution |
-|----------|----------|-----|-------------|-------------|
-| `simulate_auc_matrix()` | Class-conditional multivariate normal | Target AUC via closed-form mean shift | Named structure (`exchangeable`/`ar1`/`block`/`user`) | Multivariate normal |
-| `generate_data_probit()` | Latent multivariate normal | Target AUC via calibrated $\rho$ | Directly specified in $\Sigma$ | Multivariate normal |
-| `generate_data_analytical()` | Sequential binormal decomposition | Target AUC via mean separation | Approximately achieved | Normal per class |
-| `generate_auc_vector()` | Rank construction | Exact empirical AUC | Not controlled (post-hoc via Box-Cox) | Normal quantile scores |
+### Quick Reference
+
+| Function | AUC | Correlation | Approach | Best for |
+|----------|-----|-------------|----------|----------|
+| `simulate_auc_matrix()` | Target via $\delta$ | Named structures | Class-conditional MVN | General use |
+| `generate_data_probit()` | Target via $\rho$ | Full matrix | Latent MVN | Free AUC + correlation |
+| `generate_data_analytical()` | Target via $\delta$ | Sequential approx | Binormal decomposition | Fast validation |
+| `generate_auc_vector()` | **Exact** empirical | None (post-hoc Box-Cox) | Rank construction | Exact AUC guarantees |
+| `generate_auc_cor_vector()` | **Exact** empirical | **Approx** Pearson r | Rank + Box-Cox tuning | Exact AUC with correlation |
+| `simulate_auc_correlation()` | MC distribution | MC distribution | Binormal draws | Understanding sampling variation |
+| `validate_simulation()` | Repeat + diagnostics | Repeat + diagnostics | Independent replication | Calibration confirmation |
 
 ---
 
-## 1. Latent Probit Model (`generate_data_probit`)
+## 1. `simulate_auc_matrix()` — Recommended General-Purpose Simulator
 
 ### Mathematical Foundation
 
-The binary outcome $Y$ is modelled as arising from a latent continuous
-variable $Y^*$ with a threshold:
+Rather than deriving the outcome from a thresholded latent variable,
+`simulate_auc_matrix()` fixes the outcome $Y$ first and draws biomarkers
+**conditional on class**:
+
+$$X \mid Y = 0 \sim \mathcal{N}_p(\mu_0, \mathbf{R}), \qquad
+  X \mid Y = 1 \sim \mathcal{N}_p(\mu_1, \mathbf{R})$$
+
+Both classes share the same correlation matrix $\mathbf{R}$; only the mean
+vectors differ. The per-biomarker mean shift $\delta_k = \mu_{1k} - \mu_{0k}$
+uses closed-form binormal calibration:
+
+$$\delta_k = \sqrt{2} \cdot \Phi^{-1}(\text{AUC}_k)$$
+
+The class means are centred so the $n$-weighted grand mean is zero:
+
+$$\mu_0 = \delta \cdot \left(-\frac{n_1}{n}\right), \qquad
+  \mu_1 = \delta \cdot \left(\frac{n_0}{n}\right)$$
+
+Because $Y$ is fixed *before* any biomarker is drawn, supplied outcomes keep
+their exact values and row order, and generated outcomes get exact class
+counts (default) or Bernoulli counts.
+
+### Outcome Modes
+
+```{r matrix_outcome_modes}
+set.seed(42)
+
+# 1. Generate outcome from n + prevalence (default: exact class counts)
+sim_gen <- simulate_auc_matrix(
+  n = 500, prevalence = 0.3,
+  target_aucs = c(0.9, 0.8, 0.7, 0.65),
+  correlation = 0.3, structure = "exchangeable"
+)
+table(sim_gen$data$truth)  # exact 150 / 350
+
+# 2. Bernoulli outcome (random class counts)
+sim_bern <- simulate_auc_matrix(
+  n = 500, prevalence = 0.3,
+  target_aucs = c(0.9, 0.8, 0.7, 0.65),
+  correlation = 0.3, structure = "exchangeable",
+  outcome_mode = "bernoulli", seed = 45
+)
+table(sim_bern$data$truth)  # varies around 30%
+
+# 3. Supplied outcome (exact values preserved)
+y_supplied <- rbinom(300, 1, 0.3)
+sim_y <- simulate_auc_matrix(
+  y = y_supplied,
+  target_aucs = c(0.85, 0.75),
+  correlation = 0.3, structure = "exchangeable", seed = 1
+)
+all(sim_y$data$truth == y_supplied)
+```
+
+### Correlation Structures
+
+Instead of hand-building a full matrix, `structure` names a pattern:
+
+| `structure` | Parameters | Formula for $R_{ij}$ |
+|-------------|-----------|----------------------|
+| `"user"` | Full matrix `correlation` | As supplied |
+| `"exchangeable"` | `correlation` = $\rho$ | $\rho$ for all $i \neq j$ |
+| `"ar1"` | `correlation` = $\rho$ | $\rho^{|i-j|}$ |
+| `"block"` | `block_sizes`, $\rho_w$, $\rho_b$ | $\rho_w$ in block, $\rho_b$ between |
+
+```{r matrix_structures}
+# Exchangeable
+sim_ex <- simulate_auc_matrix(
+  n = 500, prevalence = 0.3,
+  target_aucs = c(0.9, 0.8, 0.7, 0.65),
+  correlation = 0.4, structure = "exchangeable", seed = 1
+)
+cat("Exchangeable (rho = 0.4):\n")
+round(sim_ex$achieved_correlation, 3)
+
+# AR(1) — correlation decays with distance
+sim_ar1 <- simulate_auc_matrix(
+  n = 500, prevalence = 0.3,
+  target_aucs = c(0.9, 0.8, 0.7, 0.65),
+  correlation = 0.6, structure = "ar1", seed = 1
+)
+cat("\nAR(1) (rho = 0.6):\n")
+round(sim_ar1$achieved_correlation, 3)
+
+# Block — two groups of two with different within/between correlations
+sim_blk <- simulate_auc_matrix(
+  n = 500, prevalence = 0.3,
+  target_aucs = c(0.9, 0.8, 0.7, 0.65),
+  structure = "block", block_sizes = c(2, 2),
+  rho_within = 0.6, rho_between = 0.1, seed = 1
+)
+cat("\nBlock (rho_w = 0.6, rho_b = 0.1):\n")
+round(sim_blk$achieved_correlation, 3)
+```
+
+### Feasibility Diagnostics
+
+Not every correlation matrix is positive definite. `feasibility` controls
+the response:
+
+- `"error"` (default): stops with a structured condition and quantitative
+  diagnostic (eigenvalue, matrix dimensions).
+- `"nearest"`: projects to the nearest positive-semidefinite matrix via
+  eigenvalue clipping, reports Frobenius adjustment and maximum element-wise
+  change.
+
+```{r matrix_feasibility}
+# This is infeasible: exchangeable(0.4) with p=4 is PD; exchangeable(-0.5) is not
+# because the min eigenvalue of an exchangeable matrix with rho is
+# (1 - rho) for p-1 multiplicities, needs rho > -1/(p-1) = -1/3 for p=4
+sim_adj <- simulate_auc_matrix(
+  n = 200, prevalence = 0.3,
+  target_aucs = c(0.8, 0.7, 0.6, 0.55),
+  correlation = -0.5, structure = "exchangeable",
+  feasibility = "nearest", seed = 1
+)
+sim_adj$feasibility
+```
+
+### A Note on Achieved Correlation
+
+`$achieved_correlation` is computed on **within-class centred** residuals —
+each class centred on its own empirical mean before correlating. This is
+what `$requested_correlation` ($\mathbf{R}$) actually parametrizes. The raw
+pooled correlation of the returned columns (ignoring `truth`) is **not** a
+consistent estimate of $\mathbf{R}$ whenever any AUC differs from 0.5:
+mixing subpopulations with different means inflates the pooled correlation
+(a mixture / Simpson's-paradox effect).
+
+```{r matrix_correlation_note}
+sim_demo <- simulate_auc_matrix(
+  n = 1000, prevalence = 0.3,
+  target_aucs = c(0.85, 0.75), correlation = 0.3,
+  structure = "exchangeable", seed = 1
+)
+
+# Naive pooled correlation (wrong estimate of R):
+cat("Naive pooled cor(X1, X2):             ",
+    round(cor(sim_demo$data$X1, sim_demo$data$X2), 4), "\n")
+# Correct within-class correlation (estimate of R):
+cat("Within-class centred cor (correct):    ",
+    round(sim_demo$achieved_correlation[1, 2], 4), "\n")
+cat("Requested correlation (R):             ",
+    sim_demo$requested_correlation[1, 2], "\n")
+```
+
+### Advantages
+
+- **Fast** — closed-form mean shift, no numerical calibration loop
+- **Named correlation structures** — exchangeable, AR(1), block, or
+  hand-supplied matrix
+- **Feasibility diagnostics** — structured errors or automatic nearest-PD
+  repair with adjustment magnitude reported
+- **Outcome-preserving** — supplied `y` is never altered; generated `y` gets
+  exact class counts by default
+
+### Limitations
+
+- Equal-variance binormal assumption (both classes share the same $\mathbf{R}$)
+- Correlation structure limited to common parametric patterns
+- Non-normal marginals, batch effects, outliers, and missingness not yet
+  supported (planned for later milestones)
+
+---
+
+## 2. `validate_simulation()` — Calibration Check
+
+A single draw is not evidence a simulator is calibrated. This function
+repeats a `simulate_auc_matrix()` specification across many independent
+replicates with deterministic seed streams (seed + replicate_index − 1) and
+reports:
+
+| Metric | AUC | Correlation |
+|--------|-----|-------------|
+| Bias | `colMeans(achieved) - target` | Per upper-triangle pair |
+| RMSE | `sqrt(colMeans((achieved - target)^2))` | Per pair |
+| MC SE | `sd / sqrt(n_ok)` — estimation uncertainty | Per pair |
+| Hit rate | Fraction within tolerance of target | Per pair |
+
+```{r validate_example}
+val <- validate_simulation(
+  n = 300, prevalence = 0.3,
+  target_aucs = c(0.85, 0.75, 0.65),
+  correlation = 0.3, structure = "exchangeable",
+  times = 100, seed = 1
+)
+print(val)
+```
+
+### Interpreting the Output
+
+- **Bias** should be small relative to `auc_mc_se` (Monte Carlo standard
+  error). If bias is consistently much larger than MC SE across replicates,
+  the simulator has a systematic calibration error.
+- **RMSE** captures both bias and variance. At small `times`, RMSE is
+  dominated by sampling variation; at large `times`, remaining RMSE reflects
+  bias.
+- **Hit rate** depends on `tolerance`. With `tolerance$auc = 0.02`, roughly
+  95% of samples should hit when the Monte Carlo SE of the achieved AUC is
+  about 0.01 (i.e., `n` around 300-500). Hit rates below ~30% with
+  `times = 100` can indicate a calibration problem or simply that `tolerance`
+  is too tight for the chosen `n`.
+
+### Failure Handling
+
+`n_failed` records replicates where `simulate_auc_matrix()` threw an error.
+Requires at least 2 successful replicates. Successful and failed counts are
+always reported.
+
+---
+
+## 3. Latent Probit Model (`generate_data_probit`)
+
+### Mathematical Foundation
+
+The binary outcome $Y$ arises from a latent continuous variable $Y^*$:
 
 $$Y^* \sim \mathcal{N}(0, 1), \qquad
-Y = \mathbf{1}\{Y^* > \tau\}, \qquad
-\tau = \Phi^{-1}(1 - \pi)$$
-
-where $\pi$ is the prevalence.
+  Y = \mathbf{1}\{Y^* > \tau\}, \qquad
+  \tau = \Phi^{-1}(1 - \pi)$$
 
 Biomarkers $(X_1, \ldots, X_p, Y^*)$ are jointly multivariate normal:
 
 $$\begin{pmatrix} X_1 \\ \vdots \\ X_p \\ Y^* \end{pmatrix} \sim
-\mathcal{N}_{p+1}\left(
-\mathbf{0},
-\begin{pmatrix}
-\mathbf{R} & \boldsymbol{\rho} \\
-\boldsymbol{\rho}^\top & 1
-\end{pmatrix}
-\right)$$
+  \mathcal{N}_{p+1}\left(
+  \mathbf{0},
+  \begin{pmatrix}
+  \mathbf{R} & \boldsymbol{\rho} \\
+  \boldsymbol{\rho}^\top & 1
+  \end{pmatrix}
+  \right)$$
 
 where $\mathbf{R}$ is the $p \times p$ between-biomarker correlation
 matrix and $\rho_k = \text{Cor}(X_k, Y^*)$ governs the biomarker-outcome
@@ -73,22 +289,12 @@ relationship.
 
 ### AUC–$\rho$ Relationship
 
-For a given prevalence $\pi$, the resulting AUC is a strictly increasing
-function of the latent correlation $\rho_k$:
+For prevalence $\pi$, the AUC is a strictly increasing function of $\rho_k$:
 
 $$\text{AUC}(\rho_k, \pi) = f(\rho_k, \pi)$$
 
-The function $f$ involves the bivariate normal CDF — not available in
-closed form.  `generate_data_probit()` calibrates $\rho_k$ numerically
-via bisection over a large calibration sample ($n = 100,000$ by default).
-
-### Advantages
-
-- **Both AUC and correlation are free parameters** — decoupled unlike
-  the equal-variance binormal model
-- **Positive definiteness** is checked and repaired automatically
-- **Natural framework** — the full $(p+1) \times (p+1)$ matrix
-  captures all relationships in one coherent structure
+$f$ involves the bivariate normal CDF (no closed form). Calibration uses
+bisection over a large sample ($n = 100,000$ by default).
 
 ### Example
 
@@ -106,64 +312,55 @@ sim_p <- generate_data_probit(
   prevalence = 0.3
 )
 
-# Achieved AUCs closely match targets
+# Target vs achieved AUCs
 data.frame(
   Target   = sim_p$target_aucs,
-  Achieved = round(sim_p$achieved_aucs, 4)
+  Achieved = round(sim_p$achieved_aucs, 4),
+  Latent_rho = round(sim_p$latent_rhos, 4)
 )
 ```
 
-```{r probit_latent}
-# The calibrated latent correlations
-sim_p$latent_rhos
-```
+### Advantages
+
+- **Both AUC and correlation are free parameters** — independent control
+- **Natural framework** — single $(p+1) \times (p+1)$ matrix captures all
+  relationships
+- **Positive definiteness** checked and repaired automatically
 
 ### Limitations
 
-- Requires `mvtnorm` for multivariate normal generation
-- Calibration is computationally expensive (large $n_{\text{cal}}$)
-- Not every $(p+1) \times (p+1)$ correlation matrix is positive definite —
-  incompatible (AUC, correlation) specifications trigger nearest-PD repair
+- Numerical calibration is expensive ($n_{\text{cal}} = 100,000$ draws per
+  AUC, bisection to $10^{-6}$ tolerance)
+- Not every $(p+1) \times (p+1)$ correlation matrix is positive definite
+- Requires `mvtnorm` for multivariate normal draws
 
 ---
 
-## 2. Sequential Binormal Model (`generate_data_analytical`)
+## 4. Sequential Binormal Model (`generate_data_analytical`)
 
 ### Mathematical Foundation
 
-Under the **equal-variance binormal model**:
+Biomarkers are constructed from **highest to lowest AUC**:
 
-$$X_k \mid Y = 0 \sim \mathcal{N}(\mu_{k0}, \sigma^2), \qquad
-X_k \mid Y = 1 \sim \mathcal{N}(\mu_{k1}, \sigma^2)$$
+1. The first biomarker $X_1$ is drawn with the full mean separation
+   $\delta_1 = \sqrt{2} \cdot \Phi^{-1}(\text{AUC}_1)$.
 
-The AUC is determined by the standardized mean separation:
+2. For $k \geq 2$, $X_k$ is built in two parts:
+   - **Correlated component**: linear combination of $X_1, \ldots, X_{k-1}$
+     weighted by $\mathbf{R}_{k, 1:k-1} \cdot \mathbf{R}_{1:k-1, 1:k-1}^{-1}$
+   - **Residual component**: independent normal carrying the remaining mean
+     separation needed to hit $\text{AUC}_k$ after accounting for what the
+     correlated component already contributes
 
-$$\text{AUC}_k = \Phi\!\left(\frac{\mu_{k1} - \mu_{k0}}{\sigma\sqrt{2}}\right)$$
-
-### Sequential Construction
-
-Biomarkers are generated from **highest to lowest AUC**.
-For each biomarker $X_k$:
-
-1. **Correlated component** $X_k^{\text{(corr)}}$ is constructed from
-   the $k-1$ previously generated biomarkers to achieve the target
-   correlations $\rho_{k,1}, \ldots, \rho_{k,k-1}$
-
-2. **Residual component** $X_k^{\text{(res)}}$ carries the remaining
-   mean separation needed to hit the target AUC, after accounting for
-   the separation already present in the correlated component
-
-3. $X_k = X_k^{\text{(corr)}} + X_k^{\text{(res)}}$, then standardized
+3. $X_k$ is centred and scaled to unit variance.
 
 ### AUC–Correlation Link
 
-In this model, for a given prevalence $\pi$, the Pearson correlation
+In this model, for a given prevalence $\pi$, the point-biserial correlation
 between $X_k$ and $Y$ is **determined** by the AUC:
 
 $$r_{pb} = \frac{\delta_k \cdot \sqrt{\pi(1-\pi)}}
                 {\sqrt{\delta_k^2 \cdot \pi(1-\pi) + 1}}$$
-
-where $\delta_k = \sqrt{2} \cdot \Phi^{-1}(\text{AUC}_k)$.
 
 | AUC | $r_{pb}$ at $\pi = 0.3$ | $r_{pb}$ at $\pi = 0.5$ |
 |-----|--------------------------|--------------------------|
@@ -172,21 +369,6 @@ where $\delta_k = \sqrt{2} \cdot \Phi^{-1}(\text{AUC}_k)$.
 | 0.80 | 0.36 | 0.47 |
 | 0.90 | 0.51 | 0.64 |
 | 0.95 | 0.60 | 0.73 |
-
-### Advantages
-
-- **Fast** — no numerical calibration needed, closed-form $\delta_k$
-- **Simple** — interpretable two-class normal model
-- **Good for method validation** — commonly used in biomarker simulation
-  literature (Hanley & McNeil, 1982; Obuchowski, 1997)
-
-### Limitations
-
-- **AUC and correlation are linked** — cannot independently specify both
-- **Equal variance assumption** may be restrictive for heteroscedastic
-  biomarkers
-- Sequential construction means biomarkers with lower AUC "inherit"
-  residuals from higher-AUC biomarkers
 
 ### Example
 
@@ -204,179 +386,82 @@ sim_b <- generate_data_analytical(
 )
 
 data.frame(
-  Biomarker = paste0("X", 1:3),
-  Target_AUC = c(0.85, 0.75, 0.65),
+  Biomarker   = paste0("X", 1:3),
+  Target_AUC  = c(0.85, 0.75, 0.65),
   Achieved_AUC = round(sim_b$achieved_aucs, 4)
 )
 ```
 
+### Advantages
+
+- **Fast** — closed-form calibration, no numerical search
+- **Simple** — interpretable equal-variance binormal model
+- **Common in literature** — Hanley & McNeil (1982), Obuchowski (1997)
+
+### Limitations
+
+- **AUC and correlation are linked** — cannot independently specify both
+- Equal-variance assumption may be restrictive
+- Sequential construction means lower-AUC biomarkers inherit residuals from
+  higher-AUC ones
+
 ---
 
-## 3. Rank-Based Construction (`generate_auc_vector`)
+## 5. Rank-Based Construction (`generate_auc_vector`, `generate_auc_cor_vector`)
 
-### Mathematical Foundation
+### `generate_auc_vector()` — Exact Empirical AUC
 
-The empirical AUC depends **only on the rank ordering** of scores.
-On a finite sample with $n_1$ positives and $n_0$ negatives, the
-achievable AUC values form a discrete grid:
+The empirical AUC depends **only on the rank ordering** of scores. On a
+finite sample with $n_1$ positives and $n_0$ negatives, achievable AUC
+values form a discrete grid with step $\Delta_{\text{AUC}} = 1/(n_1 n_0)$.
 
-$$\Delta_{\text{AUC}} = \frac{1}{n_1 \cdot n_0}$$
-
-Given a target AUC $\theta$, we find the subset of $n_1$ ranks (from
-$\{1, \ldots, n\}$) whose sum produces the required Mann-Whitney
-U-statistic $U = \theta \cdot n_1 n_0$, then assign normal quantile
-scores $\Phi^{-1}((R_i - 0.5)/n)$ to each observation.
-
-### AUC–Correlation Decoupling
-
-`generate_auc_cor_vector()` extends this by applying a strictly
-increasing Box-Cox transformation after rank construction.
-This preserves the AUC (ranks unchanged) while tuning the Pearson
-correlation toward a target value.
-
-```{r auc_cor}
+```{r rank_exact}
 y <- rbinom(200, 1, 0.3)
-out <- generate_auc_cor_vector(
+out <- generate_auc_vector(y, target_auc = 0.80)
+
+c(Requested = out$requested_auc, Achieved = out$achieved_auc,
+  AUC_step = out$auc_step)
+```
+
+When the requested AUC is not exactly attainable, `unattainable = "nearest"`
+uses the closest grid value and warns.
+
+### `generate_auc_cor_vector()` — AUC + Correlation
+
+After constructing ranks for the target AUC, a strictly increasing Box-Cox
+transform is tuned to move the Pearson correlation toward a target without
+changing the AUC (since monotone transforms preserve ranks, hence preserve AUC).
+
+```{r rank_cor}
+out_cor <- generate_auc_cor_vector(
   y, target_auc = 0.80, target_cor = 0.45,
   shuffle_within_class = FALSE
 )
 
-c(AUC = out$achieved_auc, Correlation = out$achieved_cor)
+c(AUC = out_cor$achieved_auc, Correlation = out_cor$achieved_cor,
+  lambda = out_cor$lambda,
+  cor_min = out_cor$cor_range[1], cor_max = out_cor$cor_range[2])
 ```
 
-The Box-Cox parameter $\lambda$ is found by grid search followed by
-local optimization.  Not every (AUC, correlation) pair is achievable —
-the monotone transform can only move the correlation within a bounded
-range $[r_{\min}, r_{\max}]$.
+Not every (AUC, correlation) pair is achievable — the Box-Cox family can
+only move correlation within a bounded range $[r_{\min}, r_{\max}]$.
 
----
+### `simulate_auc_correlation()` — Monte Carlo Distribution
 
-## 4. Class-Conditional Matrix Simulator (`simulate_auc_matrix`)
+Repeatedly draws from the binormal model and records achieved (AUC, r) pairs,
+showing the sampling distribution:
 
-### Mathematical Foundation
-
-Rather than deriving the outcome from a thresholded latent variable,
-`simulate_auc_matrix()` fixes the outcome $Y$ first — supplied directly, or
-generated with exact or Bernoulli class counts — and draws biomarkers
-**conditional on class**:
-
-$$X \mid Y = 0 \sim \mathcal{N}_p(\mu_0, \mathbf{R}), \qquad
-X \mid Y = 1 \sim \mathcal{N}_p(\mu_1, \mathbf{R})$$
-
-Both classes share the same correlation matrix $\mathbf{R}$; only the mean
-vectors differ. The per-biomarker mean shift $\delta_k = \mu_{1k} - \mu_{0k}$
-uses the same closed-form binormal calibration as
-`generate_data_analytical()`:
-
-$$\delta_k = \sqrt{2} \cdot \Phi^{-1}(\text{AUC}_k)$$
-
-Because $Y$ is fixed *before* any biomarker is drawn, a supplied `y` keeps
-its exact values and row order, and a generated `y` gets exact class counts
-under the default `outcome_mode = "exact"` (or independent Bernoulli draws
-under `outcome_mode = "bernoulli"`) — neither is achievable when the outcome
-is instead re-derived by thresholding a fresh latent draw.
-
-### Correlation Structures
-
-Instead of hand-building a full $p \times p$ matrix, `structure` names one of:
-
-| `structure` | Parameters | Off-diagonal entries |
-|---|---|---|
-| `"user"` | `correlation` = full matrix | as supplied |
-| `"exchangeable"` | `correlation` = single value | constant $\rho$ everywhere |
-| `"ar1"` | `correlation` = single value | $\rho^{|i-j|}$ |
-| `"block"` | `block_sizes`, `rho_within`, `rho_between` | block-diagonal |
-
-```{r matrix_ar1}
-set.seed(1)
-sim_ar1 <- simulate_auc_matrix(
-  n = 500, prevalence = 0.3,
-  target_aucs = c(0.9, 0.85, 0.8, 0.75),
-  correlation = 0.6, structure = "ar1"
+```{r rank_mc}
+mc <- simulate_auc_correlation(
+  y, target_auc = c(0.7, 0.8, 0.9), n_sim = 500, seed = 123
 )
-round(sim_ar1$achieved_correlation, 2)
+
+# Empirical mean AUCs (should be near targets)
+aggregate(auc ~ target_auc, data = mc$results, mean)
+
+# Mean shift for each target AUC
+mc$mean_shift
 ```
-
-```{r matrix_block}
-sim_block <- simulate_auc_matrix(
-  n = 500, prevalence = 0.3,
-  target_aucs = c(0.9, 0.85, 0.75, 0.7),
-  structure = "block", block_sizes = c(2, 2),
-  rho_within = 0.6, rho_between = 0.1, seed = 1
-)
-round(sim_block$achieved_correlation, 2)
-```
-
-### Feasibility Diagnostics
-
-Not every requested correlation matrix is positive definite (e.g. an
-exchangeable matrix needs `correlation > -1/(p-1)`). `feasibility` controls
-what happens when it isn't:
-
-- **`"error"`** (default): stops with a structured `aucmat_infeasible_targets`
-  condition.
-- **`"nearest"`**: projects to the nearest positive-semidefinite matrix
-  (eigenvalue clipping, rescaled back to a unit diagonal) and proceeds,
-  reporting the adjustment in `$feasibility`.
-
-```{r matrix_infeasible}
-sim_adj <- simulate_auc_matrix(
-  n = 200, prevalence = 0.3,
-  target_aucs = c(0.8, 0.7, 0.6, 0.55),
-  correlation = -0.5, structure = "exchangeable",
-  feasibility = "nearest", seed = 1
-)
-sim_adj$feasibility
-```
-
-### A Note on Achieved Correlation
-
-`$achieved_correlation` is computed on **within-class centred** residuals
-(each class centred on its own empirical mean before correlating), matching
-what `$requested_correlation` (`R`) actually parametrizes. The raw pooled
-correlation of the returned columns — ignoring `truth` — is *not* a
-consistent estimate of `R` whenever an AUC differs from 0.5: mixing two
-subpopulations with different means systematically inflates the pooled
-correlation (a mixture / Simpson's-paradox effect), independently of the
-within-class dependence structure.
-
-### Advantages
-
-- **Fast** — closed-form mean shift, no numerical calibration
-- **Named correlation structures** — exchangeable, AR(1), block, or a
-  hand-supplied matrix
-- **Feasibility diagnostics** — structured errors or automatic nearest-PD
-  repair, with the adjustment magnitude reported
-- **Outcome-preserving** — a supplied `y` is never altered; a generated `y`
-  gets exact class counts by default
-
-### Limitations
-
-- Equal-variance binormal assumption, like `generate_data_analytical()`
-- Correlation structure is limited to `user`/`exchangeable`/`ar1`/`block`
-- Non-normal marginals are not yet supported
-
----
-
-## 5. Validating a Simulator (`validate_simulation`)
-
-A single simulated draw is not evidence that a simulator is calibrated.
-`validate_simulation()` repeats a `simulate_auc_matrix()` call many times
-with independent seeds and reports bias, RMSE, Monte Carlo standard error,
-and target-interval hit rates for both AUCs and pairwise correlations.
-
-```{r validate}
-val <- validate_simulation(
-  n = 300, prevalence = 0.3,
-  target_aucs = c(0.85, 0.75, 0.65), correlation = 0.3, structure = "exchangeable",
-  times = 100, seed = 1
-)
-print(val)
-```
-
-Bias should be small relative to the Monte Carlo SE (`auc_mc_se`); a bias
-that stays large across replicates relative to `auc_mc_se` signals a
-calibration bug rather than sampling noise.
 
 ---
 
@@ -385,7 +470,7 @@ calibration bug rather than sampling noise.
 | Goal | Recommended Function |
 |------|---------------------|
 | General-purpose matrix simulation with named correlation structures | `simulate_auc_matrix()` |
-| Checking that a simulation spec is actually calibrated | `validate_simulation()` |
+| Checking a simulation spec is calibrated | `validate_simulation()` |
 | Independent control of AUC and a fully custom correlation matrix | `generate_data_probit()` |
 | Fast, simple binormal simulation | `generate_data_analytical()` |
 | Exact empirical AUC for a single biomarker | `generate_auc_vector()` |
@@ -400,3 +485,6 @@ calibration bug rather than sampling noise.
   under two or more correlated ROC curves. *Biometrics*, 44(3), 837–845.
 - Obuchowski NA (1997). Nonparametric analysis of clustered ROC curve
   data. *Biometrics*, 53(2), 567–578.
+- Sun X, Xu W (2014). Fast implementation of DeLong's algorithm for
+  comparing the areas under correlated ROC curves. *IEEE Signal Processing
+  Letters*, 21, 1389–1393.
