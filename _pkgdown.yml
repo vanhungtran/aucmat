@@ -47,6 +47,8 @@ reference:
   - plot_auc_stability
   - plot_roc_top
   - plot_correlation_heatmap
+  - plot.aucmat_compare
+  - plot.aucmat_simulation
 
 - title: Panels, CV & Power
   desc: Multivariable panels, cross-validation, and study planning
