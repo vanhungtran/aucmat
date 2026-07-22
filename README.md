@@ -24,24 +24,37 @@ remotes::install_github("vanhungtran/aucmat")
 | Category | Function | Description |
 |----------|----------|-------------|
 | **Screening** | `aucmat()` | Screen all biomarkers against a binary outcome |
+| | `cv_aucmat()` | Cross-validated AUC screening (out-of-fold) |
+| | `aucmat_by()` | Stratified screening by group with heterogeneity |
+| | `aucmat_multiclass()` | One-vs-rest + Hand-Till multiclass AUC |
+| | `hurdle_auc()` | Two-stage AUC for zero-inflated data |
 | **Inference** | `compare_auc()` | Paired AUC comparisons (superiority, NI, equivalence) |
 | | `compare_auc_global()` | Omnibus Wald test: H0 all AUCs equal |
 | | `auc_stability()` | Bootstrap rank-stability analysis |
-| **Simulation** | `simulate_auc_matrix()` | Class-conditional MVN with named correlation structures |
+| | `roc_test()` | Single-biomarker DeLong test with clean summary |
+| **Simulation** | `simulate_auc_matrix()` | Class-conditional MVN, named correlation structures |
+| | `simulate_auc_copula()` | Gaussian copula + iterative AUC perturbation |
+| | `simulate_hurdle_auc()` | Zero-inflated data (Bernoulli hurdle + log-normal) |
 | | `validate_simulation()` | Repeated-draw calibration check |
 | | `generate_data_probit()` | Latent probit: independent AUC + correlation |
 | | `generate_data_analytical()` | Sequential binormal: fast, AUC-correlation linked |
 | | `generate_auc_vector()` | Single score with exact empirical AUC |
 | | `generate_auc_cor_vector()` | Single score with exact AUC + approximate Pearson r |
 | | `simulate_auc_correlation()` | Monte Carlo sampling distribution of (AUC, r) |
+| **Panels & Power** | `fit_auc_panel()` | Multivariable panel scores (ridge/lasso/elastic-net) |
+| | `power_auc_matrix()` | Sample size and power for AUC comparisons |
 | **Visualization** | `plot_auc_rank()` | Ordered discrimination strengths with CIs |
 | | `plot_auc_volcano()` | Effect magnitude vs statistical evidence |
 | | `plot_auc_forest()` | Selected AUCs with confidence intervals |
 | | `plot_auc_stability()` | Bootstrap rank distributions |
 | | `plot_roc_top()` | ROC curves for selected biomarkers |
+| | `plot_roc_smooth()` | Smoothed (binormal) ROC curves |
+| | `plot_auc_pr()` | Precision-Recall curves for imbalanced data |
+| | `plot_correlation_heatmap()` | Requested vs achieved correlation |
+| | `plot_hurdle_diagnostics()` | Zero-inflation vs magnitude discrimination |
 | **S3 Methods** | `print()`, `summary()` | Display and summarise results |
 | | `as.data.frame()` | Convert screening results to data.frame |
-| | `plot()` | Default plot (rank plot) |
+| | `plot()` | Default plot per object class |
 | | `subset()` | Filter screening results |
 
 ## Quick Start
@@ -285,18 +298,56 @@ stab$coselection          # pairwise co-selection frequencies
 
 ---
 
-## 6. Simulation
+## 6. Hurdle-AUC: Zero-Inflated Biomarker Data
 
-`aucmat` provides seven simulation functions. The core distinction is whether
+Standard AUC assumes continuous data following a shifted normal distribution
+per class.  This breaks on zero-inflated data (scRNA-seq, microbiome,
+detection-limited assays) where 60%+ of values are exactly zero.  Under the
+standard model, zeros come from the tail of N(0,1) below 0 — biologically
+implausible.  The Hurdle-AUC models zeros and expression magnitudes as
+**separate biological processes**:
+
+**Stage 1** — Zero or expressed?  P(X=0 | class) via logistic regression.  
+**Stage 2** — If expressed, at what level?  Standard AUC on nonzero values only.
+
+```r
+# scRNA-seq: 62% zeros in controls, 25% in cases
+sim <- simulate_hurdle_auc(
+  n = 500, prevalence = 0.3,
+  target_hurdle_aucs = c(0.85, 0.72, 0.55),
+  zero_rate_neg = c(0.55, 0.30, 0.80),
+  zero_rate_pos = c(0.25, 0.10, 0.70)
+)
+
+# Standard AUC misses the signal
+fit_std <- aucmat(as.matrix(sim$data[, 1:3]), sim$data$truth, ci = "none")
+# Hurdle AUC recovers it (+69% improvement)
+fit_hur <- hurdle_auc(as.matrix(sim$data[, 1:3]), sim$data$truth)
+
+# Diagnostics: zero discrimination vs magnitude discrimination
+plot_hurdle_diagnostics(fit_hur)
+```
+
+| Metric | Standard AUC | Hurdle AUC | Why |
+|--------|:-----------:|:----------:|-----|
+| Biomarker 1 | ~0.53 | **~0.90** | 55%→25% zero rate shift + strong nonzero signal |
+| Biomarker 2 | ~0.65 | **~0.72** | 30%→10% zero rate shift + moderate signal |
+| Biomarker 3 | ~0.52 | ~0.55 | 80%→70% zero rate shift (weak discrimination) |
+
+## 7. Simulation
+
+`aucmat` provides nine simulation functions. The core distinction is whether
 AUC and between-biomarker correlation are **independent** (free parameters) or
 **linked** (determined by the binormal constraint).
 
-### 6.1 Simulator Comparison
+### 7.1 Simulator Comparison
 
 | Function | AUC + Correlation | Approach | Speed |
 |----------|-------------------|----------|-------|
-| `simulate_auc_matrix()` | **Independent** | Class-conditional MVN, closed-form mean shift, named correlation structures | Fast |
+| `simulate_auc_matrix()` | **Independent** | Class-conditional MVN, named correlation structures | Fast |
+| `simulate_auc_copula()` | **Independent** | Gaussian copula + iterative AUC perturbation | Moderate |
 | `generate_data_probit()` | **Independent** | Latent MVN, numerical ρ calibration | Slower |
+| `simulate_hurdle_auc()` | **Zero-inflated** | Bernoulli hurdle + log-normal magnitude | Moderate |
 | `generate_data_analytical()` | **Linked** | Sequential binormal decomposition | Fast |
 | `generate_auc_vector()` | **AUC only** | Rank construction, exact finite-sample AUC | Instant |
 | `generate_auc_cor_vector()` | **AUC exact, r approx** | Rank + Box-Cox tuning | Fast |

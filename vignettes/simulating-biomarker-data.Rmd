@@ -465,11 +465,129 @@ mc$mean_shift
 
 ---
 
+## 6. Gaussian Copula + Perturbation (`simulate_auc_copula`)
+
+### Mathematical Foundation
+
+The copula simulator cleanly separates two orthogonal concerns:
+
+**Phase 1 — Gaussian Copula:** For each class independently, biomarkers are
+drawn from MVN(0, R) then rank-transformed to uniforms and probit-transformed
+back to normal scores.  This copula step ensures the rank correlation
+structure $\mathbf{R}$ is preserved exactly, regardless of the marginal
+distributions.
+
+**Phase 2 — Iterative AUC Perturbation:** For each biomarker whose achieved
+AUC deviates from the target, a small class-conditional mean shift is applied.
+The shift magnitude follows the binormal calibration
+$\delta = \sqrt{2} \cdot \Phi^{-1}(\text{AUC})$ and decays with each
+iteration (step size $\times$ `step_decay`${}^\text{iter}$).  Because only
+means are shifted (not correlations), the correlation structure from Phase 1
+is minimally disturbed.
+
+### Example
+
+```{r copula_example}
+set.seed(42)
+sim_cop <- simulate_auc_copula(
+  n = 500, prevalence = 0.3,
+  target_aucs = c(0.85, 0.75, 0.65),
+  corr_matrix = matrix(c(
+    1.0, 0.4, 0.2,
+    0.4, 1.0, 0.3,
+    0.2, 0.3, 1.0
+  ), 3, 3)
+)
+
+data.frame(
+  Target   = sim_cop$target_aucs,
+  Phase1   = round(sim_cop$phase1_aucs, 3),
+  Achieved = round(sim_cop$achieved_aucs, 3)
+)
+
+cat("\nAchieved correlation:\n")
+round(sim_cop$achieved_correlation, 3)
+```
+
+### Advantages
+
+- **Strong correlation preservation** — copula rank-transform preserves
+  the target $\mathbf{R}$ better than sequential methods
+- **No AUC-correlation tradeoff** — Phase 2 perturbs only means
+- **Flexible** — can be extended to non-normal marginals via ECDF
+  (future milestone)
+
+### Limitations
+
+- Requires `mvtnorm` for multivariate normal draws
+- Iterative perturbation adds computational cost vs closed-form methods
+- Currently limited to normal marginals (ECDF extension deferred)
+
+---
+
+## 7. Hurdle Model for Zero-Inflated Data (`simulate_hurdle_auc`)
+
+### Mathematical Foundation
+
+In scRNA-seq and similar assays, a large fraction of measurements are exactly
+zero.  The standard binormal model cannot represent this: it would require
+the tail of a normal distribution below zero, producing implausible negative
+values.  The hurdle model separates the data-generating process into two
+stages:
+
+**Stage 1 — Zero Hurdle:**
+$$P(X_j = 0 \mid y) = \text{logistic}(\beta_0 + \beta_1 y)$$
+The difference in zero rates between classes provides discriminative signal.
+
+**Stage 2 — Magnitude (if expressed):**
+$$X_j \mid X_j > 0, y \sim \text{LogNormal}(\mu_y, \sigma^2)$$
+with $\mu_1 - \mu_0$ calibrated to the target non-zero AUC via the binormal
+shift $\delta = \sqrt{2} \cdot \Phi^{-1}(\text{AUC}_{\text{nonzero}})$.
+
+### Example
+
+```{r hurdle_example}
+set.seed(1)
+sim_hur <- simulate_hurdle_auc(
+  n = 500, prevalence = 0.3,
+  target_hurdle_aucs = c(0.85, 0.72, 0.55),
+  zero_rate_neg = c(0.55, 0.30, 0.80),
+  zero_rate_pos = c(0.25, 0.10, 0.70)
+)
+
+# Check achieved zero rates vs targets
+data.frame(
+  Biomarker     = paste0("X", 1:3),
+  Target_ZeroNeg = c(0.55, 0.30, 0.80),
+  Achieved_ZeroNeg = round(sim_hur$achieved_zero_rate_neg, 3),
+  Target_ZeroPos  = c(0.25, 0.10, 0.70),
+  Achieved_ZeroPos = round(sim_hur$achieved_zero_rate_pos, 3)
+)
+```
+
+### Advantages
+
+- **Biologically realistic** — models the "off vs on" binary decision
+  separately from the "how much when on" continuous decision
+- **Recovers signal** — standard AUC near 0.5 becomes Hurdle-AUC > 0.85
+  when zeros are class-discriminative
+- **Interpretable** — decomposes into zero AUC and nonzero AUC components
+
+### Limitations
+
+- Currently independent biomarkers (no correlation control)
+- Lognormal assumption for nonzero magnitudes
+- Requires explicit per-class zero rates (not derived from AUC)
+
+---
+
 ## Choosing a Simulator
 
 | Goal | Recommended Function |
 |------|---------------------|
 | General-purpose matrix simulation with named correlation structures | `simulate_auc_matrix()` |
+| Strong correlation preservation + accurate AUCs | `simulate_auc_copula()` |
+| Zero-inflated data (scRNA-seq, microbiome) | `simulate_hurdle_auc()` |
 | Checking a simulation spec is calibrated | `validate_simulation()` |
 | Independent control of AUC and a fully custom correlation matrix | `generate_data_probit()` |
 | Fast, simple binormal simulation | `generate_data_analytical()` |

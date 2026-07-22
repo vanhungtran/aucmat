@@ -72,7 +72,54 @@ head(as.data.frame(fit), 8)
 
 ---
 
-## 3. Visualize Results
+## 3. Hurdle-AUC for Zero-Inflated Biomarkers
+
+Now let's add zero-inflation to simulate scRNA-seq-like data and compare
+standard AUC against the two-stage Hurdle-AUC.
+
+```{r hurdle_data}
+set.seed(123)
+sim_hur <- simulate_hurdle_auc(
+  n = 400, prevalence = 0.3,
+  target_hurdle_aucs = c(0.85, 0.72, 0.60, 0.55, 0.52),
+  zero_rate_neg = c(0.55, 0.30, 0.70, 0.80, 0.90),
+  zero_rate_pos = c(0.25, 0.10, 0.60, 0.75, 0.88)
+)
+Xh <- as.matrix(sim_hur$data[, 1:5])
+yh <- sim_hur$data$truth
+
+# Standard AUC
+fit_std <- aucmat(Xh, yh, ci = "none")
+
+# Hurdle AUC
+fit_hur <- hurdle_auc(Xh, yh)
+```
+
+```{r hurdle_compare}
+# Side-by-side comparison
+comp <- data.frame(
+  Biomarker     = paste0("X", 1:5),
+  Standard_AUC  = round(fit_std$results$auc_strength, 3),
+  Hurdle_AUC    = round(fit_hur$results$hurdle_auc, 3),
+  Zero_AUC      = round(fit_hur$results$zero_auc, 3),
+  Nonzero_AUC   = round(fit_hur$results$nonzero_auc, 3),
+  Zero_Rate     = round(fit_hur$results$zero_rate_total, 3)
+)
+comp$Improvement <- round((comp$Hurdle_AUC - comp$Standard_AUC) / comp$Standard_AUC * 100, 1)
+comp
+```
+
+```{r hurdle_diag, fig.width=7, fig.height=4.5}
+plot_hurdle_diagnostics(fit_hur)
+```
+
+The Hurdle-AUC decomposes discrimination into zero-inflation signal and
+magnitude signal, recovering AUCs that standard screening misses on
+zero-heavy biomarkers.
+
+---
+
+## 4. Visualize Results
 
 ### Rank plot
 
@@ -94,7 +141,7 @@ plot_auc_forest(fit, n = 6)
 
 ---
 
-## 4. Compare Leading Candidates
+## 5. Compare Leading Candidates
 
 ```{r compare}
 # All pairs among the top 5
@@ -116,7 +163,7 @@ compare_auc_global(fit, X, y, biomarkers = head(fit$results$biomarker, 5))
 
 ---
 
-## 5. Assess Rank Stability
+## 6. Assess Rank Stability
 
 ```{r stability}
 stab <- auc_stability(X, y, times = 500, seed = 123)
@@ -129,7 +176,7 @@ plot_auc_stability(stab, n_label = 12)
 
 ---
 
-## 6. Cross-Validated Screening
+## 7. Cross-Validated Screening
 
 Same-data AUCs are optimistically biased. Cross-validation gives honest
 out-of-fold estimates:
@@ -149,7 +196,7 @@ head(data.frame(
 
 ---
 
-## 7. Build a Multivariable Panel
+## 8. Build a Multivariable Panel
 
 Combine the top biomarkers into a single score:
 
@@ -168,7 +215,7 @@ plot(panel)
 
 ---
 
-## 8. Plan a Follow-Up Study
+## 9. Plan a Follow-Up Study
 
 What sample size is needed to detect AUC = 0.70 with 80% power?
 
