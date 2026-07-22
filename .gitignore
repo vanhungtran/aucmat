@@ -10,4 +10,3 @@ vignettes/*.R
 !vignettes/lightbox.html
 .copilot/
 manuscript/
-*.Rmd

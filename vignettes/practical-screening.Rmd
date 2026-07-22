@@ -1,0 +1,246 @@
+---
+title: "Practical Biomarker Screening with aucmat"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+    includes:
+      before_body: lightbox.html
+vignette: >
+  %\VignetteIndexEntry{Practical Biomarker Screening with aucmat}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
+  fig.width = 7, fig.height = 5, message = FALSE, warning = FALSE)
+```
+
+```{r setup}
+library(aucmat)
+```
+
+## Overview
+
+This vignette walks through a realistic biomarker screening analysis using
+`aucmat`, from simulation through to reporting. We follow a typical omics
+workflow: generate data with known properties, screen biomarkers, compare
+leading candidates, validate via cross-validation, combine into a panel,
+and assess power for a follow-up study.
+
+---
+
+## 1. Simulate Realistic Biomarker Data
+
+We simulate 500 subjects (30% cases) with 20 biomarkers. The first 5 have
+moderate-to-strong signals (AUC 0.65–0.85); the remaining 15 are noise
+(AUC 0.50–0.55). Biomarkers within functional groups are correlated.
+
+```{r sim_data}
+set.seed(42)
+n_biomarkers <- 20
+signal_aucs <- c(0.85, 0.78, 0.72, 0.68, 0.65)
+noise_aucs <- runif(15, 0.50, 0.55)
+target_aucs <- c(signal_aucs, noise_aucs)
+
+sim <- simulate_auc_matrix(
+  n = 500, prevalence = 0.3,
+  target_aucs = target_aucs,
+  correlation = 0.15, structure = "exchangeable",
+  seed = 42
+)
+
+X <- as.matrix(sim$data[, 1:20])
+y <- sim$data$truth
+```
+
+---
+
+## 2. Screen All Biomarkers
+
+```{r screen}
+fit <- aucmat(X, y, ci = "delong", adjust = "BH")
+summary(fit)
+```
+
+### Top biomarkers
+
+```{r top}
+head(as.data.frame(fit), 8)
+```
+
+---
+
+## 3. Hurdle-AUC for Zero-Inflated Biomarkers
+
+Now let's add zero-inflation to simulate scRNA-seq-like data and compare
+standard AUC against the two-stage Hurdle-AUC.
+
+```{r hurdle_data}
+set.seed(123)
+sim_hur <- simulate_hurdle_auc(
+  n = 400, prevalence = 0.3,
+  target_hurdle_aucs = c(0.85, 0.72, 0.60, 0.55, 0.52),
+  zero_rate_neg = c(0.55, 0.30, 0.70, 0.80, 0.90),
+  zero_rate_pos = c(0.25, 0.10, 0.60, 0.75, 0.88)
+)
+Xh <- as.matrix(sim_hur$data[, 1:5])
+yh <- sim_hur$data$truth
+
+# Standard AUC
+fit_std <- aucmat(Xh, yh, ci = "none")
+
+# Hurdle AUC
+fit_hur <- hurdle_auc(Xh, yh)
+```
+
+```{r hurdle_compare}
+# Side-by-side comparison
+comp <- data.frame(
+  Biomarker     = paste0("X", 1:5),
+  Standard_AUC  = round(fit_std$results$auc_strength, 3),
+  Hurdle_AUC    = round(fit_hur$results$hurdle_auc, 3),
+  Zero_AUC      = round(fit_hur$results$zero_auc, 3),
+  Nonzero_AUC   = round(fit_hur$results$nonzero_auc, 3),
+  Zero_Rate     = round(fit_hur$results$zero_rate_total, 3)
+)
+comp$Improvement <- round((comp$Hurdle_AUC - comp$Standard_AUC) / comp$Standard_AUC * 100, 1)
+comp
+```
+
+```{r hurdle_diag, fig.width=7, fig.height=4.5}
+plot_hurdle_diagnostics(fit_hur)
+```
+
+The Hurdle-AUC decomposes discrimination into zero-inflation signal and
+magnitude signal, recovering AUCs that standard screening misses on
+zero-heavy biomarkers.
+
+---
+
+## 4. Visualize Results
+
+### Rank plot
+
+```{r rank_plot, fig.width=8, fig.height=4}
+plot_auc_rank(fit, n_label = 10)
+```
+
+### Volcano plot
+
+```{r volcano_plot, fig.width=8, fig.height=4}
+plot_auc_volcano(fit, q_cutoff = 0.05)
+```
+
+### Forest plot of top biomarkers
+
+```{r forest_plot, fig.width=7, fig.height=3}
+plot_auc_forest(fit, n = 6)
+```
+
+---
+
+## 5. Compare Leading Candidates
+
+```{r compare}
+# All pairs among the top 5
+cmp <- compare_auc(fit, X, y, top_n = 5, adjust = "BH")
+print(cmp)
+```
+
+### Forest plot of pairwise differences
+
+```{r compare_plot, fig.width=8, fig.height=5}
+plot(cmp)
+```
+
+### Global test
+
+```{r global}
+compare_auc_global(fit, X, y, biomarkers = head(fit$results$biomarker, 5))
+```
+
+---
+
+## 6. Assess Rank Stability
+
+```{r stability}
+stab <- auc_stability(X, y, times = 500, seed = 123)
+print(stab)
+```
+
+```{r stability_plot, fig.width=8, fig.height=5}
+plot_auc_stability(stab, n_label = 12)
+```
+
+---
+
+## 7. Cross-Validated Screening
+
+Same-data AUCs are optimistically biased. Cross-validation gives honest
+out-of-fold estimates:
+
+```{r cv}
+cv <- cv_aucmat(X, y, n_folds = 5, seed = 123)
+print(cv)
+
+# Compare: in-sample vs CV
+head(data.frame(
+  biomarker = cv$results$biomarker,
+  auc_in_sample = round(cv$results$auc_in_sample, 3),
+  auc_cv = round(cv$results$auc_cv, 3),
+  optimism = round(cv$results$optimism, 3)
+), 8)
+```
+
+---
+
+## 8. Build a Multivariable Panel
+
+Combine the top biomarkers into a single score:
+
+```{r panel}
+# Select top 4 biomarkers by CV AUC
+top4 <- head(cv$results$biomarker, 4)
+X_panel <- X[, top4, drop = FALSE]
+
+panel <- fit_auc_panel(X_panel, y, method = "ridge", n_folds = 5, seed = 123)
+print(panel)
+```
+
+```{r panel_plot, fig.width=7, fig.height=3}
+plot(panel)
+```
+
+---
+
+## 9. Plan a Follow-Up Study
+
+What sample size is needed to detect AUC = 0.70 with 80% power?
+
+```{r power}
+pwr <- power_auc_matrix(
+  target_aucs = 0.70,
+  power = 0.80,
+  prevalence = 0.3,
+  alpha = 0.05
+)
+print(pwr)
+```
+
+---
+
+## Summary
+
+| Step | Function | Key output |
+|------|----------|------------|
+| Simulate | `simulate_auc_matrix()` | Biomarker matrix + outcome |
+| Screen | `aucmat()` | Direction-preserving AUCs with q-values |
+| Visualize | `plot_auc_rank()`, `plot_auc_volcano()`, `plot_auc_forest()` | Publication-ready plots |
+| Compare | `compare_auc()` | Paired differences with CIs |
+| Global test | `compare_auc_global()` | Omnibus Wald test |
+| Stability | `auc_stability()` | Bootstrap rank distributions |
+| Cross-validate | `cv_aucmat()` | Out-of-fold AUCs, optimism |
+| Panel | `fit_auc_panel()` | Combined biomarker score |
+| Power | `power_auc_matrix()` | Sample size for next study |

@@ -1,0 +1,586 @@
+---
+title: "Introduction to aucmat"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+    includes:
+      before_body: lightbox.html
+vignette: >
+  %\VignetteIndexEntry{Introduction to aucmat}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse  = TRUE,
+  comment   = "#>",
+  fig.width  = 7,
+  fig.height = 5,
+  message    = FALSE,
+  warning    = FALSE
+)
+```
+
+```{r setup}
+library(aucmat)
+```
+
+## Overview
+
+`aucmat` is a matrix-first R package for screening and ranking molecular
+biomarkers against binary outcomes. It reports **direction-preserving AUCs**
+and provides inference, multiplicity adjustment, paired comparisons, bootstrap
+rank stability, and publication-quality visualizations.
+
+### Function Reference
+
+| Category | Function | Description |
+|----------|----------|-------------|
+| **Screening** | `aucmat()` | Screen all biomarkers against a binary outcome |
+| **Inference** | `compare_auc()` | Paired comparisons (superiority, NI, equivalence) |
+| | `compare_auc_global()` | Omnibus Wald test: H0 all AUCs equal |
+| | `auc_stability()` | Bootstrap rank-stability analysis |
+| **Simulation** | `simulate_auc_matrix()` | General-purpose matrix simulator (recommended) |
+| | `validate_simulation()` | Repeated-draw calibration check |
+| | `generate_data_probit()` | Latent probit: free AUC + correlation |
+| | `generate_data_analytical()` | Sequential binormal |
+| | `generate_auc_vector()` | Single score, exact empirical AUC |
+| | `generate_auc_cor_vector()` | Single score, exact AUC + approx Pearson r |
+| | `simulate_auc_correlation()` | Monte Carlo (AUC, r) sampling distribution |
+| **Visualization** | `plot_auc_rank()` | Ordered discrimination strengths with CIs |
+| | `plot_auc_volcano()` | Effect magnitude vs statistical evidence |
+| | `plot_auc_forest()` | Selected AUCs with confidence intervals |
+| | `plot_auc_stability()` | Bootstrap rank distributions |
+| | `plot_roc_top()` | ROC curves for selected biomarkers |
+| **S3 Methods** | `print()`, `summary()`, `as.data.frame()`, `plot()`, `subset()` | For `aucmat_screen` objects |
+
+---
+
+## 1. How Data is Simulated
+
+The AUC (Area Under the ROC Curve) answers: *if I pick one positive and one
+negative subject at random, how often does the positive have a higher
+biomarker value?* An AUC of 0.5 is useless (coin flip); 1.0 is perfect
+separation.
+
+### The Binormal Model
+
+Under the equal-variance binormal model, biomarker values are normally
+distributed in each class with a shared variance:
+
+$$X \mid Y = 0 \sim \mathcal{N}(\mu_0, \sigma^2), \qquad
+  X \mid Y = 1 \sim \mathcal{N}(\mu_1, \sigma^2)$$
+
+The AUC is linked to the standardized mean separation
+$\delta = (\mu_1 - \mu_0)/\sigma$:
+
+$$\text{AUC} = \Phi\!\left(\frac{\delta}{\sqrt{2}}\right)$$
+
+To target a specific AUC, invert: $\delta = \sqrt{2} \cdot \Phi^{-1}(\text{AUC})$.
+For example, AUC = 0.8 requires $\delta \approx 1.19$ — the positive class
+mean is about 1.19 standard deviations above the negative class mean.
+
+### Simulation Approaches
+
+| Function | AUC + Correlation | Approach | Speed |
+|----------|-------------------|----------|-------|
+| `simulate_auc_matrix()` | **Independent** (named structures) | Class-conditional MVN, closed-form $\delta$ | Fast |
+| `generate_data_probit()` | **Independent** (full matrix) | Latent MVN, numerical $\rho$ calibration | Slower |
+| `generate_data_analytical()` | **Linked** (binormal constraint) | Sequential decomposition | Fast |
+| `generate_auc_vector()` | AUC only (exact) | Rank construction | Instant |
+| `generate_auc_cor_vector()` | AUC exact, Pearson r approx | Rank + Box-Cox tuning | Fast |
+| `simulate_auc_correlation()` | Sampling distribution | Monte Carlo binormal | Moderate |
+
+---
+
+## 2. Simulating Biomarker Data
+
+### 2.1 `simulate_auc_matrix()` — Recommended General-Purpose Simulator
+
+Draws class-conditional multivariate normal biomarkers with a named
+correlation structure. The outcome is fixed before any biomarker is drawn.
+
+```{r sim_matrix}
+set.seed(42)
+sim <- simulate_auc_matrix(
+  n = 500, prevalence = 0.3,
+  target_aucs = c(0.90, 0.80, 0.70, 0.65),
+  correlation = 0.3, structure = "exchangeable"
+)
+data.frame(Target = sim$target_aucs, Achieved = round(sim$achieved_aucs, 4))
+```
+
+#### Correlation Structures
+
+```{r sim_structures}
+# Exchangeable: all off-diagonal entries equal
+sim_ex <- simulate_auc_matrix(
+  n = 500, prevalence = 0.3,
+  target_aucs = c(0.9, 0.8, 0.7, 0.65),
+  correlation = 0.4, structure = "exchangeable", seed = 1
+)
+
+# AR(1): correlation decays with distance |i-j|
+sim_ar1 <- simulate_auc_matrix(
+  n = 500, prevalence = 0.3,
+  target_aucs = c(0.9, 0.8, 0.7, 0.65),
+  correlation = 0.6, structure = "ar1", seed = 1
+)
+
+# Block: within-block and between-block correlations
+sim_blk <- simulate_auc_matrix(
+  n = 500, prevalence = 0.3,
+  target_aucs = c(0.9, 0.8, 0.7, 0.65),
+  structure = "block", block_sizes = c(2, 2),
+  rho_within = 0.6, rho_between = 0.1, seed = 1
+)
+
+cat("Exchangeable:\n")
+round(sim_ex$achieved_correlation, 3)
+cat("\nAR(1):\n")
+round(sim_ar1$achieved_correlation, 3)
+cat("\nBlock:\n")
+round(sim_blk$achieved_correlation, 3)
+```
+
+#### Feasibility Diagnostics
+
+When the requested correlation matrix is not positive definite,
+`feasibility = "nearest"` projects to the closest valid matrix:
+
+```{r sim_feasible}
+sim_adj <- simulate_auc_matrix(
+  n = 200, prevalence = 0.3,
+  target_aucs = c(0.8, 0.7, 0.6, 0.55),
+  correlation = -0.5, structure = "exchangeable",
+  feasibility = "nearest", seed = 1
+)
+sim_adj$feasibility
+```
+
+#### Supplied Outcome
+
+When `y` is supplied, its exact values, class counts, and row order are
+preserved:
+
+```{r sim_supplied}
+y_sup <- rbinom(300, 1, 0.3)
+sim_y <- simulate_auc_matrix(
+  y = y_sup,
+  target_aucs = c(0.85, 0.75),
+  correlation = 0.3, structure = "exchangeable", seed = 1
+)
+table(original = y_sup, generated = sim_y$data$truth)
+```
+
+### 2.2 `validate_simulation()` — Calibration Check
+
+A single draw is not evidence a simulator is calibrated. This function
+repeats the spec many times and reports bias, RMSE, Monte Carlo SE, and
+target-interval hit rates for both AUCs and correlations.
+
+```{r validate}
+val <- validate_simulation(
+  n = 300, prevalence = 0.3,
+  target_aucs = c(0.85, 0.75, 0.65),
+  correlation = 0.3, structure = "exchangeable",
+  times = 100, seed = 1
+)
+print(val)
+```
+
+A bias large relative to the Monte Carlo SE signals a calibration problem.
+
+### 2.3 Other Simulators
+
+```{r sim_others}
+set.seed(42)
+
+# Latent probit: independent AUC + correlation
+sim_p <- generate_data_probit(
+  n = 500,
+  target_aucs = c(0.90, 0.80, 0.70, 0.65),
+  corr_matrix = matrix(c(
+    1.0, 0.4, 0.2, 0.1,
+    0.4, 1.0, 0.3, 0.2,
+    0.2, 0.3, 1.0, 0.3,
+    0.1, 0.2, 0.3, 1.0
+  ), 4, 4),
+  prevalence = 0.3
+)
+
+# Binormal sequential
+sim_a <- generate_data_analytical(
+  n = 500, prevalence = 0.3,
+  target_aucs = c(0.85, 0.75, 0.65),
+  corr_matrix = matrix(c(1, 0.3, 0.1, 0.3, 1, 0.2, 0.1, 0.2, 1), 3, 3)
+)
+
+# Exact empirical AUC for a single biomarker
+y_raw <- rbinom(200, 1, 0.3)
+out_auc <- generate_auc_vector(y_raw, target_auc = 0.80)
+
+# Exact AUC + approximate Pearson correlation
+out_cor <- generate_auc_cor_vector(y_raw, target_auc = 0.80, target_cor = 0.45)
+
+# Monte Carlo sampling distribution
+mc <- simulate_auc_correlation(y_raw, target_auc = c(0.7, 0.8, 0.9),
+                                n_sim = 200, seed = 123)
+
+# Compare achieved vs target
+cat("=== Latent probit ===\n")
+data.frame(Target = sim_p$target_aucs, Achieved = round(sim_p$achieved_aucs, 4))
+
+cat("\n=== Binormal sequential ===\n")
+data.frame(Target = c(0.85, 0.75, 0.65), Achieved = round(sim_a$achieved_aucs, 4))
+
+cat("\n=== Single AUC vector ===\n")
+c(Requested = out_auc$requested_auc, Achieved = round(out_auc$achieved_auc, 4))
+
+cat("\n=== AUC + correlation vector ===\n")
+c(AUC_req = out_cor$requested_auc, AUC_ach = round(out_cor$achieved_auc, 4),
+  Cor_req = out_cor$requested_cor, Cor_ach = round(out_cor$achieved_cor, 4))
+
+cat("\n=== Monte Carlo (mean achieved AUC by target) ===\n")
+aggregate(auc ~ target_auc, data = mc$results, mean)
+```
+
+### 2.4 `simulate_auc_copula()` — Gaussian Copula + Perturbation
+
+The copula simulator separates correlation structure (Phase 1: Gaussian copula)
+from discriminative signal (Phase 2: iterative AUC perturbation), achieving
+both accurate correlations and accurate AUCs without the tradeoffs of the
+binormal model.
+
+```{r sim_copula}
+sim_cop <- simulate_auc_copula(
+  n = 300, prevalence = 0.3,
+  target_aucs = c(0.85, 0.75, 0.65),
+  corr_matrix = matrix(c(1, 0.4, 0.2, 0.4, 1, 0.3, 0.2, 0.3, 1), 3, 3),
+  seed = 1
+)
+data.frame(
+  Target   = sim_cop$target_aucs,
+  Phase1   = round(sim_cop$phase1_aucs, 3),
+  Achieved = round(sim_cop$achieved_aucs, 3)
+)
+```
+
+### 2.5 Hurdle-AUC for Zero-Inflated Data
+
+scRNA-seq, microbiome, and detection-limited assays produce data where 60%+
+of values are exactly zero. Standard AUC is near 0.5 on such data because
+the binormal assumption breaks. `hurdle_auc()` uses a two-stage model:
+
+1. **Zero hurdle:** P(X=0 | class) via logistic regression
+2. **Magnitude:** standard AUC on nonzero values only
+
+```{r sim_hurdle}
+sim_hur <- simulate_hurdle_auc(
+  n = 400, prevalence = 0.3,
+  target_hurdle_aucs = c(0.85, 0.72),
+  zero_rate_neg = c(0.55, 0.80),
+  zero_rate_pos = c(0.25, 0.70), seed = 1
+)
+Xh <- as.matrix(sim_hur$data[, 1:2])
+yh <- sim_hur$data$truth
+
+# Standard AUC vs Hurdle AUC
+fit_std <- aucmat(Xh, yh, ci = "none")
+fit_hur <- hurdle_auc(Xh, yh)
+
+data.frame(
+  Biomarker     = paste0("X", 1:2),
+  Standard_AUC  = round(fit_std$results$auc_strength, 3),
+  Hurdle_AUC    = round(fit_hur$results$hurdle_auc, 3),
+  Zero_AUC      = round(fit_hur$results$zero_auc, 3),
+  Nonzero_AUC   = round(fit_hur$results$nonzero_auc, 3)
+)
+```
+
+```{r sim_hurdle_diag, fig.width=6, fig.height=4}
+plot_hurdle_diagnostics(fit_hur)
+```
+
+---
+
+## 3. Matrix Screening: `aucmat()`
+
+`aucmat()` screens every biomarker column against a binary outcome with
+direction-preserving AUCs and configurable inference.
+
+```{r screen}
+X <- as.matrix(sim$data[, 1:4])
+y <- sim$data$truth
+
+fit <- aucmat(X, y, ci = "delong", adjust = "BH")
+print(fit)
+```
+
+```{r summary}
+summary(fit)
+```
+
+### Result Columns
+
+| Column | Description |
+|--------|-------------|
+| `biomarker` | Column name from X |
+| `auc_raw` | AUC on observed direction (may be < 0.5) |
+| `auc_strength` | $0.5 + |\text{auc\_raw} - 0.5|$ — always ≥ 0.5 |
+| `effect_direction` | `higher_in_positive` or `lower_in_positive` |
+| `std_error` | DeLong or bootstrap standard error |
+| `conf_low`, `conf_high` | Confidence interval bounds |
+| `p_value`, `q_value` | Raw and multiplicity-adjusted p-values |
+| `rank` | Ordered by `auc_strength` descending |
+| `n_used`, `n_pos`, `n_neg` | Sample counts per biomarker |
+| `n_missing`, `missing_fraction` | Missing data diagnostics |
+| `status` | `ok`, `constant`, `insufficient_positive`, etc. |
+| `warning` | `small_class_counts`, `high_missingness`, etc. |
+
+### Configuration Options
+
+```{r screen_options}
+# DeLong CIs with Benjamini-Hochberg adjustment (default)
+fit_delong <- aucmat(X, y, ci = "delong", adjust = "BH")
+
+# Stratified bootstrap CIs
+fit_boot   <- aucmat(X, y, ci = "bootstrap", boot_n = 2000, seed = 42)
+
+# No inference (fastest — AUC only, no CIs or p-values)
+fit_none   <- aucmat(X, y, ci = "none")
+
+# Bonferroni adjustment (stricter than BH)
+fit_bonf   <- aucmat(X, y, ci = "delong", adjust = "bonferroni")
+
+# Complete-case analysis (remove rows with any NA)
+fit_comp   <- aucmat(X, y, ci = "delong", na_action = "complete")
+
+# Retain data for downstream plotting without supplying X, y again
+fit_keep   <- aucmat(X, y, ci = "delong", retain_data = TRUE)
+```
+
+### S3 Methods for `aucmat_screen`
+
+```{r s3_methods}
+print(fit)                          # compact top-10 display
+summary(fit)                        # counts, statuses, missingness, multiplicity
+head(as.data.frame(fit))            # full results as a plain data.frame
+plot(fit)                           # alias for plot_auc_rank(fit)
+subset(fit, q_value < 0.05)         # filter by significance
+subset(fit, auc_strength > 0.8)     # filter by discrimination strength
+```
+
+---
+
+## 4. Visualizing Results
+
+Every function returns a `ggplot2` object. Labels are limited to a
+configurable number of top features to keep wide-matrix views readable.
+
+### 4.1 Rank Plot — `plot_auc_rank()`
+
+Ordered discrimination strengths with DeLong CI error bars. Colour indicates
+effect direction: blue = higher in positives, red = lower.
+
+```{r plot_rank, fig.width=7, fig.height=4}
+plot_auc_rank(fit, n_label = 4)
+```
+
+### 4.2 Volcano Plot — `plot_auc_volcano()`
+
+Effect magnitude ($|\text{AUC} - 0.5|$) against statistical evidence
+($-\log_{10} q$). Biomarkers with $q < \text{cutoff}$ are highlighted in red.
+
+```{r plot_volcano, fig.width=7, fig.height=4}
+plot_auc_volcano(fit, q_cutoff = 0.05)
+```
+
+### 4.3 Forest Plot — `plot_auc_forest()`
+
+Point estimates with confidence intervals for selected biomarkers.
+
+```{r plot_forest, fig.width=7, fig.height=3.5}
+plot_auc_forest(fit, n = 4)
+```
+
+### 4.4 ROC Curves — `plot_roc_top()`
+
+Empirical ROC curves for deliberately selected biomarkers. Optional
+bootstrap CI ribbons show estimation uncertainty.
+
+```{r plot_roc, fig.width=5.5, fig.height=5}
+plot_roc_top(fit, X = X, y = y,
+  biomarkers = head(fit$results$biomarker, 3),
+  add_ci = TRUE, boot_n = 500)
+```
+
+### 4.5 Stability Plot — `plot_auc_stability()`
+
+Bootstrap rank distributions: median (point) and IQR (error bar).
+
+```{r plot_stability, fig.width=8, fig.height=4.5}
+stab <- auc_stability(X, y, times = 200, top_k = c(3, 5), seed = 42)
+plot_auc_stability(stab, n_label = 8)
+```
+
+---
+
+## 5. Comparing Biomarker AUCs: `compare_auc()`
+
+`compare_auc()` tests AUC differences between biomarkers measured on the
+**same subjects**, supporting three hypothesis types and three selection modes.
+
+### 5.1 Three Comparison Modes
+
+```{r compare_modes}
+# Mode 1: Reference — every other biomarker vs one reference
+cmp_ref <- compare_auc(fit, X, y, reference = "X1")
+print(cmp_ref)
+
+# Mode 2: Top-N — all pairs among top N (with post-selection warning)
+cmp_top <- compare_auc(fit, X, y, top_n = 3)
+
+# Mode 3: Named set — all pairs within a specific list
+cmp_set <- compare_auc(fit, X, y, biomarkers = c("X1", "X2", "X4"))
+```
+
+### 5.2 Three Hypothesis Types
+
+```{r compare_hypotheses}
+# 1. Superiority (default): H0: AUC_a = AUC_b
+cmp_sup <- compare_auc(fit, X, y, reference = "X1",
+  hypothesis = "superiority")
+
+# 2. Directional superiority: H0: AUC_a <= AUC_b (a is no better)
+cmp_dir <- compare_auc(fit, X, y, reference = "X1",
+  hypothesis = "superiority", alternative = "greater")
+
+# 3. Non-inferiority: H0: AUC_a is worse than AUC_b by at least margin
+cmp_ni <- compare_auc(fit, X, y, reference = "X1",
+  hypothesis = "noninferiority", margin = 0.05)
+
+# 4. Equivalence (TOST): H0_lower: delta <= -m, H0_upper: delta >= m
+cmp_eq <- compare_auc(fit, X, y, reference = "X1",
+  hypothesis = "equivalence", margin = 0.15)
+```
+
+**Output columns:** `biomarker_a`, `biomarker_b`, `auc_a`, `auc_b`,
+`auc_diff`, `std_error`, `conf_low`, `conf_high`, `p_value`, `q_value`,
+`n_common`, `n_pos`, `n_neg`, `hypothesis`, `margin`.
+
+For equivalence, `p_value = max(p_lower, p_upper)` (TOST) and the interval is
+$1 - 2\alpha$.
+
+### 5.3 Multiplicity Adjustment
+
+```{r compare_adjust}
+compare_auc(fit, X, y, top_n = 3, adjust = "BH")
+compare_auc(fit, X, y, reference = "X1", adjust = "holm")
+compare_auc(fit, X, y, biomarkers = c("X1", "X2", "X4"),
+  adjust = "bonferroni")
+```
+
+---
+
+## 6. Global Test: `compare_auc_global()`
+
+Tests $H_0: \text{AUC}_1 = \text{AUC}_2 = \dots = \text{AUC}_p$ on a common
+subject set using the joint DeLong covariance matrix and a Wald statistic.
+
+```{r global}
+sim_big <- simulate_auc_matrix(n = 500, prevalence = 0.3,
+  target_aucs = c(0.85, 0.80, 0.75, 0.70, 0.65),
+  correlation = 0.3, structure = "exchangeable", seed = 3)
+X_big <- as.matrix(sim_big$data[, 1:5])
+y_big <- sim_big$data$truth
+fit_big <- aucmat(X_big, y_big, ci = "delong", adjust = "BH")
+
+global_test <- compare_auc_global(fit_big, X_big, y_big)
+print(global_test)
+
+# Select specific biomarkers
+compare_auc_global(fit_big, X_big, y_big,
+  biomarkers = c("X1", "X2", "X3"))
+```
+
+With two biomarkers, the global Wald statistic equals the squared
+paired-DeLong z statistic (within numerical tolerance). The default safety
+limit is 100 biomarkers; raise it with `max_biomarkers`.
+
+---
+
+## 7. Rank Stability: `auc_stability()`
+
+Bootstrap resampling quantifies how much rankings change under sampling
+variability, complementing point estimates with distribution information.
+
+```{r stability}
+stab <- auc_stability(X, y, times = 500, top_k = c(10, 25), seed = 42)
+print(stab)
+
+# Rank distribution summary
+head(stab$rank_summary)
+
+# Top-10 selection probability for each biomarker
+head(stab$top_k_probs[stab$top_k_probs$k == 10, ])
+
+# Pairwise co-selection frequencies for top biomarkers
+stab$coselection$biomarkers[1:4]
+```
+
+---
+
+## 8. Handling Missing Data
+
+Two strategies via `na_action`:
+
+| `na_action` | Behaviour |
+|-------------|-----------|
+| `"featurewise"` (default) | Each biomarker uses all subjects with observed values — maximises data |
+| `"complete"` | Only subjects with complete observations across all biomarkers — comparable populations |
+
+```{r missing}
+X_na <- X
+X_na[sample(length(X_na), 50)] <- NA
+
+fit_fw <- aucmat(X_na, y, ci = "none", na_action = "featurewise")
+head(fit_fw$results[, c("biomarker", "n_used", "n_missing", "missing_fraction")])
+```
+
+Imputation should be done **before** calling `aucmat()`. The package reports
+missingness per biomarker and warns on high missing fractions (> 50%).
+
+---
+
+## 9. Reproducibility
+
+All functions with randomness accept a `seed` argument. When `seed` is
+provided, the global `.Random.seed` is restored on exit — including when
+an error occurs:
+
+```{r repro}
+fit1 <- aucmat(X, y, ci = "bootstrap", boot_n = 500, seed = 123)
+fit2 <- aucmat(X, y, ci = "bootstrap", boot_n = 500, seed = 123)
+identical(fit1$results$auc_raw, fit2$results$auc_raw)
+```
+
+---
+
+## Getting Help
+
+```r
+?aucmat
+?simulate_auc_matrix
+?validate_simulation
+?generate_data_probit
+?compare_auc
+?compare_auc_global
+?auc_stability
+?plot_auc_rank
+```
+
+See also the [Simulating Biomarker Data](simulating-biomarker-data.html)
+vignette for mathematical foundations of each simulation engine.
