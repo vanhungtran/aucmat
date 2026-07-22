@@ -9,3 +9,5 @@ vignettes/*.html
 vignettes/*.R
 !vignettes/lightbox.html
 .copilot/
+manuscript/
+*.Rmd
