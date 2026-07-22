@@ -24,28 +24,27 @@ simulate_auc_copula(
 
 \item{corr_matrix}{A p x p target correlation matrix.}
 
-\item{n_iterations}{Number of perturbation iterations.  Default 5.
-More iterations give better AUC convergence at the cost of slightly
-more correlation distortion.}
+\item{n_iterations}{Number of perturbation iterations.  Default 5.}
 
 \item{step_decay}{Rate at which perturbation step size decreases.
-Default 0.5 means step size halves each iteration.}
+Default 0.5.}
 
-\item{convergence_tol}{Stop perturbing features where |achieved - target| < tol.
-Default 0.02.}
+\item{convergence_tol}{Stop perturbing features where
+|achieved - target| < tol.  Default 0.02.}
 
-\item{verify}{Logical.  If TRUE (default), verify achieved AUCs and correlations.}
+\item{verify}{Logical.  If TRUE (default), verify achieved AUCs and
+correlations.}
 }
 \value{
-A list with components \code{data}, \code{achieved_aucs}, \code{achieved_correlations},
-\code{target_aucs}, \code{phase1_aucs} (AUCs after Phase 1, before perturbation),
-\code{n_iterations_used}.
+An object of class \code{aucmat_simulation} with components \code{data},
+\code{target_aucs}, \code{achieved_aucs}, \code{requested_correlation},
+\code{achieved_correlation}, \code{phase1_aucs}, \code{n}, \code{prevalence}.
 }
 \description{
 Generates biomarkers in two phases: (1) a class-conditional Gaussian copula
-captures the full correlation structure and marginal distributions, then
-(2) iterative perturbation fine-tunes each biomarker's AUC against the
-outcome while minimally disturbing correlations.
+captures the full correlation structure, then (2) iterative perturbation
+fine-tunes each biomarker's AUC against the outcome while minimally
+disturbing correlations.
 }
 \details{
 \strong{Comparison to other aucmat simulators:}
@@ -57,28 +56,19 @@ Good AUC control, weak correlation control.}
 control via parametrized structures, normal marginals only.}
 \item{\code{generate_data_probit()}}{Latent probit model.  Simultaneously
 controls AUC and correlation via (p+1)x(p+1) matrix.}
-\item{\code{simulate_auc_copula()}}{\strong{This function.}  ECDF copula for
-arbitrary marginals + iterative AUC perturbation.  Best of both:
-distribution matching AND discriminative signal.}
+\item{\code{simulate_auc_copula()}}{\strong{This function.}  Gaussian copula +
+iterative AUC perturbation.  Strong correlation preservation
+without the AUC-correlation tradeoff.}
 }
-
-\strong{When to use:}
-Use when you need BOTH accurate correlations AND accurate AUCs, and your
-data may have non-normal marginal distributions.  This is the recommended
-default for most simulation scenarios.
 }
 \examples{
 \donttest{
-# Generate 500 samples with 3 biomarkers
 set.seed(42)
 sim <- simulate_auc_copula(
-  n = 500,
-  prevalence = 0.3,
+  n = 500, prevalence = 0.3,
   target_aucs = c(0.85, 0.75, 0.65),
   corr_matrix = matrix(c(1.0, 0.4, 0.2, 0.4, 1.0, 0.3, 0.2, 0.3, 1.0), 3, 3)
 )
-
-# Check achieved vs target
 data.frame(
   target   = sim$target_aucs,
   phase1   = round(sim$phase1_aucs, 3),
