@@ -1,700 +1,549 @@
-% Options for packages loaded elsewhere
-\PassOptionsToPackage{unicode}{hyperref}
-\PassOptionsToPackage{hyphens}{url}
-\documentclass[
-]{article}
-\usepackage{xcolor}
-\usepackage[margin=1in]{geometry}
-\usepackage{amsmath,amssymb}
-\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
-\usepackage{iftex}
-\ifPDFTeX
-  \usepackage[T1]{fontenc}
-  \usepackage[utf8]{inputenc}
-  \usepackage{textcomp} % provide euro and other symbols
-\else % if luatex or xetex
-  \usepackage{unicode-math} % this also loads fontspec
-  \defaultfontfeatures{Scale=MatchLowercase}
-  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
-\fi
-\usepackage{lmodern}
-\ifPDFTeX\else
-  % xetex/luatex font selection
-\fi
-% Use upquote if available, for straight quotes in verbatim environments
-\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
-\IfFileExists{microtype.sty}{% use microtype if available
-  \usepackage[]{microtype}
-  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
-}{}
-\makeatletter
-\@ifundefined{KOMAClassName}{% if non-KOMA class
-  \IfFileExists{parskip.sty}{%
-    \usepackage{parskip}
-  }{% else
-    \setlength{\parindent}{0pt}
-    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
-}{% if KOMA class
-  \KOMAoptions{parskip=half}}
-\makeatother
-\usepackage{color}
-\usepackage{fancyvrb}
-\newcommand{\VerbBar}{|}
-\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
-\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
-% Add ',fontsize=\small' for more characters per line
-\usepackage{framed}
-\definecolor{shadecolor}{RGB}{248,248,248}
-\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
-\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
-\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
-\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
-\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
-\newcommand{\BuiltInTok}[1]{#1}
-\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
-\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
-\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
-\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
-\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
-\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
-\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
-\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
-\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
-\newcommand{\ExtensionTok}[1]{#1}
-\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
-\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
-\newcommand{\ImportTok}[1]{#1}
-\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
-\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
-\newcommand{\NormalTok}[1]{#1}
-\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
-\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
-\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
-\newcommand{\RegionMarkerTok}[1]{#1}
-\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
-\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
-\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
-\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
-\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
-\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
-\usepackage{longtable,booktabs,array}
-\usepackage{calc} % for calculating minipage widths
-% Correct order of tables after \paragraph or \subparagraph
-\usepackage{etoolbox}
-\makeatletter
-\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
-\makeatother
-% Allow footnotes in longtable head/foot
-\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
-\makesavenoteenv{longtable}
-\usepackage{graphicx}
-\makeatletter
-\newsavebox\pandoc@box
-\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
-  \sbox\pandoc@box{#1}%
-  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
-  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
-  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
-  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
-  \else\usebox{\pandoc@box}%
-  \fi%
-}
-% Set default figure placement to htbp
-\def\fps@figure{htbp}
-\makeatother
-\setlength{\emergencystretch}{3em} % prevent overfull lines
-\providecommand{\tightlist}{%
-  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
-\usepackage[]{natbib}
-\bibliographystyle{plainnat}
-\usepackage{bookmark}
-\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
-\urlstyle{same}
-\hypersetup{
-  pdftitle={aucmat: matrix-first ROC analysis for high-dimensional biomarker screening in R},
-  hidelinks,
-  pdfcreator={LaTeX via pandoc}}
+% ===========================================================================
+%  aucmat: matrix-first ROC analysis for high-dimensional biomarker screening
+%  Bioinformatics Application Note
+% ===========================================================================
+\documentclass[10pt,twocolumn]{article}
 
-\title{aucmat: matrix-first ROC analysis for high-dimensional biomarker
-screening in R}
-\author{true}
+% ---- Packages ----
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\usepackage{natbib}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{microtype}
+
+% ---- Metadata ----
+\title{\textbf{aucmat}: matrix-first ROC analysis \\ for high-dimensional biomarker screening in \textsf{R}}
+
+\author{Lucas VHH Tran$^{1,*}$ \\
+$^{1}$Ho Chi Minh City, Vietnam \\
+$^{*}$tranhungydhcm@gmail.com}
+
 \date{}
 
 \begin{document}
+
 \maketitle
+
 \begin{abstract}
-\textbf{Summary:} The area under the receiver operating characteristic
-curve (AUC) is the standard metric for evaluating continuous biomarkers
-against binary outcomes. When screening thousands of molecular
-biomarkers, researchers need matrix-wide AUC estimation with proper
-inference, multiplicity adjustment, and stability assessment. We present
-aucmat, an R package providing a matrix-first architecture:
-\texttt{aucmat(X,\ y)} computes direction-preserving AUCs with DeLong or
-stratified-bootstrap confidence intervals for every column of a numeric
-matrix in a single call. The package supports Benjamini-Hochberg
-multiplicity adjustment, three hypothesis-testing frameworks for paired
-comparisons (superiority, non-inferiority, equivalence via TOST), an
-omnibus Wald test for equality of multiple correlated AUCs via the joint
-DeLong covariance matrix, and bootstrap rank-stability analysis.
-Cross-validated screening eliminates same-data optimism. A two-stage
-Hurdle-AUC model handles zero-inflated data (scRNA-seq, microbiome)
-where standard AUC degrades to near chance. Eight simulation generators
-and a validation harness produce correlated biomarkers with controlled
-properties under parametrized correlation structures with built-in
-calibration diagnostics. The package provides over a dozen visualization
-functions including ranked discrimination plots, volcano plots, forest
-plots, ROC curves with confidence ribbons, precision-recall curves, and
-Hurdle-AUC diagnostics. On a typical proteomics screen, aucmat avoids
-the per-column looping required by single-biomarker tools and provides
-complete inference in a single function call. The package is freely
-available under the MIT license at
-\url{https://github.com/vanhungtran/aucmat}. \textbf{Availability and
-Implementation:} R package (R \textgreater= 4.0.0), MIT license. Source:
-\url{https://github.com/vanhungtran/aucmat}. Documentation:
-\url{https://vanhungtran.github.io/aucmat}. Dependencies: pROC
-(\textgreater= 1.18), mvtnorm, ggplot2, rlang. \textbf{Contact:}
-\href{mailto:lucas.tran@ck-care.ch}{\nolinkurl{lucas.tran@ck-care.ch}}
+\textbf{Summary:} The area under the receiver operating characteristic curve
+(AUC) is the standard metric for evaluating continuous biomarkers against
+binary outcomes. When screening thousands of molecular biomarkers, researchers
+need matrix-wide AUC estimation with proper inference, multiplicity adjustment,
+and stability assessment. We present \texttt{aucmat}, an R package providing a
+matrix-first architecture: \texttt{aucmat(X, y)} computes direction-preserving
+AUCs with DeLong or stratified-bootstrap confidence intervals for every column
+of a numeric matrix in a single call. The package supports Benjamini-Hochberg
+multiplicity adjustment, three hypothesis-testing frameworks (superiority,
+non-inferiority, equivalence via TOST), an omnibus Wald test for equality of
+multiple correlated AUCs via the joint DeLong covariance matrix, and bootstrap
+rank-stability analysis. A two-stage Hurdle-AUC model handles zero-inflated
+data (scRNA-seq, microbiome). Eight simulation generators produce correlated
+biomarkers with controlled properties under exchangeable, AR(1), block, or
+user-supplied correlation structures with built-in calibration diagnostics.
+Over a dozen visualization functions are provided. The package is freely
+available under the MIT license at \url{https://github.com/vanhungtran/aucmat}.
+
+\textbf{Availability:} \texttt{aucmat} v0.2.0, R $\geq$ 4.0.0, MIT license.
+\url{https://github.com/vanhungtran/aucmat} (source),
+\url{https://vanhungtran.github.io/aucmat} (documentation).\\
+\textbf{Contact:} tranhungydhcm@gmail.com
 \end{abstract}
 
-\section{Introduction}\label{introduction}
+% ===========================================================================
+\section{Introduction}
+% ===========================================================================
 
-Receiver operating characteristic (ROC) analysis is the dominant
-framework for evaluating continuous biomarkers against binary outcomes
-in diagnostic medicine, prognostic modeling, and molecular screening
-\citep{Hanley1982, DeLong1988, Pepe2004}. The area under the ROC curve
-(AUC) summarizes the probability that a randomly chosen positive subject
-has a higher biomarker value than a randomly chosen negative subject.
-Its interpretability -- 0.5 for chance, 1.0 for perfect separation --
-has made it the default metric in omics-scale biomarker discovery
-\citep{Robin2011}.
+Receiver operating characteristic (ROC) analysis is the dominant framework
+for evaluating continuous biomarkers against binary outcomes in diagnostic
+medicine, prognostic modeling, and molecular screening
+\citep{Hanley1982,DeLong1988,Pepe2004}. The area under the ROC curve (AUC)
+summarises the probability that a randomly chosen positive subject has a
+higher biomarker value than a randomly chosen negative subject.
 
 Modern molecular profiling technologies routinely measure thousands of
 features on a few hundred subjects. A proteomics panel may contain 5,000
-proteins; a metabolomics screen 2,000 metabolites; a transcriptomics
-experiment 20,000 genes. The core statistical task -- ``which biomarkers
-discriminate cases from controls?'' -- requires computing and testing an
-AUC for each feature, adjusting for multiplicity, comparing top
-candidates, and assessing the stability of the rankings under sampling
-variability. Despite decades of methodological development, no
-widely-used R package integrates these steps into a single, reproducible
-workflow.
+proteins; a transcriptomics experiment 20,000 genes. The core task --
+identifying which biomarkers discriminate cases from controls -- requires
+computing and testing an AUC for each feature, adjusting for multiplicity,
+comparing top candidates, and assessing ranking stability. Yet no single
+widely-used R package integrates these steps.
 
-The existing R ecosystem provides excellent point solutions.
-\textbf{pROC} \citep{Robin2011} is the gold standard for
-single-biomarker ROC inference: it computes DeLong confidence intervals
-using the Sun \& Xu (2014) O(N log N) algorithm \citep{Sun2014}, tests
-paired or unpaired AUC differences via \texttt{roc.test()}, handles
-partial AUC with bootstrap inference, provides binormal and
-density-smoothed ROC curves, computes covariance between paired AUCs via
-\texttt{cov()}, and supports multiclass AUC via Hand \& Till
-\citep{Hand2001}. However, pROC operates one biomarker at a time --
-screening a matrix of 10,000 features requires an explicit per-column
-loop. \textbf{ROCR} \citep{Sing2005} offers flexible visualization with
-28 performance measures and cross-validation averaging but provides no
-statistical inference (no confidence intervals, no hypothesis tests for
-AUC differences). \textbf{precrec} \citep{Saito2017} adds
-precision-recall curves and fast C++-based AUC computation, with
-confidence bands for multiple test sets and functions for partial AUC
-(\texttt{part()}, \texttt{pauc()}) and AUC confidence intervals
-(\texttt{auc\_ci()}), but provides no DeLong inference, no multiplicity
-adjustment, and no paired comparison tests. \textbf{colAUC} from caTools
-\citep{Tuszynski2024} computes column-wise AUCs efficiently via the
-Wilcoxon rank-sum test and supports multiclass AUC via column means --
-but provides no inference whatsoever (no standard errors, confidence
-intervals, or p-values). \textbf{dtComb} \citep{Yerlitas2025} provides
-142 methods for combining two diagnostic markers into a composite score,
-with 30+ cutoff optimization methods, resampling, and caret integration
--- but is limited to exactly two biomarkers and does not perform
-matrix-wide screening. \textbf{cancerclass} \citep{Budczies2024} builds
-validated classifiers from high-dimensional molecular data using
-nearest-centroid prediction with multiple random validation, but does
-not offer DeLong-based screening or bootstrap stability analysis.
+The R ecosystem provides excellent point solutions. \texttt{pROC}
+\citep{Robin2011} is the gold standard: it computes DeLong confidence
+intervals using the Sun \& Xu (2014) $\mathcal{O}(N\log N)$ algorithm
+\citep{Sun2014}, tests paired or unpaired AUC differences via
+\texttt{roc.test()}, provides partial AUC with bootstrap inference, binormal
+and density-smoothed ROC curves, and multiclass AUC via Hand \& Till
+\citep{Hand2001}. However, pROC operates one biomarker at a time.
+\texttt{ROCR} \citep{Sing2005} offers 28 performance measures and visualisation
+but no statistical inference. \texttt{precrec} \citep{Saito2017} adds fast
+C++-based precision-recall curves and confidence bands but provides no DeLong
+inference or multiplicity adjustment. \texttt{colAUC} \citep{Tuszynski2024}
+computes column-wise AUCs efficiently but provides no inference whatsoever.
+\texttt{dtComb} \citep{Yerlitas2025} combines two biomarkers via 142 methods
+but does not perform matrix-wide screening. \texttt{cancerclass}
+\citep{Budczies2024} builds classifiers from high-dimensional data but lacks
+DeLong-based screening.
 
-aucmat fills this gap. Its design philosophy is \emph{matrix-first}: the
-primary function \texttt{aucmat(X,\ y)} accepts a numeric matrix
-\(\mathbf{X} \in
-\mathbb{R}^{n \times p}\) and a binary outcome vector \(\mathbf{y} \in
-\{0,1\}^n\), and returns a complete screening table with point
-estimates, standard errors, confidence intervals, raw and
-multiplicity-adjusted p-values, and diagnostic metadata for every
-biomarker in a single call. Downstream functions for comparison,
-stability, cross-validation, panel construction, and power analysis
-consume the same S3 object, preserving outcome encoding and inferential
-settings throughout.
+\texttt{aucmat} fills this gap with a \textit{matrix-first} design. The
+primary function \texttt{aucmat(X, y)} accepts $\mathbf{X} \in
+\mathbb{R}^{n \times p}$ and a binary outcome $\mathbf{y} \in \{0,1\}^n$,
+returning point estimates, standard errors, confidence intervals, raw and
+multiplicity-adjusted $p$-values, and diagnostic metadata for every biomarker
+in one call. Downstream functions for comparison, stability, cross-validation,
+panel construction, and power analysis consume the same S3 object, preserving
+outcome encoding throughout.
 
-\section{Methods}\label{methods}
+% ===========================================================================
+\section{Methods}
+% ===========================================================================
 
-\subsection{Direction-preserving AUC}\label{direction-preserving-auc}
+\subsection{Direction-preserving AUC}
 
-For biomarker \(X\) and binary outcome \(Y \in \{0,1\}\), the AUC equals
-the Mann-Whitney U probability:
-\(\text{AUC} = P(X_i > X_j \mid Y_i = 1, Y_j =
-0)\) \citep{Hanley1982}. Most ROC software reports
-\(\max(\text{AUC}, 1 -
-\text{AUC})\), silently reversing the biomarker to force the reported
-value above 0.5. aucmat deliberately preserves the observed direction,
-reporting three values per biomarker: \(\text{AUC}_{\text{raw}}\) (the
-Mann-Whitney estimate on the original numeric scale, which may be below
-0.5),
-\(\text{AUC}_{\text{strength}} = 0.5 + |\text{AUC}_{\text{raw}} - 0.5|\)
-(for ranking), and \texttt{effect\_direction}
-(\texttt{higher\_in\_positive} or \texttt{lower\_in\_positive}). This
-distinction matters biologically: a tumor suppressor gene with
-\(\text{AUC}_{\text{raw}} = 0.15\) discriminates just as strongly as an
-oncogene with \(\text{AUC}_{\text{raw}} = 0.85\), but with the opposite
-biological interpretation.
+For biomarker $X$ and binary outcome $Y \in \{0,1\}$, the AUC equals the
+Mann-Whitney U probability:
+\begin{equation}
+\text{AUC} = P(X_i > X_j \mid Y_i = 1, Y_j = 0) \label{eq:auc}
+\end{equation}
+Most software reports $\max(\text{AUC}, 1 - \text{AUC})$, silently reversing
+the biomarker. \texttt{aucmat} preserves the observed direction, reporting
+$\text{AUC}_{\text{raw}}$ (may be $< 0.5$), $\text{AUC}_{\text{strength}} =
+0.5 + |\text{AUC}_{\text{raw}} - 0.5|$ (for ranking), and
+\texttt{effect\_direction}. A tumour suppressor with $\text{AUC}_{\text{raw}}
+= 0.15$ discriminates as strongly as an oncogene with 0.85.
 
-\subsection{DeLong variance and joint
-covariance}\label{delong-variance-and-joint-covariance}
+\subsection{DeLong variance and joint covariance}
 
-The DeLong variance estimator \citep{DeLong1988, Sun2014} uses placement
-values
-\(V_{10}(X_i) = n_0^{-1} \sum_{j:Y_j=0} [\mathbf{1}(X_j < X_i) + 0.5 \cdot
-\mathbf{1}(X_j = X_i)]\) for positive subjects and
-\(V_{01}(X_j) = n_1^{-1}
-\sum_{i:Y_i=1} [\mathbf{1}(X_i > X_j) + 0.5 \cdot \mathbf{1}(X_i = X_j)]\)
-for negative subjects. Let
-\(S_{10} = (n_1 - 1)^{-1} \sum_{i \in \mathcal{I}_1}
-(V_{10}(X_i) - \bar{V}_{10})^2\) and
-\(S_{01} = (n_0 - 1)^{-1} \sum_{j \in
-\mathcal{I}_0} (V_{01}(X_j) - \bar{V}_{01})^2\) be the sample variances
-of the placement values. The DeLong variance estimator is
-\(\widehat{\text{Var}}(\widehat{\text{AUC}}) = S_{10}/n_1 + S_{01}/n_0\).
-For \(p\) biomarkers on common subjects, the \(p \times p\) joint
-covariance matrix
-\(\widehat{\mathbf{\Sigma}} = n_1^{-1}\widehat{\text{Cov}}(\mathbf{V}_{10})
-+ n_0^{-1}\widehat{\text{Cov}}(\mathbf{V}_{01})\) supports an omnibus
-Wald test of \(H_0: \text{AUC}_1 = \cdots = \text{AUC}_p\). Let
-\(\mathbf{C}\) be a \((p-1) \times p\) contrast matrix (default:
-comparing biomarkers \(2,\ldots,p\) against biomarker 1). The Wald
-statistic \(W = (\mathbf{C}\hat{\boldsymbol{\theta}})^\top
-(\mathbf{C}\widehat{\mathbf{\Sigma}}\mathbf{C}^\top)^{-1}
-(\mathbf{C}\hat{\boldsymbol{\theta}}) \sim \chi^2_{r}\) uses the
-effective rank \(r\) of the contrast covariance matrix, determined via
-eigenvalue tolerance. A generalized inverse is used on the stable
-subspace only; rank-zero or numerically unstable cases return
-\texttt{status\ =\ "non\_testable\_singular"}. For \(p = 2\), \(W\)
-equals the squared paired-DeLong \(z\)-statistic within numerical
-tolerance, serving as an internal consistency check.
+The DeLong estimator \citep{DeLong1988,Sun2014} uses placement values:
+\begin{align}
+V_{10}(X_i) &= \frac{1}{n_0} \sum_{j:Y_j=0}
+  \bigl[ \mathbf{1}(X_j < X_i) + \tfrac{1}{2}\mathbf{1}(X_j = X_i) \bigr],
+  \quad i \in \mathcal{I}_1 \label{eq:V10} \\
+V_{01}(X_j) &= \frac{1}{n_1} \sum_{i:Y_i=1}
+  \bigl[ \mathbf{1}(X_i > X_j) + \tfrac{1}{2}\mathbf{1}(X_i = X_j) \bigr],
+  \quad j \in \mathcal{I}_0 \label{eq:V01}
+\end{align}
+Let $S_{10} = (n_1-1)^{-1}\sum_{i\in\mathcal{I}_1}(V_{10}(X_i)-\bar{V}_{10})^2$
+and $S_{01} = (n_0-1)^{-1}\sum_{j\in\mathcal{I}_0}(V_{01}(X_j)-\bar{V}_{01})^2$.
+The variance estimator is:
+\begin{equation}
+\widehat{\text{Var}}(\widehat{\text{AUC}}) = \frac{S_{10}}{n_1} + \frac{S_{01}}{n_0}
+  \label{eq:delong_var}
+\end{equation}
 
-\subsection{Multiplicity adjustment and
-stability}\label{multiplicity-adjustment-and-stability}
+For $p$ biomarkers on common subjects, the $p \times p$ joint covariance is:
+\begin{equation}
+\widehat{\mathbf{\Sigma}} = \frac{1}{n_1}\widehat{\text{Cov}}(\mathbf{V}_{10})
+  + \frac{1}{n_0}\widehat{\text{Cov}}(\mathbf{V}_{01}) \label{eq:joint_cov}
+\end{equation}
+This supports an omnibus Wald test of $H_0: \text{AUC}_1 = \cdots =
+\text{AUC}_p$. With contrast matrix $\mathbf{C}$ (default: comparing
+biomarkers $2,\ldots,p$ against biomarker 1):
+\begin{equation}
+W = (\mathbf{C}\hat{\boldsymbol{\theta}})^\top
+  (\mathbf{C}\widehat{\mathbf{\Sigma}}\mathbf{C}^\top)^{-1}
+  (\mathbf{C}\hat{\boldsymbol{\theta}}) \sim \chi^2_{r} \label{eq:wald}
+\end{equation}
+using the effective rank $r$ via eigenvalue tolerance. At $p=2$, $W$ equals
+the squared paired-DeLong $z$-statistic within numerical tolerance.
 
-Screening \(p\) biomarkers produces \(p\) hypothesis tests. aucmat
-applies Benjamini-Hochberg \citep{Benjamini1995}, Holm, or Bonferroni
-correction via \texttt{stats::p.adjust()}, reporting adjusted p-values
-as \(q\)-values. For equivalence (TOST) \citep{Schuirmann1987}, the
-reported \(p_{\text{equiv}} =
-\max(p_{\text{lower}}, p_{\text{upper}})\) and multiplicity adjustment
-applies to this combined value.
+\subsection{Multiplicity and stability}
 
-Bootstrap rank-stability analysis (\texttt{auc\_stability()}) resamples
-the data \(B\) times with replacement (stratified by outcome),
-recomputes the full screening for each replicate, and reports median/IQR
-rank distributions, top-\(k\) selection probabilities, and pairwise
-co-selection frequencies -- quantifying how reproducible the ranking is
-under sampling variability \citep{Efron1994}.
+Screening $p$ biomarkers produces $p$ tests. \texttt{aucmat} applies
+Benjamini-Hochberg \citep{Benjamini1995}, Holm, or Bonferroni correction,
+reporting adjusted $p$-values as $q$-values. For TOST equivalence
+\citep{Schuirmann1987}, $p_{\text{equiv}} = \max(p_{\text{lower}},
+p_{\text{upper}})$ with adjustment on this combined value.
 
-\subsection{Hurdle-AUC for zero-inflated
-data}\label{hurdle-auc-for-zero-inflated-data}
+Bootstrap rank-stability (\texttt{auc\_stability()}) resamples data $B$ times
+(stratified by outcome), recomputes the full screening, and reports median/IQR
+rank distributions, top-$k$ selection probabilities, and pairwise co-selection
+frequencies \citep{Efron1994}.
 
-Standard AUC assumes continuous biomarkers following a shifted normal
-distribution per class. This assumption breaks on zero-inflated data
-(scRNA-seq, microbiome, detection-limited assays) where 60\%+ of values
-are exactly zero. Under the standard model, zeros would need to arise
-from the tail of a normal distribution below zero -- biologically
-implausible. The Hurdle-AUC uses a two-stage model:
+\subsection{Hurdle-AUC for zero-inflated data}
 
-\textbf{Stage 1 -- Zero hurdle:}
-\(P(X_j = 0 \mid Y) = \text{logistic}(\beta_0 +
-\beta_1 Y)\) models the binary expression decision via logistic
-regression.
+Standard AUC assumes continuous biomarkers. On zero-inflated data (scRNA-seq,
+microbiome), 60\%+ of values are zero, and standard AUC degrades to near 0.5.
+The Hurdle-AUC models zeros and expression as separate processes:
+\begin{align}
+\text{Stage 1 (zero hurdle):}\quad
+  P(X_j = 0 \mid Y) &= \text{logistic}(\beta_0 + \beta_1 Y) \label{eq:hurdle1} \\
+\text{Stage 2 (magnitude):}\quad
+  \text{AUC}(X_j \mid X_j > 0) &\text{ computed on expressed values only}
+  \label{eq:hurdle2}
+\end{align}
+The composite score for observation $i$ is:
+\begin{equation}
+S_i = \begin{cases}
+  \hat{p}_i & \text{if } X_{ij} = 0 \\
+  0.5\,\hat{p}_i + 0.5\,\tilde{x}_{ij} & \text{if } X_{ij} > 0
+\end{cases} \label{eq:hurdle_score}
+\end{equation}
+where $\hat{p}_i$ is the predicted non-zero probability from Stage~1 and
+$\tilde{x}_{ij}$ is the normalised biomarker value.
 
-\textbf{Stage 2 -- Magnitude:} Standard AUC on the non-zero values
-captures magnitude discrimination among expressed observations.
+\subsection{Multivariate simulation engine}
+\label{sec:simulation}
 
-The composite score \(S_i\) for observation \(i\) is:
-\(S_i = \hat{p}_i\) if \(X_{ij} = 0\), and
-\(S_i = 0.5 \cdot \hat{p}_i + 0.5 \cdot
-\tilde{x}_{ij}\) if \(X_{ij} > 0\), where \(\hat{p}_i\) is the predicted
-probability of being non-zero from Stage 1, and \(\tilde{x}_{ij}\) is
-the normalized biomarker value.
+The simulation engine is a core contribution of \texttt{aucmat}. We describe
+it in full mathematical detail, as it underpins the package's reproducibility
+guarantees and distinguishes it from ad-hoc simulation approaches.
 
-Simulation confirms recovery from standard AUC \(\approx\) 0.53 to
-Hurdle-AUC \(\approx\) 0.90 on zero-inflated biomarkers by acknowledging
-that ``expression on/off'' and ``expression level when on'' are separate
-biological processes.
+\subsubsection{The equal-variance binormal model}
 
-\subsection{Multivariate simulation}\label{multivariate-simulation}
+Under the standard binormal model \citep{Hanley1982}, for biomarker
+$k \in \{1,\ldots,p\}$:
+\begin{equation}
+X_k \mid Y = 0 \sim \mathcal{N}(\mu_{k0}, \sigma^2), \qquad
+X_k \mid Y = 1 \sim \mathcal{N}(\mu_{k1}, \sigma^2) \label{eq:binormal}
+\end{equation}
+The standardised mean separation $\delta_k = (\mu_{k1} - \mu_{k0})/\sigma$
+determines the AUC via:
+\begin{equation}
+\text{AUC}_k = \Phi\!\left(\frac{\delta_k}{\sqrt{2}}\right)
+  \label{eq:auc_delta}
+\end{equation}
+where $\Phi(\cdot)$ is the standard normal CDF. Inverting gives the
+closed-form calibration used by all \texttt{aucmat} simulators:
+\begin{equation}
+\delta_k = \sqrt{2} \cdot \Phi^{-1}(\text{AUC}_k) \label{eq:delta_cal}
+\end{equation}
+For $\text{AUC}=0.8$, $\delta \approx 1.19$; for $\text{AUC}=0.9$, $\delta
+\approx 1.81$. The class means are centred so the $n$-weighted grand mean is
+zero:
+\begin{equation}
+\mu_{k0} = \delta_k \cdot \left(-\frac{n_1}{n}\right), \qquad
+\mu_{k1} = \delta_k \cdot \left(\frac{n_0}{n}\right) \label{eq:centered_means}
+\end{equation}
 
-Under the equal-variance binormal model,
-\(X_k \mid Y \sim \mathcal{N}(\mu_{kY},
-\sigma^2)\) with
-\(\delta_k = (\mu_{1k} - \mu_{0k})/\sigma = \sqrt{2} \cdot
-\Phi^{-1}(\text{AUC}_k)\). For \(p\) biomarkers with correlation matrix
-\(\mathbf{R}\), the class-conditional distribution is
-\(\mathbf{X} \mid Y \sim
-\mathcal{N}_p(\boldsymbol{\mu}_Y, \mathbf{R})\), where
-\(\boldsymbol{\mu}_0\) and \(\boldsymbol{\mu}_1\) are centred so the
-\(n\)-weighted grand mean is zero. \texttt{simulate\_auc\_matrix()}
-generates data under this model with four parametrized correlation
-structures (user, exchangeable, AR(1), block) and feasibility
-diagnostics with optional nearest positive-definite projection.
+\subsubsection{Class-conditional multivariate normal (\texttt{simulate\_auc\_matrix})}
 
-\texttt{simulate\_auc\_copula()} uses a two-phase approach: Phase 1
-applies a Gaussian copula (rank-transform to uniform, probit to normal
-scores) that preserves the target correlation structure; Phase 2 applies
-iterative mean perturbation with decaying step size to fine-tune each
-biomarker's AUC. This separates correlation control (copula) from
-discriminative signal (perturbation), avoiding the AUC-correlation
-tradeoff inherent in sequential binormal methods.
+For $p$ biomarkers with correlation matrix $\mathbf{R}$, the class-conditional
+distribution generalises Eq.~\eqref{eq:binormal} to the multivariate case:
+\begin{equation}
+\mathbf{X} \mid Y = 0 \sim \mathcal{N}_p(\boldsymbol{\mu}_0, \mathbf{R}), \qquad
+\mathbf{X} \mid Y = 1 \sim \mathcal{N}_p(\boldsymbol{\mu}_1, \mathbf{R})
+  \label{eq:mvn_sim}
+\end{equation}
+where $\boldsymbol{\mu}_0 = (\mu_{10},\ldots,\mu_{p0})^\top$ and
+$\boldsymbol{\mu}_1 = (\mu_{11},\ldots,\mu_{p1})^\top$ follow
+Eq.~\eqref{eq:centered_means}. Both classes share the same $\mathbf{R}$.
 
-\texttt{simulate\_hurdle\_auc()} implements the two-stage hurdle model:
-Bernoulli zeros with class-specific rates, and log-normal magnitudes for
-expressed values with binormal-calibrated mean separation, clipped to
-\([0, \infty)\).
+The outcome $Y$ is fixed \textit{before} any biomarker is drawn. In
+\texttt{outcome\_mode = "exact"}, $n_1 = \lfloor n\pi \rfloor$ observations
+are assigned $Y=1$ with randomised order; in \texttt{"bernoulli"}, each
+$Y_i \sim \text{Bernoulli}(\pi)$. When $Y$ is user-supplied, its exact values
+and row order are preserved.
 
-\texttt{validate\_simulation()} repeats a specification across
-independent draws and reports bias, RMSE, Monte Carlo standard error,
-and target-interval hit rates for both AUCs and pairwise correlations --
-a single draw is never evidence that a simulator is calibrated.
+The matrix $\mathbf{R}$ is built from a named structure:
 
-\section{Implementation}\label{implementation}
+\begin{itemize}[nosep]
+  \item \textbf{exchangeable}: $R_{ij} = \rho$ for all $i \neq j$.
+    Requires $\rho > -1/(p-1)$ for positive definiteness.
+  \item \textbf{AR(1)}: $R_{ij} = \rho^{|i-j|}$.
+  \item \textbf{block}: $R_{ij} = \rho_w$ if $i,j$ in same block,
+    $\rho_b$ otherwise. Block sizes must sum to $p$.
+  \item \textbf{user}: $R_{ij}$ directly from the supplied matrix.
+\end{itemize}
 
-aucmat is implemented in pure R (\textasciitilde5,700 lines across 35
-source files) with minimized dependencies. The primary function
-\texttt{aucmat()} performs six steps in sequence: (1) input validation
-(matrix dimensions, column names, outcome levels, infinite values); (2)
-outcome normalization via \texttt{.normalize\_binary\_y()} (accepting
-logical, numeric 0/1, factor, or character outcomes); (3) matrix-wide
-AUC computation via the Mann-Whitney rank formulation; (4) DeLong or
-bootstrap inference via \texttt{.apply\_inference()} with configurable
-alternative hypothesis (\texttt{two.sided}, \texttt{greater},
-\texttt{less}); (5) multiplicity adjustment via
-\texttt{.adjust\_pvalues()}; and (6) result assembly with ranking by
-discrimination strength and feature-level warnings for small class
-counts or high missingness.
+When $\mathbf{R}$ is not positive definite, \texttt{feasibility = "nearest"}
+projects to the closest valid correlation matrix via eigenvalue clipping
+followed by re-normalisation to unit diagonal. The adjustment is reported in
+\texttt{\$feasibility} with Frobenius norm and maximum element-wise change.
 
-All primary functions return S3 objects with \texttt{print()},
-\texttt{summary()}, \texttt{plot()}, and (where appropriate)
-\texttt{as.data.frame()} and \texttt{subset()} methods. The package
-stores outcome encoding, positive-class designation, and sample masks in
-the returned object, eliminating the need for downstream functions to
-re-infer factor direction or re-derive class counts.
+After generation, each biomarker is standardised to zero mean and unit
+variance (an affine transform that preserves both AUC and Pearson correlation).
+Achieved correlation is computed on within-class centred residuals to avoid
+mixture-induced inflation (Simpson's paradox).
 
-Structured error classes (inheriting from \texttt{error}) allow
-programmatic handling of common failures:
-\texttt{aucmat\_invalid\_outcome},
-\texttt{aucmat\_invalid\_correlation},
-\texttt{aucmat\_infeasible\_targets},
-\texttt{aucmat\_insufficient\_sample}, and
-\texttt{aucmat\_resampling\_failure}. An RNG-safety mechanism
-(\texttt{with\_seed()}) saves the global \texttt{.Random.seed}, executes
-the computation, and restores the previous state on exit, including when
-\texttt{.Random.seed} was previously absent and when an error occurs.
+\subsubsection{Gaussian copula with perturbation (\texttt{simulate\_auc\_copula})}
 
-The package imports pROC (ROC curve objects and smoothed ROC), mvtnorm
-(multivariate normal generation), ggplot2 (visualization), and rlang
-(tidy evaluation). Optional Suggests include GGally (pairs plots for
-simulated data), glmnet (penalized panel models), matrixStats (fast
-column-wise ranks), knitr and rmarkdown (vignette building), and ggrepel
-(non-overlapping plot labels). The complete source, documentation, and
-four vignettes are available at
-\url{https://vanhungtran.github.io/aucmat}.
+This simulator separates correlation control from discriminative signal:
 
-\section{Usage}\label{usage}
+\textbf{Phase~1 -- Gaussian Copula.} For each class independently, $n_c$
+draws are taken from $\mathcal{N}_{p+1}(\mathbf{0}, \mathbf{R}_{\text{work}})$,
+where $\mathbf{R}_{\text{work}}$ is a $(p+1)\times(p+1)$ matrix combining the
+biomarker correlation $\mathbf{R}$ (upper-left $p\times p$) with latent
+outcome correlations $\boldsymbol{\rho}$ (last row/column). The latent
+correlations are approximated from target AUCs:
+\begin{equation}
+\rho_k^{\text{latent}} = \frac{\delta_k}{\sqrt{1 + \delta_k^2}}
+  \label{eq:latent_rho}
+\end{equation}
+Each column is rank-transformed to uniform quantiles, then probit-transformed
+to standard normal scores. This copula step preserves rank correlations
+exactly regardless of marginal distributions.
 
-\subsection{Basic screening}\label{basic-screening}
+\textbf{Phase~2 -- Iterative Perturbation.} After Phase~1, each biomarker's
+empirical AUC, $\widehat{\text{AUC}}_k$, is compared to its target. The gap
+$\Delta_k = \text{AUC}_k - \widehat{\text{AUC}}_k$ is translated to a mean
+shift via the binormal calibration:
+\begin{equation}
+\Delta\delta_k = \sqrt{2}\left[
+  \Phi^{-1}(\text{AUC}_k) - \Phi^{-1}(\widehat{\text{AUC}}_k)
+\right] \label{eq:perturb}
+\end{equation}
+The shift $\Delta\delta_k \cdot \sigma_k \cdot \eta^t$ is applied
+class-conditionally (positive class receives $+(n_0/n)$ times the shift,
+negative class $-(n_1/n)$), where $\eta \in (0,1)$ is the step decay and $t$
+the iteration index. Perturbation stops when $|\Delta_k| < \tau$ for all $k$ or
+after $T_{\max}$ iterations.
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\FunctionTok{library}\NormalTok{(aucmat)}
+\subsubsection{Hurdle simulator (\texttt{simulate\_hurdle\_auc})}
 
-\NormalTok{sim }\OtherTok{\textless{}{-}} \FunctionTok{simulate\_auc\_matrix}\NormalTok{(}
-  \AttributeTok{n =} \DecValTok{500}\NormalTok{, }\AttributeTok{prevalence =} \FloatTok{0.3}\NormalTok{,}
-  \AttributeTok{target\_aucs =} \FunctionTok{c}\NormalTok{(}\FloatTok{0.9}\NormalTok{, }\FloatTok{0.8}\NormalTok{, }\FloatTok{0.7}\NormalTok{, }\FloatTok{0.65}\NormalTok{),}
-  \AttributeTok{correlation =} \FloatTok{0.3}\NormalTok{, }\AttributeTok{structure =} \StringTok{"exchangeable"}
-\NormalTok{)}
-\NormalTok{X }\OtherTok{\textless{}{-}} \FunctionTok{as.matrix}\NormalTok{(sim}\SpecialCharTok{$}\NormalTok{data[, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{4}\NormalTok{])}
-\NormalTok{y }\OtherTok{\textless{}{-}}\NormalTok{ sim}\SpecialCharTok{$}\NormalTok{data}\SpecialCharTok{$}\NormalTok{truth}
+Generates zero-inflated biomarkers via a two-stage process. For biomarker $j$:
 
-\NormalTok{fit }\OtherTok{\textless{}{-}} \FunctionTok{aucmat}\NormalTok{(X, y, }\AttributeTok{ci =} \StringTok{"delong"}\NormalTok{, }\AttributeTok{adjust =} \StringTok{"BH"}\NormalTok{)}
-\FunctionTok{print}\NormalTok{(fit)}
-\FunctionTok{summary}\NormalTok{(fit)}
-\FunctionTok{plot\_auc\_rank}\NormalTok{(fit, }\AttributeTok{n\_label =} \DecValTok{4}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
+\textbf{Stage~1 -- Zero hurdle.} Logistic parameters are solved from
+user-specified per-class zero rates:
+\begin{align}
+\beta_0 &= \text{logit}(p_0), \quad
+  p_0 = P(X_j = 0 \mid Y = 0) \label{eq:hurdle_beta0} \\
+\beta_1 &= \text{logit}(p_1) - \text{logit}(p_0), \quad
+  p_1 = P(X_j = 0 \mid Y = 1) \label{eq:hurdle_beta1}
+\end{align}
+For each subject, $Z_{ij} \sim \text{Bernoulli}(\text{logistic}(\beta_0 +
+\beta_1 Y_i))$ determines whether $X_{ij} = 0$.
 
-\subsection{Paired comparisons with hypothesis
-testing}\label{paired-comparisons-with-hypothesis-testing}
+\textbf{Stage~2 -- Magnitude.} For observations with $Z_{ij} = 0$
+(expressed), values are drawn from a log-normal distribution with
+class-conditional means calibrated to achieve the target non-zero AUC via
+Eq.~\eqref{eq:delta_cal}:
+\begin{equation}
+X_{ij} \mid X_{ij} > 0, Y_i = c \sim
+  \text{LogNormal}\!\left(\mu_c, \sigma^2\right) \label{eq:lognormal_hurdle}
+\end{equation}
+where $\mu_1 - \mu_0$ is set by the binormal shift. Values are clipped to
+$[0, \infty)$.
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{\# Two{-}sided superiority (default: H0: delta = 0)}
-\FunctionTok{compare\_auc}\NormalTok{(fit, X, y, }\AttributeTok{reference =} \StringTok{"X1"}\NormalTok{)}
+\subsubsection{Other simulators}
 
-\CommentTok{\# Non{-}inferiority: H0: AUC\_a \textless{}= AUC\_b {-} margin}
-\FunctionTok{compare\_auc}\NormalTok{(fit, X, y, }\AttributeTok{reference =} \StringTok{"X1"}\NormalTok{,}
-  \AttributeTok{hypothesis =} \StringTok{"noninferiority"}\NormalTok{, }\AttributeTok{margin =} \FloatTok{0.05}\NormalTok{)}
+\texttt{generate\_data\_probit()} uses a latent probit formulation where
+$\mathbf{X}$ and a latent $Y^* \sim \mathcal{N}(0,1)$ are jointly
+$\mathcal{N}_{p+1}(\mathbf{0}, \mathbf{\Sigma})$, with $Y =
+\mathbf{1}\{Y^* > \Phi^{-1}(1-\pi)\}$. The full $(p+1)\times(p+1)$
+correlation matrix simultaneously controls both biomarker-biomarker and
+biomarker-outcome associations. The latent correlations $\rho_k =
+\text{Cor}(X_k, Y^*)$ are calibrated numerically via bisection over a large
+calibration sample ($n_{\text{cal}} = 100{,}000$).
 
-\CommentTok{\# Equivalence (TOST): H0: |AUC\_a {-} AUC\_b| \textgreater{}= margin}
-\FunctionTok{compare\_auc}\NormalTok{(fit, X, y, }\AttributeTok{reference =} \StringTok{"X1"}\NormalTok{,}
-  \AttributeTok{hypothesis =} \StringTok{"equivalence"}\NormalTok{, }\AttributeTok{margin =} \FloatTok{0.15}\NormalTok{, }\AttributeTok{adjust =} \StringTok{"BH"}\NormalTok{)}
+\texttt{generate\_data\_analytical()} constructs biomarkers sequentially from
+highest to lowest AUC. For $k \geq 2$, $X_k$ is built as a linear combination
+of $X_1,\ldots,X_{k-1}$ (weighted by $\mathbf{R}_{k,1:k-1}
+\mathbf{R}_{1:k-1,1:k-1}^{-1}$ to achieve target correlations) plus an
+independent residual carrying the remaining mean separation. This is fast
+(closed-form, no calibration loop) but links AUC and correlation.
 
-\CommentTok{\# Omnibus Wald test: H0: AUC\_1 = AUC\_2 = ... = AUC\_p}
-\FunctionTok{compare\_auc\_global}\NormalTok{(fit, X, y, }\AttributeTok{biomarkers =} \FunctionTok{paste0}\NormalTok{(}\StringTok{"X"}\NormalTok{, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{4}\NormalTok{))}
+\texttt{generate\_auc\_vector()} constructs a single score with exact empirical
+AUC via rank assignment. Given $n_1$ positives and $n_0$ negatives, achievable
+AUCs form a discrete grid with step $\Delta_{\text{AUC}} = 1/(n_1 n_0)$. The
+required rank sum is solved and normal quantile scores are assigned.
 
-\CommentTok{\# Single{-}biomarker DeLong test against chance}
-\FunctionTok{roc\_test}\NormalTok{(X[, }\DecValTok{1}\NormalTok{], y)}
-\end{Highlighting}
-\end{Shaded}
+\texttt{generate\_auc\_cor\_vector()} extends this with a strictly increasing
+Box-Cox transform tuned to achieve a target Pearson correlation without
+changing the AUC (since monotone transforms preserve ranks).
 
-\subsection{Hurdle-AUC for zero-inflated
-data}\label{hurdle-auc-for-zero-inflated-data-1}
+\texttt{simulate\_auc\_correlation()} repeatedly draws from the binormal model
+and records achieved (AUC, $r$) pairs to characterise their sampling
+distribution.
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{\# scRNA{-}seq: 55\% zeros in controls, 25\% in cases}
-\NormalTok{sim }\OtherTok{\textless{}{-}} \FunctionTok{simulate\_hurdle\_auc}\NormalTok{(}
-  \AttributeTok{n =} \DecValTok{400}\NormalTok{, }\AttributeTok{prevalence =} \FloatTok{0.3}\NormalTok{,}
-  \AttributeTok{target\_hurdle\_aucs =} \FunctionTok{c}\NormalTok{(}\FloatTok{0.85}\NormalTok{, }\FloatTok{0.72}\NormalTok{),}
-  \AttributeTok{zero\_rate\_neg =} \FunctionTok{c}\NormalTok{(}\FloatTok{0.55}\NormalTok{, }\FloatTok{0.80}\NormalTok{),}
-  \AttributeTok{zero\_rate\_pos =} \FunctionTok{c}\NormalTok{(}\FloatTok{0.25}\NormalTok{, }\FloatTok{0.70}\NormalTok{)}
-\NormalTok{)}
-\NormalTok{fit\_hur }\OtherTok{\textless{}{-}} \FunctionTok{hurdle\_auc}\NormalTok{(}\FunctionTok{as.matrix}\NormalTok{(sim}\SpecialCharTok{$}\NormalTok{data[, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{2}\NormalTok{]), sim}\SpecialCharTok{$}\NormalTok{data}\SpecialCharTok{$}\NormalTok{truth)}
-\FunctionTok{print}\NormalTok{(fit\_hur)}
-\CommentTok{\# Standard AUC \textasciitilde{}0.53 recovers to Hurdle AUC \textasciitilde{}0.90}
-\end{Highlighting}
-\end{Shaded}
+\subsubsection{Simulation validation}
 
-\subsection{Cross-validation, panel construction, power
-analysis}\label{cross-validation-panel-construction-power-analysis}
+\texttt{validate\_simulation()} repeats a specification across $R$ independent
+replicates with deterministic seed streams ($\text{seed} + r - 1$). For each
+replicate it records achieved AUCs and correlations, then reports:
+\begin{align}
+\text{Bias}_k &= \frac{1}{R}\sum_{r=1}^{R}
+  (\widehat{\text{AUC}}_{kr} - \text{AUC}_k) \label{eq:bias} \\
+\text{RMSE}_k &= \sqrt{\frac{1}{R}\sum_{r=1}^{R}
+  (\widehat{\text{AUC}}_{kr} - \text{AUC}_k)^2} \label{eq:rmse} \\
+\text{MCSE}_k &= \frac{\text{SD}_k}{\sqrt{R}} \label{eq:mcse}
+\end{align}
+plus target-interval hit rates for both AUCs and correlations. A bias large
+relative to MCSE signals a systematic calibration error.
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{\# Cross{-}validated AUC (honest out{-}of{-}fold estimates)}
-\NormalTok{cv }\OtherTok{\textless{}{-}} \FunctionTok{cv\_aucmat}\NormalTok{(X, y, }\AttributeTok{n\_folds =} \DecValTok{5}\NormalTok{, }\AttributeTok{seed =} \DecValTok{42}\NormalTok{)}
+% ===========================================================================
+\section{Implementation}
+% ===========================================================================
 
-\CommentTok{\# Combine top biomarkers into a penalized panel}
-\NormalTok{panel }\OtherTok{\textless{}{-}} \FunctionTok{fit\_auc\_panel}\NormalTok{(X[, }\FunctionTok{head}\NormalTok{(cv}\SpecialCharTok{$}\NormalTok{results}\SpecialCharTok{$}\NormalTok{biomarker, }\DecValTok{4}\NormalTok{)], y,}
-  \AttributeTok{method =} \StringTok{"ridge"}\NormalTok{, }\AttributeTok{n\_folds =} \DecValTok{5}\NormalTok{)}
+\texttt{aucmat} is implemented in pure R (6,200 lines, 34 source files).
+The primary function performs six steps: (1)~input validation, (2)~outcome
+normalisation (accepting logical, 0/1, factor, or character), (3)~matrix-wide
+AUC via Mann-Whitney rank formulation, (4)~DeLong or bootstrap inference,
+(5)~multiplicity adjustment, (6)~assembly with ranking and warnings.
 
-\CommentTok{\# Sample size for 80\% power to detect AUC = 0.70}
-\FunctionTok{power\_auc\_matrix}\NormalTok{(}
-  \AttributeTok{target\_aucs =} \FloatTok{0.70}\NormalTok{, }\AttributeTok{power =} \FloatTok{0.80}\NormalTok{,}
-  \AttributeTok{prevalence =} \FloatTok{0.3}\NormalTok{, }\AttributeTok{alpha =} \FloatTok{0.05}
-\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
+All functions return S3 objects with \texttt{print()}, \texttt{summary()},
+\texttt{plot()}, and \texttt{as.data.frame()} methods. Structured error
+classes allow programmatic handling. An RNG-safety mechanism
+(\texttt{with\_seed()}) restores \texttt{.Random.seed} on exit.
 
-\section{Benchmarking}\label{benchmarking}
+Dependencies: pROC ($\geq$ 1.18), mvtnorm, ggplot2, rlang. Optional
+Suggests: GGally, glmnet, matrixStats, knitr, rmarkdown, ggrepel.
 
-\textbf{Screening throughput.} On a desktop workstation (AMD Ryzen 3.5
-GHz, 32 GB RAM, R 4.5.1, Windows 11), aucmat screens 100, 1,000, and
-10,000 biomarkers (n = 500, DeLong inference) in 0.54, 5.02, and 59.76
-seconds respectively. The equivalent per-column pROC loop
-(\texttt{pROC::roc()} then \texttt{pROC::ci.auc()} with
-\texttt{method\ =\ "delong"}) on the same data requires 0.68, 6.42, and
-an estimated 64 seconds -- a speedup of approximately 1.1--1.3× at
-moderate \(p\), increasing at larger \(p\) as aucmat's fixed per-call
-overhead is amortized over more columns. The speed advantage comes from
-avoiding repeated outcome encoding and from column-wise rank
-computation. At small \(p\) (\textless{} 100), the difference is
-negligible; for wide matrices (\(p > 1{,}000\)), the per-column overhead
-of \texttt{pROC::roc()} and \texttt{pROC::ci.auc()} becomes meaningful.
+% ===========================================================================
+\section{Usage}
+% ===========================================================================
 
-\textbf{Simulation calibration.} Across 27 simulation conditions (n =
-100, 300, 500; prevalence averaged over 0.2, 0.3, 0.5; target AUC =
-0.65, 0.75, 0.85; 200 replicates each; averaged over exchangeable and
-AR(1) correlation structures with \(\rho = 0\) and \(\rho = 0.3\)),
-DeLong 95\% confidence interval coverage ranged from 0.898 (at n = 100,
-AUC = 0.65) to 0.957 (at n = 500, AUC = 0.65), converging to the nominal
-0.95 as sample size increased. Power exceeded 0.85 for AUC \(\geq\) 0.65
-at n = 100 and reached 1.0 for AUC \(\geq\) 0.75 at n \(\geq\) 300. The
-coverage is slightly below nominal for small \(n\) and extreme AUC
-values, consistent with the known finite-sample behavior of the DeLong
-variance estimator.
+Basic screening:
+\begin{verbatim}
+fit <- aucmat(X, y, ci = "delong", adjust = "BH")
+print(fit); summary(fit)
+plot_auc_rank(fit, n_label = 4)
+\end{verbatim}
 
-\begin{longtable}[]{@{}lrrrr@{}}
-\caption{Empirical coverage of DeLong 95\% confidence intervals,
-averaged across prevalence (0.2, 0.3, 0.5) and correlation structures
-(exchangeable, AR1) with 200 replicates each.}\tabularnewline
-\toprule\noalign{}
-& AUC & n=100 & n=300 & n=500 \\
-\midrule\noalign{}
-\endfirsthead
-\toprule\noalign{}
-& AUC & n=100 & n=300 & n=500 \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-1 & 0.65 & 0.898 & 0.937 & 0.957 \\
-4 & 0.75 & 0.915 & 0.943 & 0.933 \\
-7 & 0.85 & 0.883 & 0.923 & 0.905 \\
-\end{longtable}
+Paired comparisons with hypothesis testing:
+\begin{verbatim}
+compare_auc(fit, X, y, reference = "X1")  # superiority
+compare_auc(fit, X, y, reference = "X1",
+  hypothesis = "noninferiority", margin = 0.05)
+compare_auc(fit, X, y, reference = "X1",
+  hypothesis = "equivalence", margin = 0.15)
+compare_auc_global(fit, X, y)  # H0: all AUCs equal
+\end{verbatim}
 
-\section{Comparison with existing R
-packages}\label{comparison-with-existing-r-packages}
+Hurdle-AUC for zero-inflated data:
+\begin{verbatim}
+sim <- simulate_hurdle_auc(n = 400, prevalence = 0.3,
+  target_hurdle_aucs = c(0.85, 0.72),
+  zero_rate_neg = c(0.55, 0.80),
+  zero_rate_pos = c(0.25, 0.70))
+fit <- hurdle_auc(as.matrix(sim$data[,1:2]), sim$data$truth)
+# Standard AUC ~0.53 -> Hurdle AUC ~0.90
+\end{verbatim}
 
-Table \ref{features} compares aucmat (v0.2.0) with five established R
-packages for ROC analysis and biomarker evaluation. Features are
-verified against each package's CRAN documentation and published
-literature as of July 2026.
+Cross-validation, panel construction, power analysis:
+\begin{verbatim}
+cv <- cv_aucmat(X, y, n_folds = 5, seed = 42)
+panel <- fit_auc_panel(X[,top4], y, method = "ridge")
+power_auc_matrix(target_aucs = 0.70, power = 0.80,
+  prevalence = 0.3)
+\end{verbatim}
 
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.5125}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.0875}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.0625}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1000}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.0625}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.0875}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.0875}}@{}}
+% ===========================================================================
+\section{Benchmarking}
+% ===========================================================================
+
+\begin{table}[H]
+\centering
+\caption{Empirical coverage of DeLong 95\% confidence intervals, averaged
+  across 27 simulation conditions (200 replicates each).}
+\label{tab:coverage}
+\begin{tabular}{lccc}
+\toprule
+AUC & $n=100$ & $n=300$ & $n=500$ \\
+\midrule
+0.65 & 0.898 & 0.937 & 0.957 \\
+0.75 & 0.915 & 0.943 & 0.933 \\
+0.85 & 0.883 & 0.923 & 0.905 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Screening throughput.} On a desktop workstation (AMD Ryzen 3.5~GHz,
+32~GB RAM, R 4.5.1, Windows~11), \texttt{aucmat} screens 100, 1,000, and
+10,000 biomarkers ($n=500$, DeLong inference) in 0.54, 5.02, and 59.76~seconds.
+The equivalent per-column \texttt{pROC} loop requires 0.68, 6.42, and an
+estimated 64~seconds.
+
+\textbf{Simulation calibration.} Across 27 conditions ($n = 100, 300, 500$;
+prevalence $= 0.2, 0.3, 0.5$; AUC $= 0.65, 0.75, 0.85$; 200~reps each),
+DeLong coverage ranged from 0.898 to 0.957, converging to 0.95 as $n$
+increased (Table~\ref{tab:coverage}). Power exceeded 0.85 for AUC $\geq 0.65$
+at $n=100$ and reached 1.0 for AUC $\geq 0.75$ at $n \geq 300$.
+
+% ===========================================================================
+\section{Comparison with existing packages}
+% ===========================================================================
+
+\begin{table}[H]
+\centering
 \caption{Feature comparison of R packages for ROC analysis and biomarker
-screening. \textbackslash texttt\{+\} = supported;
-\textbackslash texttt\{-\} = not supported or requires manual
-implementation. Verified against CRAN documentation as of July 2026.
-pROC supports unpaired comparisons via
-\textbackslash texttt\{roc.test(paired=FALSE)\}; aucmat requires common
-subjects for all comparisons.}\tabularnewline
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-Feature
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-aucmat
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-pROC
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-precrec
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-ROCR
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-colAUC
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-dtComb
-\end{minipage} \\
-\midrule\noalign{}
-\endfirsthead
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-Feature
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-aucmat
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-pROC
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-precrec
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-ROCR
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-colAUC
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-dtComb
-\end{minipage} \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-Matrix-first screening (single call) & + & - & - & - & + & - \\
-Direction-preserving AUC (\textless0.5 reported) & + & - & - & - & - &
-- \\
-DeLong confidence intervals & + & + & - & - & - & - \\
-Stratified bootstrap CI & + & + & - & - & - & + \\
-Multiplicity adjustment (BH/Holm/Bonf) & + & - & - & - & - & - \\
-One-sided alternative tests & + & + & - & - & - & - \\
-Paired biomarker comparisons & + & + & - & - & - & + \\
-Non-inferiority / equivalence (TOST) & + & - & - & - & - & - \\
-Omnibus Wald test (3+ correlated AUCs) & + & - & - & - & - & - \\
-Bootstrap rank-stability analysis & + & - & - & - & - & - \\
-Partial AUC & + & + & + & - & - & - \\
-Multivariate simulation engine & + & - & - & - & - & - \\
-Simulation calibration diagnostics & + & - & - & - & - & - \\
-Cross-validated AUC screening & + & - & - & - & - & + \\
-Penalized panel models (ridge/lasso) & + & - & - & - & - & + \\
-Hurdle-AUC (zero-inflated data) & + & - & - & - & - & - \\
-Precision-Recall curves & + & - & + & - & - & - \\
-Power / sample size computation & + & + & - & - & - & - \\
-Multiclass AUC (Hand-Till) & + & + & - & - & + & - \\
-ROC smoothing (binormal/density) & + & + & - & - & - & - \\
-Group-stratified screening & + & - & - & - & - & - \\
-\end{longtable}
+  screening. $+$ = supported; $-$ = not supported. Verified against CRAN
+  documentation as of July 2026.}
+\label{tab:features}
+\footnotesize
+\begin{tabular}{lcccccc}
+\toprule
+Feature & \textbf{aucmat} & pROC & precrec & ROCR & colAUC & dtComb \\
+\midrule
+Matrix-first screening & $+$ & $-$ & $-$ & $-$ & $+$ & $-$ \\
+Direction-preserving AUC & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
+DeLong confidence intervals & $+$ & $+$ & $-$ & $-$ & $-$ & $-$ \\
+Stratified bootstrap CI & $+$ & $+$ & $-$ & $-$ & $-$ & $+$ \\
+Multiplicity (BH/Holm/Bonf) & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
+One-sided alternative tests & $+$ & $+$ & $-$ & $-$ & $-$ & $-$ \\
+Paired biomarker comparisons & $+$ & $+$ & $-$ & $-$ & $-$ & $+$ \\
+Non-inferiority/equivalence & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
+Omnibus Wald test (3+ AUCs) & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
+Bootstrap rank stability & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
+Partial AUC & $+$ & $+$ & $+$ & $-$ & $-$ & $-$ \\
+Multivariate simulation & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
+Simulation calibration & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
+Cross-validated AUC & $+$ & $-$ & $-$ & $-$ & $-$ & $+$ \\
+Penalised panel (ridge/lasso) & $+$ & $-$ & $-$ & $-$ & $-$ & $+$ \\
+Hurdle-AUC (zero-inflated) & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
+Precision-Recall curves & $+$ & $-$ & $+$ & $-$ & $-$ & $-$ \\
+Power/sample size & $+$ & $+$ & $-$ & $-$ & $-$ & $-$ \\
+Multiclass AUC (Hand-Till) & $+$ & $+$ & $-$ & $-$ & $+$ & $-$ \\
+ROC smoothing & $+$ & $+$ & $-$ & $-$ & $-$ & $-$ \\
+Group-stratified screening & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\textbf{What aucmat uniquely provides.} Five capabilities are, to our
-knowledge, not available in any other single R package: (i) matrix-first
-screening with direction-preserving AUC and multiplicity adjustment in
-one call; (ii) non-inferiority and equivalence (TOST) tests for paired
-AUC comparisons; (iii) an omnibus Wald test for three or more correlated
-AUCs via the joint DeLong covariance matrix; (iv) bootstrap
-rank-stability analysis with top-\(k\) selection probabilities and
-pairwise co-selection frequencies; and (v) a two-stage Hurdle-AUC model
-for zero-inflated data that recovers discriminative signal where
-standard AUC fails.
+Five capabilities are unique to \texttt{aucmat}: (i)~matrix-first screening
+with direction-preserving AUC and multiplicity adjustment; (ii)~non-inferiority
+and equivalence tests for paired AUCs; (iii)~omnibus Wald test for three or
+more correlated AUCs; (iv)~bootstrap rank-stability analysis; and (v)~Hurdle-AUC
+for zero-inflated data.
 
-\textbf{When to use what.} For a single biomarker with smoothed ROC
-curves, pROC remains the gold standard, offering binormal and density
-smoothing, partial AUC with bootstrap inference, and Venkatraman's
-permutation test for whole-curve comparison \citep{Venkatraman2000}. For
-speed on extremely wide matrices (\textgreater100k columns), colAUC's
-Wilcoxon-based column-wise computation is recommended, though it
-provides no inference. For precision-recall analysis of highly
-imbalanced data, precrec's C++ backend offers fast and accurate PR
-curves with confidence bands for multiple test sets. For combining two
-biomarkers into an optimal composite score, dtComb's library of 142
-methods covers virtually all published linear, non-linear, mathematical,
-and machine-learning combination approaches. For end-to-end screening of
-hundreds to tens of thousands of biomarkers with full statistical
-inference, multiplicity adjustment, comparison testing, stability
-assessment, validation, and study planning in a single coherent
-workflow, aucmat is the recommended tool.
+For a single biomarker with smoothed ROC curves, \texttt{pROC} remains the
+standard. For speed on $>10^5$ columns, \texttt{colAUC} is recommended. For
+precision-recall of imbalanced data, \texttt{precrec} is preferred. For
+combining two biomarkers, \texttt{dtComb} provides the most exhaustive methods.
+For end-to-end biomarker screening with full inference, \texttt{aucmat} is the
+recommended tool.
 
-\section{Discussion}\label{discussion}
+% ===========================================================================
+\section{Discussion}
+% ===========================================================================
 
-aucmat provides a unified, statistically principled framework for
-biomarker screening against binary outcomes in R. Its matrix-first
-design reduces the code burden for high-dimensional ROC analysis from
-dozens of bespoke scripting steps to a handful of function calls with
-consistent S3 interfaces. Cross-validated screening and penalized panel
-models address same-data optimism, while power analysis tools support
-prospective study design.
+\texttt{aucmat} provides a unified, statistically principled framework for
+biomarker screening. Its matrix-first design reduces the code burden from
+dozens of scripting steps to a few function calls.
 
-\textbf{Limitations.} The current version (0.2.0) is restricted to
-binary outcomes for the primary screening workflow (multiclass is
-available experimentally via \texttt{aucmat\_multiclass()}). The DeLong
-variance estimator requires common subjects for paired comparisons;
-unpaired comparisons between independent cohorts are not yet implemented
-(pROC provides this via \texttt{roc.test(paired=FALSE)}). Partial AUC
-computation is implemented as an internal engine
-(\texttt{R/partial-auc.R}) but not yet exposed through the primary
-\texttt{aucmat()} interface. The package targets in-memory dense
-matrices; sparse and on-disk backends are deferred. The DeLong variance
-estimator shows slightly liberal coverage at small sample sizes
-(coverage \(\approx\) 0.90 at n = 100 for AUC = 0.65), consistent with
-its known finite-sample behavior; bootstrap intervals are recommended
-when n \textless{} 100 per class.
+\textbf{Limitations.} The current version (0.2.0) is restricted to binary
+outcomes for the primary workflow (multiclass is experimental). DeLong requires
+common subjects; unpaired comparisons are not implemented (pROC provides this).
+Partial AUC is an internal engine not yet exposed in \texttt{aucmat()}. The
+DeLong estimator is slightly liberal at small $n$ (coverage $\approx 0.90$ at
+$n=100$), consistent with its finite-sample behaviour; bootstrap intervals are
+recommended when $n < 100$ per class.
 
-\textbf{Future work.} The development roadmap targets four major
-extensions: version 0.3 will add multivariable penalized panel models
-with honest nested cross-validation to prevent information leakage
-across preprocessing, feature selection, and tuning steps; version 0.4
-will extend the framework to multiclass outcomes with one-versus-rest,
-one-versus-one, and Hand-Till estimators; version 0.5 will incorporate
-cumulative/dynamic time-dependent AUCs for censored survival outcomes
-\citep{Heagerty2000, Blanche2013}; and version 0.6 will introduce
-sparse-matrix and on-disk backends for genomics-scale data exceeding
-available RAM.
+\textbf{Future work.} v0.3: nested cross-validation for penalised panel
+models. v0.4: multiclass AUC with one-versus-rest, one-versus-one, and
+Hand-Till estimators. v0.5: cumulative/dynamic time-dependent AUCs for
+survival outcomes \citep{Heagerty2000,Blanche2013}. v0.6: sparse-matrix
+and on-disk backends for genomics-scale data.
 
-\section{Acknowledgements}\label{acknowledgements}
+% ===========================================================================
+\section*{Acknowledgements}
+% ===========================================================================
 
-We thank Xavier Robin and colleagues for pROC, which provided both the
-statistical foundation and the ROC curve objects that aucmat builds
-upon. Hadley Wickham's ggplot2 and the mvtnorm authors (Genz, Bretz, et
-al.) are gratefully acknowledged for the visualization and simulation
-backends. The Sun \& Xu (2014) fast DeLong algorithm implemented in pROC
-since version 1.9 informs aucmat's DeLong variance computation.
+We thank Xavier Robin and colleagues for \texttt{pROC}, which provided the
+statistical foundation and ROC curve objects. Hadley Wickham's \texttt{ggplot2}
+and the \texttt{mvtnorm} authors (Genz, Bretz, et al.) are gratefully
+acknowledged. The Sun \& Xu (2014) fast DeLong algorithm implemented in pROC
+since v1.9 informs \texttt{aucmat}'s variance computation.
 
-Thank KUHNE foundation for financial support.
-
-\renewcommand\refname{References}
-\bibliography{refs.bib}
+% ===========================================================================
+\bibliographystyle{plainnat}
+\bibliography{refs}
+% ===========================================================================
 
 \end{document}
