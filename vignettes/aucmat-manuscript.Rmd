@@ -1,6 +1,6 @@
 ---
 title: "aucmat: Matrix-First ROC Analysis"
-author: "Lucas VHH Tran"
+author: "Lucas VH Huynh-Tran"
 output:
   rmarkdown::html_vignette:
     toc: true
