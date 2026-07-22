@@ -1,5 +1,5 @@
 /* ==========================================================================
-   aucmat pkgdown extras — reading bar, back-to-top, lightbox, figure hover
+   aucmat pkgdown extras — reading bar, back-to-top, figure hover
    ========================================================================== */
 
 /* ── Reading progress bar ─────────────────────────── */
@@ -21,70 +21,7 @@
 #btt.show { opacity: 1; pointer-events: auto; }
 #btt:hover { background: #61a5c2; transform: translateY(-3px); }
 
-/* ── Lightbox overlay ─────────────────────────────── */
-#lbx-overlay {
-  display: none; position: fixed; inset: 0; z-index: 99999;
-  background: rgba(15,25,38,.96);
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-  cursor: zoom-out; align-items: center; justify-content: center;
-  overflow: hidden;
-}
-#lbx-overlay.active { display: flex; }
-
-/* ── Lightbox image ───────────────────────────────── */
-#lbx-overlay img {
-  max-width: none; max-height: none;
-  border-radius: 6px;
-  box-shadow: 0 16px 64px rgba(0,0,0,.55);
-  cursor: zoom-in;
-  transition: transform .22s cubic-bezier(.25,.1,.25,1);
-  will-change: transform;
-  -webkit-user-select: none; user-select: none;
-}
-#lbx-overlay img.zoomed  { cursor: grab; }
-#lbx-overlay img.zoomed:active { cursor: grabbing; }
-#lbx-overlay img.panning { transition: none; }
-
-/* ── Lightbox hint bar ────────────────────────────── */
-#lbx-hint {
-  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-  color: rgba(255,255,255,.55); font-size: 12px;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  pointer-events: none; z-index: 100002; opacity: 0;
-  transition: opacity .5s ease;
-}
-#lbx-hint.show { opacity: 1; }
-
-/* ── Lightbox close button ────────────────────────── */
-#lbx-close {
-  position: fixed; top: 14px; right: 18px; z-index: 100001;
-  color: rgba(255,255,255,.85); font-size: 30px; cursor: pointer;
-  background: none; border: none; line-height: 1; padding: 4px 8px;
-  transition: opacity .2s, transform .2s;
-}
-#lbx-close:hover { opacity: 1; transform: scale(1.15); }
-
-/* ── Lightbox zoom / fit / full buttons ───────────── */
-#lbx-zoom-in, #lbx-zoom-out, #lbx-fit, #lbx-full {
-  position: fixed; right: 18px; z-index: 100001;
-  color: rgba(255,255,255,.75); font-size: 16px; cursor: pointer;
-  background: rgba(255,255,255,.07);
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: 6px; width: 36px; height: 32px;
-  text-align: center; line-height: 30px;
-  transition: opacity .2s, background .2s, transform .15s, color .2s;
-}
-#lbx-zoom-in  { top: 56px; }
-#lbx-zoom-out { top: 94px; }
-#lbx-fit      { top: 132px; }
-#lbx-full     { top: 170px; }
-#lbx-zoom-in:hover, #lbx-zoom-out:hover,
-#lbx-fit:hover, #lbx-full:hover {
-  opacity: 1; background: rgba(255,255,255,.18);
-  color: #fff; transform: scale(1.08);
-}
-
-/* ── Figure hover lift (all content images) ───────── */
+/* ── Figure hover lift ────────────────────────────── */
 main img, article img, .figure img, p img {
   cursor: zoom-in;
   transition: transform .28s cubic-bezier(.34,1.56,.64,1),
