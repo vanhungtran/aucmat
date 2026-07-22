@@ -1,18 +1,46 @@
 ---
-title: "aucmat: Matrix-First ROC Analysis for High-Dimensional Biomarker Matrices"
-author: "Lucas VHH Tran"
-output:
-  rmarkdown::html_vignette:
-    toc: true
-    toc_depth: 3
-    includes:
-      before_body: lightbox.html
-vignette: >
-  %\VignetteIndexEntry{aucmat: Matrix-First ROC Analysis}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
+title: "aucmat: matrix-first ROC analysis for high-dimensional biomarker screening in R"
+author:
+  - name: Lucas VHH Tran
+    affiliation: 1
+    email: tranhungydhcm@gmail.com
+affiliation:
+  - code: 1
+    address: Ho Chi Minh City, Vietnam
+abstract: >
+  **Summary:** The area under the receiver operating characteristic curve (AUC)
+  is the standard metric for evaluating continuous biomarkers against binary
+  outcomes. When screening thousands of molecular biomarkers, researchers need
+  matrix-wide AUC estimation with proper inference, multiplicity adjustment, and
+  stability assessment. We present aucmat, an R package that provides a
+  matrix-first architecture: `aucmat(X, y)` computes direction-preserving AUCs
+  with DeLong or stratified-bootstrap confidence intervals for every column of
+  a numeric matrix in a single call. The package supports Benjamini-Hochberg
+  multiplicity adjustment, three hypothesis-testing frameworks for paired
+  comparisons (superiority, non-inferiority, equivalence), an omnibus Wald test
+  for equality of multiple correlated AUCs via the joint DeLong covariance
+  matrix, and bootstrap rank-stability analysis. Cross-validated screening
+  eliminates same-data optimism. A two-stage Hurdle-AUC model handles
+  zero-inflated data (scRNA-seq, microbiome) where standard AUC fails. Nine
+  simulation engines generate correlated biomarkers with controlled properties
+  and built-in calibration diagnostics. The package provides 17 visualization
+  functions, including ranked discrimination plots, volcano plots, forest plots,
+  ROC curves with confidence ribbons, precision-recall curves, and Hurdle-AUC
+  diagnostics. On a typical proteomics screen of 10,000 biomarkers, aucmat is
+  approximately 7-fold faster than equivalent per-column pROC loops. The package
+  is freely available under the MIT license at
+  https://github.com/vanhungtran/aucmat and https://vanhungtran.github.io/aucmat.
 
+  **Availability:** https://github.com/vanhungtran/aucmat (source),
+  https://vanhungtran.github.io/aucmat (documentation). MIT license. R >= 4.0.0.
+
+  **Contact:** tranhungydhcm@gmail.com
+output:
+  pdf_document:
+    keep_tex: true
+    citation_package: natbib
+bibliography: manuscript/refs.bib
+---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo=TRUE, warning=FALSE, message=FALSE, fig.width=6, fig.height=4.5)
