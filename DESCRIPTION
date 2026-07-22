@@ -1,16 +1,16 @@
 Package: aucmat
 Title: Scalable and Statistically Principled ROC Analysis for High-Dimensional Biomarker Matrices
-Version: 0.2.0
+Version: 0.1.0
 Date: 2026-07-22
 Authors@R:
-    person("Lucas", "VHH Tran", email = "lucas.tran@ck-care.ch", role = c("aut", "cre"))
+    person("Lucas", "VH Huynh-Tran", email = "lucas.tran@ck-care.ch", role = c("aut", "cre"))
 Description: Matrix-first ROC analysis for high-dimensional molecular biomarker data.
     Provides fast, direction-preserving AUC estimation over biomarker matrices with DeLong
     and stratified-bootstrap inference, multiplicity adjustment, paired comparisons on
     common subjects, and bootstrap rank-stability analysis. Designed for univariate
     screening and ranking of genes, proteins, and metabolites measured on the same subjects.
 License: MIT + file LICENSE
-URL: https://github.com/vanhungtran/aucmat, https://vanhungtran.github.io/aucmat
+URL: https://github.com/vanhungtran/aucmat, https://vanhungtran.github.io/aucmat/
 BugReports: https://github.com/vanhungtran/aucmat/issues
 Depends:
     R (>= 4.0.0)

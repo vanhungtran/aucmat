@@ -612,21 +612,21 @@ compares to the existing ecosystem:
 
 ## Online Documentation
 
-Full pkgdown site: <https://vanhungtran.github.io/aucmat>
+Full pkgdown site: <https://vanhungtran.github.io/aucmat/>
 
 ## Citation
 
 ```bibtex
 @software{tran_aucmat,
-  author  = {Lucas VHH Tran},
+  author  = {Lucas VH Huynh-Tran},
   title   = {aucmat: Scalable and Statistically Principled ROC Analysis
              for High-Dimensional Biomarker Matrices},
   year    = {2026},
-  version = {0.2.0},
+  version = {0.1.0},
   url     = {https://github.com/vanhungtran/aucmat}
 }
 ```
 
 ## License
 
-MIT © Lucas VHH Tran
+MIT © Lucas VH Huynh-Tran
