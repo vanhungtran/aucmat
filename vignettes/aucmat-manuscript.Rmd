@@ -1,5 +1,5 @@
 ---
-title: "aucmat: Matrix-First ROC Analysis for High-Dimensional Biomarker Matrices"
+title: "aucmat: Matrix-First ROC Analysis"
 author: "Lucas VHH Tran"
 output:
   rmarkdown::html_vignette:
