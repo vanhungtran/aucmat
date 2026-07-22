@@ -22,6 +22,7 @@ Imports:
 Suggests:
     GGally,
     glmnet,
+    matrixStats,
     knitr,
     mice,
     missForest,

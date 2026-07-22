@@ -121,6 +121,10 @@ aucmat <- function(X,
   # ---- 3. Matrix AUC computation ----
   results <- .compute_matrix_auc(X, pos, neg)
 
+  # ---- 3b. Precision-Recall AUC ----
+  prauc_df <- .compute_matrix_prauc(X, pos, neg)
+  results$prauc <- prauc_df$prauc
+
   results$n_total          <- n_total
   results$n_missing        <- n_missing
   results$missing_fraction <- missing_fraction

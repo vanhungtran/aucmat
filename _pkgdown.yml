@@ -47,6 +47,7 @@ reference:
   - plot_auc_stability
   - plot_roc_top
   - plot_correlation_heatmap
+  - plot_auc_pr
   - plot.aucmat_compare
   - plot.aucmat_simulation
 

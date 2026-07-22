@@ -462,7 +462,70 @@ identical(fit1$results$auc_raw, fit2$results$auc_raw)  # TRUE
 
 ---
 
-## 9. Documentation & Help
+## 9. Comparison with Other R Packages
+
+`aucmat` is designed for **matrix-first biomarker screening** — screen, infer,
+compare, validate, and plan a follow-up study in one package. Here's how it
+compares to the existing ecosystem:
+
+### Feature Matrix
+
+| Feature | aucmat | pROC | ROCR | precrec | colAUC | cancerclass | dtComb |
+|---------|:------:|:----:|:----:|:-------:|:------:|:-----------:|:------:|
+| Matrix-first screening | ✔ | | | | ✔ | ✔ | |
+| Direction-preserving AUC | ✔ | | | | | | |
+| DeLong inference | ✔ | ✔ | | | | | |
+| Stratified bootstrap | ✔ | ✔ | | | | | ✔ |
+| Multiplicity (BH/Holm/Bonf) | ✔ | | | | | | |
+| One-sided alternative | ✔ | ✔ | | | | | |
+| Paired comparisons | ✔ | ✔ | | | | | ✔ |
+| Non-inferiority / Equivalence | ✔ | | | | | | |
+| Global Wald test (3+ AUCs) | ✔ | | | | | | |
+| Rank stability (bootstrap) | ✔ | | | | | | |
+| Partial AUC | ✔ | ✔ | ✔* | | | | |
+| Multivariate simulation | ✔ | | | | | | |
+| Simulation validation | ✔ | | | | | | |
+| Cross-validated AUC | ✔ | | | | | ✔ | ✔ |
+| Panel scores (ridge/lasso) | ✔ | | | | | | ✔ |
+| Precision-Recall curves | ✔ | | | ✔ | | | |
+| Power / sample size | ✔ | ✔ | | | | | |
+| ROC smoothing | | ✔ | | | | | |
+| Multiclass AUC | | ✔ | | ✔ | ✔ | | |
+| Time-dependent AUC | | | | | | | |
+| S3 print/summary/plot | ✔ | ✔ | ✔ | | | | |
+| Structured error classes | ✔ | | | | | | |
+| RNG-safe seeds | ✔ | | | | | | |
+| CRAN-ready | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ |
+
+> `*` specificity only. Time-dependent AUC on the
+> [v0.5 roadmap](https://vanhungtran.github.io/aucmat/METHODS.html).
+
+### What aucmat Does That No Other Package Does
+
+1. **End-to-end workflow**: simulate → screen → compare → CV → panel → power in one API.
+2. **Matrix-first**: `aucmat(X, y)` screens all columns with one call using proper multiplicity.
+3. **Direction-preserving**: reports `auc_raw` (observed, may be <0.5), `auc_strength` (≥0.5), and `effect_direction` — never silently reverses your biomarkers.
+4. **Non-inferiority & equivalence**: TOST-based comparisons with user-specified margins.
+5. **Omnibus global Wald test**: tests H0: AUC₁ = … = AUCₚ via joint DeLong covariance.
+6. **Bootstrap rank-stability**: how much do rankings change under sampling?
+7. **Built-in simulator with validation**: generate correlated biomarkers with known truth, then confirm the simulator is calibrated.
+
+### When to Use What
+
+| Task | Best package | Why |
+|------|-------------|-----|
+| Screen 10,000 biomarkers | **aucmat** | Matrix-first, multiplicity, direction-preserving |
+| Single ROC with smoothing | **pROC** | Gold standard, binormal/density smoothing |
+| Speed on 100k+ columns | **colAUC** | C-optimized column-wise AUC |
+| Precision-Recall for rare events | **aucmat** or **precrec** | PR curves when prevalence << 0.5 |
+| Multiclass outcome | **pROC** | Hand-Till, macro/micro averaging |
+| Survival/censored outcome | **timeROC** | Cumulative/dynamic AUC |
+| Combine 3+ markers into a score | **dtComb** | 140+ combination methods |
+| Study planning (power) | **aucmat** or **pROC** | Both compute n for target AUC |
+
+---
+
+## 10. Documentation & Help
 
 ```r
 # Package-level help
