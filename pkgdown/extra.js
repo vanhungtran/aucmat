@@ -109,19 +109,19 @@
   }
 
   function fitToScreen() {
-    var vw = window.innerWidth * 0.9, vh = window.innerHeight * 0.85;
-    fitScale = Math.min(vw / naturalW, vh / naturalH, 2);
+    var vw = window.innerWidth * 0.90, vh = window.innerHeight * 0.90;
+    fitScale = Math.min(vw / naturalW, vh / naturalH, 5);
     scale = fitScale; panX = 0; panY = 0;
     applyTransform(fitScale, 0, 0);
     lbxImg.style.cursor = 'zoom-in';
-    showHint('Click to see full size');
+    showHint('Click for 1:1 actual size • Scroll to zoom');
   }
 
   function zoomToFull() {
     scale = 1; panX = 0; panY = 0;
     applyTransform(1, 0, 0);
     lbxImg.style.cursor = 'grab';
-    showHint('Scroll to zoom • Drag to pan • Click to fit screen');
+    showHint('Actual size (1:1) • Scroll to zoom • Click to fit screen');
   }
 
   function open(src) {
