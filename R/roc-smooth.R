@@ -220,7 +220,10 @@ plot_roc_smooth <- function(fit, X, y, biomarkers = NULL,
     labels <- c(labels, paste0(bm, " (AUC=", formatC(auc_val, 3, format = "f"), ")"))
   }
 
-  p <- pROC::ggroc(roc_list, legacy.axes = FALSE, size = 0.9) +
+  p <- pROC::ggroc(roc_list, legacy.axes = FALSE, size = 0.9)
+  # pROC >= 1.19 returns S7 objects; strip class to ensure ggplot2 compatibility
+  class(p) <- setdiff(class(p), c("ggroc", "ggroc_multiclass", "S7_object"))
+  p <- p +
     ggplot2::theme_minimal() +
     ggplot2::coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) +
     ggplot2::geom_abline(slope = 1, intercept = 0, linetype = "dashed",
@@ -238,8 +241,9 @@ plot_roc_smooth <- function(fit, X, y, biomarkers = NULL,
       roc_emp[[bm]] <- pROC::roc(y_norm[use], X[use, bm],
         levels = levels(y_norm), direction = "auto", quiet = TRUE)
     }
-    p <- p + pROC::ggroc(roc_emp, legacy.axes = FALSE, size = 0.3,
-      alpha = 0.35, linetype = "dashed")
+    p_emp <- try(pROC::ggroc(roc_emp, legacy.axes = FALSE, size = 0.3,
+      alpha = 0.35, linetype = "dashed"), silent = TRUE)
+	    if (!inherits(p_emp, "try-error")) p <- p + p_emp
   }
 
   # CI ribbons on the smoothed curves

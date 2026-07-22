@@ -1,12 +1,12 @@
 ---
 title: "aucmat: matrix-first ROC analysis for high-dimensional biomarker screening in R"
 author:
-  - name: Lucas VHH Tran
+  - name: Lucas VH Huynh-Tran
     affiliation: 1
-    email: tranhungydhcm@gmail.com
+    email: lucas.tran@ck-care.ch
 affiliation:
   - code: 1
-    address: Ho Chi Minh City, Vietnam
+    address: CK-CARE, Davos Wolfgang, Switzerland
 abstract: >
   **Summary:** The area under the receiver operating characteristic curve (AUC)
   is the standard metric for evaluating continuous biomarkers against binary
