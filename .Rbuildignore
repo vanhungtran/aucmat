@@ -15,3 +15,5 @@
 ^METHODS\.md$
 ^cran-comments\.md$
 ^\.zenodo\.json$
+create_logo.R
+Rplots.pdf
