@@ -52,7 +52,7 @@ available under the MIT license at \url{https://github.com/vanhungtran/aucmat}.
 \textbf{Availability:} \texttt{aucmat} v0.2.0, R $\geq$ 4.0.0, MIT license.
 \url{https://github.com/vanhungtran/aucmat} (source),
 \url{https://vanhungtran.github.io/aucmat} (documentation).\\
-\textbf{Contact:} tranhungydhcm@gmail.com
+\textbf{Contact:} lucas.tran@ck-care.ch
 \end{abstract}
 
 % ===========================================================================
@@ -460,41 +460,41 @@ at $n=100$ and reached 1.0 for AUC $\geq 0.75$ at $n \geq 300$.
 \section{Comparison with existing packages}
 % ===========================================================================
 
-\begin{table}[H]
+\begin{table*}[t]
 \centering
 \caption{Feature comparison of R packages for ROC analysis and biomarker
-  screening. $+$ = supported; $-$ = not supported. Verified against CRAN
-  documentation as of July 2026.}
+  screening. \texttt{+} = supported; \texttt{--} = not supported. Verified
+  against CRAN documentation as of July 2026.}
 \label{tab:features}
-\footnotesize
-\begin{tabular}{lcccccc}
+\small
+\begin{tabular}{@{}lcccccc@{}}
 \toprule
 Feature & \textbf{aucmat} & pROC & precrec & ROCR & colAUC & dtComb \\
 \midrule
-Matrix-first screening & $+$ & $-$ & $-$ & $-$ & $+$ & $-$ \\
-Direction-preserving AUC & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
-DeLong confidence intervals & $+$ & $+$ & $-$ & $-$ & $-$ & $-$ \\
-Stratified bootstrap CI & $+$ & $+$ & $-$ & $-$ & $-$ & $+$ \\
-Multiplicity (BH/Holm/Bonf) & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
-One-sided alternative tests & $+$ & $+$ & $-$ & $-$ & $-$ & $-$ \\
-Paired biomarker comparisons & $+$ & $+$ & $-$ & $-$ & $-$ & $+$ \\
-Non-inferiority/equivalence & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
-Omnibus Wald test (3+ AUCs) & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
-Bootstrap rank stability & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
-Partial AUC & $+$ & $+$ & $+$ & $-$ & $-$ & $-$ \\
-Multivariate simulation & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
-Simulation calibration & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
-Cross-validated AUC & $+$ & $-$ & $-$ & $-$ & $-$ & $+$ \\
-Penalised panel (ridge/lasso) & $+$ & $-$ & $-$ & $-$ & $-$ & $+$ \\
-Hurdle-AUC (zero-inflated) & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
-Precision-Recall curves & $+$ & $-$ & $+$ & $-$ & $-$ & $-$ \\
-Power/sample size & $+$ & $+$ & $-$ & $-$ & $-$ & $-$ \\
-Multiclass AUC (Hand-Till) & $+$ & $+$ & $-$ & $-$ & $+$ & $-$ \\
-ROC smoothing & $+$ & $+$ & $-$ & $-$ & $-$ & $-$ \\
-Group-stratified screening & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
+Matrix-first screening       & $+$ & $-$ & $-$ & $-$ & $+$ & $-$ \\
+Direction-preserving AUC     & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
+DeLong CI                    & $+$ & $+$ & $-$ & $-$ & $-$ & $-$ \\
+Stratified bootstrap CI      & $+$ & $+$ & $-$ & $-$ & $-$ & $+$ \\
+Multiplicity adjustment      & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
+One-sided tests              & $+$ & $+$ & $-$ & $-$ & $-$ & $-$ \\
+Paired comparisons           & $+$ & $+$ & $-$ & $-$ & $-$ & $+$ \\
+Non-inferiority/equivalence  & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
+Omnibus Wald (3+ AUCs)       & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
+Bootstrap rank stability     & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
+Partial AUC                  & $+$ & $+$ & $+$ & $-$ & $-$ & $-$ \\
+Multivariate simulation      & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
+Simulation diagnostics       & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
+Cross-validated AUC          & $+$ & $-$ & $-$ & $-$ & $-$ & $+$ \\
+Panel (ridge/lasso)          & $+$ & $-$ & $-$ & $-$ & $-$ & $+$ \\
+Hurdle-AUC (zero-inflated)   & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
+Precision-Recall curves      & $+$ & $-$ & $+$ & $-$ & $-$ & $-$ \\
+Power / sample size           & $+$ & $+$ & $-$ & $-$ & $-$ & $-$ \\
+Multiclass (Hand-Till)       & $+$ & $+$ & $-$ & $-$ & $+$ & $-$ \\
+ROC smoothing                & $+$ & $+$ & $-$ & $-$ & $-$ & $-$ \\
+Group-stratified screening   & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
 Five capabilities are unique to \texttt{aucmat}: (i)~matrix-first screening
 with direction-preserving AUC and multiplicity adjustment; (ii)~non-inferiority
