@@ -62,6 +62,13 @@ reference:
   - roc_test
   - plot_roc_smooth
 
+- title: Hurdle-AUC
+  desc: Two-stage model for zero-inflated biomarker data
+  contents:
+  - hurdle_auc
+  - simulate_hurdle_auc
+  - plot_hurdle_diagnostics
+
 - title: Deprecated
   desc: Functions retained for backward compatibility
   contents:
