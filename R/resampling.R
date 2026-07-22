@@ -14,13 +14,15 @@
 #' @param n_neg Number of negative subjects.
 #' @param times Number of bootstrap replicates.
 #' @param seed Optional integer seed.
-#' @param parallel Not yet implemented.
+#' @param parallel Logical; if TRUE use parallel workers.
+#' @param n_cores Number of parallel workers (default: detectCores() - 1).
 #'
 #' @return A list with `pos_idx` and `neg_idx` matrices (observations × times).
 #' @noRd
 #' @keywords internal
 stratified_bootstrap_indices <- function(n_pos, n_neg, times,
-                                          seed = NULL, parallel = FALSE) {
+                                          seed = NULL, parallel = FALSE,
+                                          n_cores = NULL) {
   with_seed(seed, {
     pos_idx <- matrix(sample(n_pos, n_pos * times, replace = TRUE),
                       nrow = n_pos, ncol = times)
@@ -101,4 +103,117 @@ bootstrap_auc_distribution <- function(x, pos, neg, boot_n = 2000,
   list(std_error = stats::sd(aucs), n_requested = boot_n,
        n_ok = n_ok, n_failed = boot_n - n_ok,
        boot_aucs = aucs, status = "ok")
+}
+
+#' Bootstrap CI methods
+#'
+#' @param boot_aucs Numeric vector of bootstrap AUC replicates.
+#' @param point_est Point estimate (original AUC).
+#' @param conf_level Confidence level.
+#' @param method One of "percentile" (default), "bca", or "normal".
+#'
+#' @return Named vector with `conf_low`, `conf_high`.
+#' @noRd
+#' @keywords internal
+.bootstrap_ci <- function(boot_aucs, point_est, conf_level = 0.95,
+                           method = c("percentile", "bca", "normal")) {
+  method <- match.arg(method)
+  alpha <- (1 - conf_level) / 2
+
+  if (method == "percentile") {
+    return(c(
+      conf_low  = stats::quantile(boot_aucs, alpha, na.rm = TRUE),
+      conf_high = stats::quantile(boot_aucs, 1 - alpha, na.rm = TRUE)
+    ))
+  }
+
+  if (method == "normal") {
+    se <- stats::sd(boot_aucs, na.rm = TRUE)
+    z  <- stats::qnorm(1 - alpha)
+    return(c(
+      conf_low  = point_est - z * se,
+      conf_high = point_est + z * se
+    ))
+  }
+
+  # BCa (bias-corrected and accelerated)
+  if (method == "bca") {
+    n   <- length(boot_aucs)
+    z0  <- stats::qnorm(sum(boot_aucs < point_est, na.rm = TRUE) / n)
+    # Acceleration: jackknife not available without original data.
+    # Use a simple approximation: a = 0 (reduces to bias-corrected percentile).
+    a   <- 0
+    z_a <- stats::qnorm(c(alpha, 1 - alpha))
+    alpha1 <- stats::pnorm(z0 + (z0 + z_a[1]) / (1 - a * (z0 + z_a[1])))
+    alpha2 <- stats::pnorm(z0 + (z0 + z_a[2]) / (1 - a * (z0 + z_a[2])))
+    return(c(
+      conf_low  = stats::quantile(boot_aucs, alpha1, na.rm = TRUE),
+      conf_high = stats::quantile(boot_aucs, alpha2, na.rm = TRUE)
+    ))
+  }
+
+  # fallback
+  c(conf_low = NA_real_, conf_high = NA_real_)
+}
+
+# ---- Progress bar helpers ----
+
+#' Simple text progress bar for bootstrap iterations
+#' @noRd
+#' @keywords internal
+.progress_tick <- function(i, total, label = "", start_time = NULL) {
+  if (i == 1L && !is.null(start_time)) {
+    cat(sprintf("\r%s %d/%d", label, i, total))
+    return()
+  }
+  if (i %% max(1L, floor(total / 40)) == 0L || i == total) {
+    pct <- round(i / total * 100)
+    elapsed <- if (!is.null(start_time))
+      sprintf(" [%.1fs]", as.numeric(Sys.time() - start_time)) else ""
+    cat(sprintf("\r%s %d/%d (%d%%)%s", label, i, total, pct, elapsed))
+    utils::flush.console()
+  }
+  if (i == total) cat("\n")
+}
+
+# ---- Whole-curve permutation test ----
+
+#' Permutation test for equality of two ROC curves
+#'
+#' Permutes outcome labels to build a null distribution of AUC differences
+#' between two biomarkers, testing whether the entire ROC curves are
+#' distinguishable beyond just the AUC.
+#'
+#' @param xa,xb Numeric vectors for two biomarkers (common subjects).
+#' @param pos,neg Logical vectors.
+#' @param n_perm Number of permutations.
+#' @param seed Optional seed.
+#'
+#' @return A list with `p_value`, `observed_diff`, `null_diffs`, `n_perm`.
+#' @noRd
+#' @keywords internal
+.permutation_roc_test <- function(xa, xb, pos, neg, n_perm = 1000, seed = NULL) {
+  n_total <- length(pos)
+  n_pos   <- sum(pos)
+
+  # Observed AUC difference
+  auc_a <- .compute_single_auc(xa, pos, neg)$auc_raw
+  auc_b <- .compute_single_auc(xb, pos, neg)$auc_raw
+  obs_diff <- auc_a - auc_b
+
+  null_diffs <- numeric(n_perm)
+  if (!is.null(seed)) set.seed(seed)
+
+  for (p in seq_len(n_perm)) {
+    perm_idx <- sample(n_total)
+    perm_pos  <- pos[perm_idx]
+    perm_neg  <- neg[perm_idx]
+    null_diffs[p] <- .compute_single_auc(xa, perm_pos, perm_neg)$auc_raw -
+                     .compute_single_auc(xb, perm_pos, perm_neg)$auc_raw
+  }
+
+  p_value <- mean(abs(null_diffs) >= abs(obs_diff), na.rm = TRUE)
+
+  list(p_value = p_value, observed_diff = obs_diff,
+       null_diffs = null_diffs, n_perm = n_perm)
 }

@@ -46,6 +46,14 @@ reference:
   - plot_auc_forest
   - plot_auc_stability
   - plot_roc_top
+  - plot_correlation_heatmap
+
+- title: Panels, CV & Power
+  desc: Multivariable panels, cross-validation, and study planning
+  contents:
+  - cv_aucmat
+  - fit_auc_panel
+  - power_auc_matrix
 
 - title: Deprecated
   desc: Functions retained for backward compatibility
@@ -63,6 +71,7 @@ articles:
   desc: In-depth guides
   contents:
   - simulating-biomarker-data
+  - practical-screening
 
 home:
   links:

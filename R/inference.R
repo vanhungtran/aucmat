@@ -104,11 +104,14 @@
 #' @keywords internal
 .apply_inference <- function(results, X, pos, neg,
                               ci = c("delong", "bootstrap", "none"),
-                              conf_level = 0.95, boot_n = 2000) {
-  ci <- match.arg(ci)
+                              conf_level = 0.95, boot_n = 2000,
+                              alternative = c("two.sided", "greater", "less")) {
+  ci         <- match.arg(ci)
+  alternative <- match.arg(alternative)
   X <- as.matrix(X)
 
-  z <- stats::qnorm((1 + conf_level) / 2)
+  z_two <- stats::qnorm((1 + conf_level) / 2)
+  z_one <- stats::qnorm(conf_level)
 
   results$std_error <- NA_real_
   results$conf_low  <- NA_real_
@@ -135,11 +138,22 @@
     }
 
     auc_raw <- results$auc_raw[j]
+    z_stat  <- (auc_raw - 0.5) / se_val
     results$std_error[j] <- se_val
-    results$conf_low[j]  <- auc_raw - z * se_val
-    results$conf_high[j] <- auc_raw + z * se_val
-    results$p_value[j]   <- 2 * stats::pnorm(abs(auc_raw - 0.5) / se_val,
-                                             lower.tail = FALSE)
+
+    if (alternative == "two.sided") {
+      results$conf_low[j]  <- auc_raw - z_two * se_val
+      results$conf_high[j] <- auc_raw + z_two * se_val
+      results$p_value[j]   <- 2 * stats::pnorm(abs(z_stat), lower.tail = FALSE)
+    } else if (alternative == "greater") {
+      results$conf_low[j]  <- auc_raw - z_one * se_val
+      results$conf_high[j] <- 1
+      results$p_value[j]   <- stats::pnorm(z_stat, lower.tail = FALSE)
+    } else {  # "less"
+      results$conf_low[j]  <- 0
+      results$conf_high[j] <- auc_raw + z_one * se_val
+      results$p_value[j]   <- stats::pnorm(z_stat, lower.tail = TRUE)
+    }
   }
 
   results

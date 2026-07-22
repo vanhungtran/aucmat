@@ -20,6 +20,8 @@ Imports:
     pROC,
     rlang
 Suggests:
+    GGally,
+    glmnet,
     knitr,
     mice,
     missForest,

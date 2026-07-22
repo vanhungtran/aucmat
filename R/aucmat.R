@@ -20,6 +20,8 @@
 #' @param ci Confidence interval method: `"delong"` (default),
 #'   `"bootstrap"`, or `"none"`.
 #' @param conf_level Confidence level in (0, 1).  Default 0.95.
+#' @param alternative Alternative hypothesis: `"two.sided"` (default),
+#'   `"greater"`, or `"less"`.
 #' @param adjust Multiplicity adjustment: `"BH"` (default), `"holm"`,
 #'   `"bonferroni"`, or `"none"`.
 #' @param na_action `"featurewise"` (default) uses all subjects with
@@ -53,6 +55,7 @@ aucmat <- function(X,
                    positive       = NULL,
                    ci             = c("delong", "bootstrap", "none"),
                    conf_level     = 0.95,
+                   alternative    = c("two.sided", "greater", "less"),
                    adjust         = c("BH", "holm", "bonferroni", "none"),
                    na_action      = c("featurewise", "complete"),
                    boot_n         = 2000,
@@ -60,7 +63,8 @@ aucmat <- function(X,
                    retain_data    = FALSE,
                    feature_metadata = NULL) {
 
-  ci        <- match.arg(ci)
+  ci         <- match.arg(ci)
+  alternative <- match.arg(alternative)
   adjust    <- match.arg(adjust)
   na_action <- match.arg(na_action)
 
@@ -126,7 +130,7 @@ aucmat <- function(X,
 
   results <- .apply_inference(results, X, pos, neg,
                                ci = ci, conf_level = conf_level,
-                               boot_n = boot_n)
+                               boot_n = boot_n, alternative = alternative)
 
   # ---- 5. Multiplicity adjustment ----
   results$q_value <- .adjust_pvalues(results$p_value, method = adjust)
@@ -163,11 +167,12 @@ aucmat <- function(X,
   )
 
   settings <- list(
-    ci         = ci,
-    conf_level = conf_level,
-    adjust     = adjust,
-    na_action  = na_action,
-    boot_n     = boot_n
+    ci          = ci,
+    conf_level  = conf_level,
+    alternative = alternative,
+    adjust      = adjust,
+    na_action   = na_action,
+    boot_n      = boot_n
   )
 
   out <- list(

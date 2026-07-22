@@ -10,6 +10,7 @@ aucmat(
   positive = NULL,
   ci = c("delong", "bootstrap", "none"),
   conf_level = 0.95,
+  alternative = c("two.sided", "greater", "less"),
   adjust = c("BH", "holm", "bonferroni", "none"),
   na_action = c("featurewise", "complete"),
   boot_n = 2000,
@@ -34,6 +35,9 @@ or factor with ambiguous ordering.  Ignored for logical and numeric
 \code{"bootstrap"}, or \code{"none"}.}
 
 \item{conf_level}{Confidence level in (0, 1).  Default 0.95.}
+
+\item{alternative}{Alternative hypothesis: \code{"two.sided"} (default),
+\code{"greater"}, or \code{"less"}.}
 
 \item{adjust}{Multiplicity adjustment: \code{"BH"} (default), \code{"holm"},
 \code{"bonferroni"}, or \code{"none"}.}
