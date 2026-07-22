@@ -199,6 +199,15 @@ simulate_hurdle_auc <- function(n, prevalence,
 #' @param n_label Number of biomarkers to label.  Default 15.
 #'
 #' @return A `ggplot2` object.
+#' @examples
+#' \donttest{
+#' set.seed(1)
+#' sim <- simulate_hurdle_auc(n=100, prevalence=0.3,
+#'   target_hurdle_aucs=c(0.8,0.7), zero_rate_neg=c(0.5,0.3),
+#'   zero_rate_pos=c(0.2,0.1))
+#' fit <- hurdle_auc(as.matrix(sim$data[,1:2]), sim$data$truth)
+#' plot_hurdle_diagnostics(fit)
+#' }
 #' @export
 plot_hurdle_diagnostics <- function(fit, n_label = 15L) {
   df <- fit$results

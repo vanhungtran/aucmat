@@ -38,3 +38,13 @@ A \code{ggplot2} object.
 Plots empirical ROC curves for deliberately selected biomarkers.
 Designed for small sets; labelling is explicit.
 }
+\examples{
+\donttest{
+set.seed(42)
+sim <- simulate_auc_matrix(n=100, prevalence=0.3,
+  target_aucs=c(0.85,0.75), correlation=0.3, structure="exchangeable")
+X <- as.matrix(sim$data[,1:2]); y <- sim$data$truth
+fit <- aucmat(X, y, ci="none")
+plot_roc_top(fit, X, y, biomarkers=c("X1","X2"))
+}
+}

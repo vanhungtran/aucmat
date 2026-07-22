@@ -19,3 +19,9 @@ A \code{ggplot2} object.
 \description{
 Volcano plot: effect magnitude against statistical evidence
 }
+\examples{
+set.seed(42)
+X <- matrix(rnorm(100*20), 100, 20, dimnames=list(NULL, paste0("bm",1:20)))
+fit <- aucmat(X, rep(0:1, each=50), ci="none")
+plot_auc_volcano(fit, q_cutoff=0.1)
+}

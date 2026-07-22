@@ -12,3 +12,4 @@ scale_fill_aucmat_direction(...)
 \description{
 aucmat fill colour scale (discrete)
 }
+\keyword{internal}

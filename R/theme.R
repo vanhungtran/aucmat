@@ -48,6 +48,7 @@ aucmat_colors <- list(
 #'
 #' @return A ggplot2 theme object.
 #' @export
+#' @keywords internal
 theme_aucmat <- function(base_size = 12, base_family = "") {
   ggplot2::`%+replace%`(
     ggplot2::theme_minimal(base_size = base_size, base_family = base_family),
@@ -100,6 +101,7 @@ theme_aucmat <- function(base_size = 12, base_family = "") {
 #'
 #' @param ... Passed to [ggplot2::scale_colour_manual()].
 #' @export
+#' @keywords internal
 scale_colour_aucmat_direction <- function(...) {
   ggplot2::scale_colour_manual(
     values = c(
@@ -116,6 +118,7 @@ scale_colour_aucmat_direction <- function(...) {
 #'
 #' @param ... Passed to [ggplot2::scale_fill_manual()].
 #' @export
+#' @keywords internal
 scale_fill_aucmat_direction <- function(...) {
   ggplot2::scale_fill_manual(
     values = c(
@@ -137,6 +140,7 @@ scale_fill_aucmat_direction <- function(...) {
 #' @param q_cutoff Cutoff value for the legend label.
 #' @param ... Passed to [ggplot2::scale_colour_manual()].
 #' @export
+#' @keywords internal
 scale_colour_aucmat_significance <- function(q_cutoff = 0.05, ...) {
   ggplot2::scale_colour_manual(
     values = c(

@@ -20,3 +20,4 @@ A clean, professional theme for all aucmat plots.
 Uses Fira Sans if available via showtext, otherwise falls back to
 system defaults.
 }
+\keyword{internal}

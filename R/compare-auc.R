@@ -31,6 +31,15 @@
 #'   or `"none"` (default).
 #'
 #' @return A data.frame of class `aucmat_compare`.
+#' @examples
+#' \donttest{
+#' set.seed(42)
+#' sim <- simulate_auc_matrix(n=100, prevalence=0.3,
+#'   target_aucs=c(0.85,0.75,0.65), correlation=0.3, structure="exchangeable")
+#' X <- as.matrix(sim$data[,1:3]); y <- sim$data$truth
+#' fit <- aucmat(X, y, ci="none")
+#' compare_auc(fit, X, y, reference="X1")
+#' }
 #' @export
 #' @importFrom stats p.adjust pnorm qnorm
 compare_auc <- function(fit = NULL, X, y,

@@ -12,6 +12,13 @@
 #'
 #' @return A `ggplot2` object (via GGally if available) or a base-R pairs plot.
 #' @importFrom graphics pairs
+#' @examples
+#' \donttest{
+#' set.seed(42)
+#' sim <- simulate_auc_matrix(n=50, prevalence=0.3,
+#'   target_aucs=c(0.8,0.7,0.6), correlation=0.3, structure="exchangeable")
+#' plot(sim)
+#' }
 #' @export
 plot.aucmat_simulation <- function(x, ...) {
   data  <- x$data
@@ -53,6 +60,13 @@ plot.aucmat_simulation <- function(x, ...) {
 #'   (achieved - requested). Default `FALSE`.
 #'
 #' @return A `ggplot2` object.
+#' @examples
+#' \donttest{
+#' set.seed(42)
+#' sim <- simulate_auc_matrix(n=50, prevalence=0.3,
+#'   target_aucs=c(0.8,0.7,0.6), correlation=0.3, structure="exchangeable")
+#' plot_correlation_heatmap(sim)
+#' }
 #' @export
 plot_correlation_heatmap <- function(sim, difference = FALSE) {
   p <- length(sim$target_aucs)

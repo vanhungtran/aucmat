@@ -14,6 +14,13 @@
 #' @param target_aucs a vector of p target AUC values
 #' @param corr_matrix a p x p target correlation matrix
 #' @importFrom stats cor qnorm rbinom rnorm
+#' @examples
+#' \donttest{
+#' set.seed(42)
+#' sim <- generate_data_analytical(n=100, prevalence=0.3,
+#'   target_aucs=c(0.8,0.7), corr_matrix=matrix(c(1,0.3,0.3,1),2,2))
+#' round(sim$achieved_aucs, 3)
+#' }
 #' @export
 generate_data_analytical <- function(n, prevalence, target_aucs, corr_matrix) {
 

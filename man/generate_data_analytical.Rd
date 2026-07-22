@@ -18,3 +18,11 @@ generate_data_analytical(n, prevalence, target_aucs, corr_matrix)
 \description{
 This function analytically generates a dataset with specified properties.
 }
+\examples{
+\donttest{
+set.seed(42)
+sim <- generate_data_analytical(n=100, prevalence=0.3,
+  target_aucs=c(0.8,0.7), corr_matrix=matrix(c(1,0.3,0.3,1),2,2))
+round(sim$achieved_aucs, 3)
+}
+}

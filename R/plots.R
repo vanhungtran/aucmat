@@ -13,6 +13,11 @@
 #' @param show_ci If `TRUE` and CIs are present, add error bars.
 #'
 #' @return A `ggplot2` object.
+#' @examples
+#' set.seed(42)
+#' X <- matrix(rnorm(100*20), 100, 20, dimnames=list(NULL, paste0("bm",1:20)))
+#' fit <- aucmat(X, rep(0:1, each=50), ci="none")
+#' plot_auc_rank(fit, n_label=5)
 #' @export
 #' @importFrom ggplot2 ggplot aes geom_point geom_errorbar geom_text theme_minimal labs
 #' @importFrom utils head
@@ -57,6 +62,11 @@ plot_auc_rank <- function(fit, n_label = 20L, show_ci = TRUE) {
 #' @param q_cutoff Highlight biomarkers with q-value below this threshold.
 #'
 #' @return A `ggplot2` object.
+#' @examples
+#' set.seed(42)
+#' X <- matrix(rnorm(100*20), 100, 20, dimnames=list(NULL, paste0("bm",1:20)))
+#' fit <- aucmat(X, rep(0:1, each=50), ci="none")
+#' plot_auc_volcano(fit, q_cutoff=0.1)
 #' @export
 plot_auc_volcano <- function(fit, n_label = 20L, q_cutoff = 0.05) {
   df <- fit$results
@@ -101,6 +111,11 @@ plot_auc_volcano <- function(fit, n_label = 20L, q_cutoff = 0.05) {
 #' @param n Number of biomarkers when `biomarkers = "top"`.  Default 20.
 #'
 #' @return A `ggplot2` object.
+#' @examples
+#' set.seed(42)
+#' X <- matrix(rnorm(100*20), 100, 20, dimnames=list(NULL, paste0("bm",1:20)))
+#' fit <- aucmat(X, rep(0:1, each=50), ci="none")
+#' plot_auc_forest(fit, n=5)
 #' @export
 plot_auc_forest <- function(fit, biomarkers = "top", n = 20L) {
   df <- fit$results
@@ -140,6 +155,14 @@ plot_auc_forest <- function(fit, biomarkers = "top", n = 20L) {
 #' @param n_label Number of biomarkers to show.  Default 25.
 #'
 #' @return A `ggplot2` object.
+#' @examples
+#' \donttest{
+#' set.seed(42)
+#' X <- matrix(rnorm(200*10), 200, 10, dimnames=list(NULL, paste0("bm",1:10)))
+#' y <- rep(c(0,1), each=100)
+#' stab <- auc_stability(X, y, times=50, seed=1)
+#' plot_auc_stability(stab, n_label=8)
+#' }
 #' @export
 plot_auc_stability <- function(stability, n_label = 25L) {
   rs <- stability$rank_summary
@@ -179,6 +202,15 @@ plot_auc_stability <- function(stability, n_label = 25L) {
 #' @param boot_n Number of bootstrap replicates for CI ribbons.  Default 500.
 #'
 #' @return A `ggplot2` object.
+#' @examples
+#' \donttest{
+#' set.seed(42)
+#' sim <- simulate_auc_matrix(n=100, prevalence=0.3,
+#'   target_aucs=c(0.85,0.75), correlation=0.3, structure="exchangeable")
+#' X <- as.matrix(sim$data[,1:2]); y <- sim$data$truth
+#' fit <- aucmat(X, y, ci="none")
+#' plot_roc_top(fit, X, y, biomarkers=c("X1","X2"))
+#' }
 #' @export
 plot_roc_top <- function(fit, X = NULL, y = NULL,
                           biomarkers = NULL, show_auc = TRUE,

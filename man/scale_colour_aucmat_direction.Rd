@@ -12,3 +12,4 @@ scale_colour_aucmat_direction(...)
 \description{
 Maps \code{higher_in_positive} → blue, \code{lower_in_positive} → red.
 }
+\keyword{internal}

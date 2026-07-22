@@ -19,3 +19,11 @@ A \code{ggplot2} object.
 Side-by-side heatmaps comparing the requested and achieved correlation
 matrices from a simulation object.
 }
+\examples{
+\donttest{
+set.seed(42)
+sim <- simulate_auc_matrix(n=50, prevalence=0.3,
+  target_aucs=c(0.8,0.7,0.6), correlation=0.3, structure="exchangeable")
+plot_correlation_heatmap(sim)
+}
+}

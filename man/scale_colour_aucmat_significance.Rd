@@ -14,3 +14,4 @@ scale_colour_aucmat_significance(q_cutoff = 0.05, ...)
 \description{
 Red for significant, grey for non-significant.
 }
+\keyword{internal}

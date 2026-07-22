@@ -22,6 +22,14 @@
 #' @return An object of class `aucmat_stability`, a list with components:
 #'   `rank_summary`, `top_k_probs`, `coselection`, `settings`.
 #'
+#' @examples
+#' \donttest{
+#' set.seed(42)
+#' X <- matrix(rnorm(200*10), 200, 10, dimnames=list(NULL, paste0("bm",1:10)))
+#' y <- rep(c(0,1), each=100)
+#' stab <- auc_stability(X, y, times=50, seed=1)
+#' print(stab)
+#' }
 #' @export
 auc_stability <- function(X, y, positive = NULL,
                            times   = 1000,

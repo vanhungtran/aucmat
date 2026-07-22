@@ -18,3 +18,13 @@ A \code{ggplot2} object.
 Visualizes the zero-inflation pattern and AUC decomposition for
 hurdle-model results.
 }
+\examples{
+\donttest{
+set.seed(1)
+sim <- simulate_hurdle_auc(n=100, prevalence=0.3,
+  target_hurdle_aucs=c(0.8,0.7), zero_rate_neg=c(0.5,0.3),
+  zero_rate_pos=c(0.2,0.1))
+fit <- hurdle_auc(as.matrix(sim$data[,1:2]), sim$data$truth)
+plot_hurdle_diagnostics(fit)
+}
+}
