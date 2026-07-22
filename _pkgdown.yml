@@ -24,6 +24,8 @@ reference:
   desc: Generate synthetic biomarker data with controlled AUC and correlation
   contents:
   - simulate_auc_matrix
+  - simulate_auc_copula
+  - simulate_hurdle_auc
   - validate_simulation
   - generate_data_probit
   - generate_data_analytical
