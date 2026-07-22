@@ -1,0 +1,221 @@
+---
+title: "Real-Data Application: BeatMG Proteomics"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+    includes:
+      before_body: lightbox.html
+vignette: >
+  %\VignetteIndexEntry{Real-Data Application: BeatMG Proteomics}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse  = TRUE,
+  comment   = "#>",
+  fig.width  = 7,
+  fig.height = 5,
+  message    = FALSE,
+  warning    = FALSE
+)
+have_dt <- requireNamespace("DT", quietly = TRUE)
+```
+
+```{r setup}
+library(aucmat)
+```
+
+## Overview
+
+Every other vignette in this package uses simulated data with known ground
+truth -- useful for validating methodology, but it can't show what `aucmat()`
+actually finds in a real biomarker matrix. This vignette does that, using
+plasma Olink proteomics from **BeatMG** (NeuroNEXT NN102), a randomized,
+double-blind, placebo-controlled trial of rituximab for myasthenia gravis.
+
+Rituximab is an anti-CD20 monoclonal antibody that depletes B cells. That
+gives us a real, mechanistically falsifiable question to screen for: *does
+the plasma proteome show rituximab's effect, and if so, through which
+proteins?* Two datasets ship with `aucmat`:
+
+- `beatmg_baseline`: 48 subjects, pre-treatment (Timepoint 1)
+- `beatmg_ontreatment`: 44 subjects, on-treatment (Timepoint 3 -- the latest
+  collection with enough samples for AUC inference; Timepoint 4 has only 5)
+
+Both are Olink Inflammation + Inflammation_II panels (730 proteins),
+quality-controlled (`?beatmg_baseline` for exact QC criteria). Randomization
+means baseline should show *no* systematic biomarker--arm association --
+that makes it a real-data negative control, not just a second discovery run.
+
+---
+
+## 1. The Raw Data
+
+```{r load_data}
+data(beatmg_baseline)
+data(beatmg_ontreatment)
+dim(beatmg_baseline)
+dim(beatmg_ontreatment)
+table(beatmg_baseline$arm)
+```
+
+```{r raw_table_dt, eval=have_dt}
+DT::datatable(
+  beatmg_ontreatment[, 1:12],
+  caption = "On-treatment data (first 10 proteins shown; 730 total columns)",
+  options = list(pageLength = 10, scrollX = TRUE)
+)
+```
+
+```{r raw_table_fallback, eval=!have_dt}
+head(beatmg_ontreatment[, 1:12])
+```
+
+---
+
+## 2. Per-Biomarker Descriptive Statistics
+
+Before screening, look at what's actually in the matrix: distribution of
+each protein's NPX values, plus its raw AUC against treatment arm.
+
+```{r biomarker_stats}
+protein_cols <- setdiff(names(beatmg_ontreatment), c("SampleID", "arm"))
+X <- as.matrix(beatmg_ontreatment[, protein_cols])
+y <- beatmg_ontreatment$arm
+
+fit <- aucmat(X, y, positive = "Rituximab", ci = "delong", adjust = "BH")
+
+desc <- data.frame(
+  biomarker = protein_cols,
+  mean      = colMeans(X),
+  sd        = apply(X, 2, stats::sd),
+  min       = apply(X, 2, min),
+  max       = apply(X, 2, max)
+)
+biomarker_summary <- merge(
+  desc,
+  fit$results[, c("biomarker", "auc_raw", "conf_low", "conf_high",
+                   "p_value", "q_value")],
+  by = "biomarker"
+)
+biomarker_summary <- biomarker_summary[order(-abs(biomarker_summary$auc_raw - 0.5)), ]
+biomarker_summary[, -1] <- round(biomarker_summary[, -1], 4)
+```
+
+```{r biomarker_stats_dt, eval=have_dt}
+DT::datatable(
+  biomarker_summary,
+  caption = "Per-biomarker NPX distribution and AUC (ranked by |AUC - 0.5|)",
+  options = list(pageLength = 10, scrollX = TRUE)
+)
+```
+
+```{r biomarker_stats_fallback, eval=!have_dt}
+head(biomarker_summary, 10)
+```
+
+---
+
+## 3. Screening: Baseline vs. On-Treatment
+
+### 3.1 Baseline (randomization check)
+
+```{r baseline_screen}
+fit_baseline <- aucmat(
+  as.matrix(beatmg_baseline[, protein_cols]), beatmg_baseline$arm,
+  positive = "Rituximab", ci = "delong", adjust = "BH"
+)
+sum(fit_baseline$results$q_value < 0.05, na.rm = TRUE)
+```
+
+Zero proteins reach `q < 0.05` out of 730 tested. That's the expected result
+under randomization -- and it rules out an easy alternative explanation for
+whatever the on-treatment screen finds (a systematic batch/plate artifact
+would show up at every timepoint, not appear only on-treatment).
+
+### 3.2 On-treatment (discovery)
+
+```{r ontreatment_screen}
+print(fit)
+sum(fit$results$q_value < 0.05, na.rm = TRUE)
+hits <- fit$results[!is.na(fit$results$q_value) & fit$results$q_value < 0.05, ]
+hits[order(hits$auc_raw), c("biomarker", "auc_raw", "conf_low", "conf_high", "q_value")]
+```
+
+Eight proteins are significant at on-treatment, all with `auc_raw < 0.5` --
+systematically *lower* under rituximab. Six of the eight (`FCRL2`, `CD22`,
+`TNFRSF13C`/BAFF-R, `TNFRSF13B`/TACI, `CD79B`, `CD72`) are canonical B-cell
+surface or B-cell-survival-signaling proteins. Finding exactly these
+suppressed in a blinded, randomized comparison is the textbook
+pharmacodynamic signature of anti-CD20 B-cell depletion -- not an
+after-the-fact story fit to noise.
+
+Cross-checking against bootstrap CI (small per-arm n here, ~21-23, is below
+where DeLong's asymptotic coverage is fully reliable):
+
+```{r bootstrap_cross_check}
+fit_boot <- aucmat(X, y, positive = "Rituximab", ci = "bootstrap",
+                    boot_n = 1000, adjust = "BH", seed = 42)
+sum(fit_boot$results$q_value < 0.05, na.rm = TRUE)
+```
+
+Same eight proteins, in close numerical agreement -- DeLong is not
+misleading us here despite the small sample.
+
+---
+
+## 4. Validation: Is the Ranking Stable?
+
+A single screen is not evidence of a stable ranking. `auc_stability()`
+resamples (stratified by arm) and reports how often each protein actually
+lands in the top-k.
+
+```{r stability, fig.width=8, fig.height=5}
+stab <- auc_stability(X, y, positive = "Rituximab",
+                       times = 1000, top_k = c(8, 15, 25), seed = 42)
+print(stab)
+plot_auc_stability(stab, n_label = 10)
+```
+
+The eight significant hits split into two stability tiers: `FCRL2`, `CD22`,
+`IL17F`, `TNFRSF13C` are rock-stable (top-8 in essentially every resample);
+`TNFRSF13B` and `SPINK2` are moderately stable; `CD79B` and `CD72` are
+fragile -- most resamples do *not* reproduce them in the top 8. Report the
+last two with more caution than the first six.
+
+---
+
+## 5. Visualization
+
+```{r rank_plot}
+plot_auc_rank(fit, n_label = 10)
+```
+
+```{r volcano_plot}
+plot_auc_volcano(fit, n_label = 10, q_cutoff = 0.05)
+```
+
+---
+
+## Scope and Limitations
+
+This analysis shows rituximab's expected pharmacodynamic effect on
+circulating B-cell markers -- it is **not** a clinical efficacy or
+treatment-response result. `beatmg_baseline`/`beatmg_ontreatment` carry only
+randomized arm, not the trial's clinical endpoints (MG-ADL, QMG,
+prednisone-sparing outcome), which are not part of this data release. The
+datasets are also an available-case subset (44-48 of 52 randomized
+participants, two of four Olink panels) rather than the full cohort or
+proteome.
+
+## Summary
+
+| Step | Function | Key output |
+|------|----------|------------|
+| Load real data | `data(beatmg_baseline)`, `data(beatmg_ontreatment)` | Subject x protein NPX matrix + randomized arm |
+| Screen | `aucmat()` | Direction-preserving AUCs with DeLong/bootstrap CIs and q-values |
+| Validate | `auc_stability()` | Bootstrap rank-stability, top-k selection frequency |
+| Visualize | `plot_auc_rank()`, `plot_auc_volcano()`, `plot_auc_stability()` | Publication-ready plots |

@@ -34,6 +34,12 @@ biomarkers against binary outcomes. It reports **direction-preserving AUCs**
 and provides inference, multiplicity adjustment, paired comparisons, bootstrap
 rank stability, and publication-quality visualizations.
 
+This vignette uses simulated data throughout, to keep the API examples fast
+and self-contained. For a worked example on real biomarker data -- Olink
+plasma proteomics from a randomized clinical trial, including a real-data
+negative control and bootstrap validation of the findings -- see the
+[Real-Data Application: BeatMG Proteomics](real-data-beatmg.html) vignette.
+
 ### Function Reference
 
 | Category | Function | Description |

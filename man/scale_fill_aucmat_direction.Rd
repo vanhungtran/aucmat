@@ -7,7 +7,7 @@
 scale_fill_aucmat_direction(...)
 }
 \arguments{
-\item{...}{Passed to \code{\link[ggplot2:scale_fill_manual]{ggplot2::scale_fill_manual()}}.}
+\item{...}{Passed to \code{\link[ggplot2:scale_manual]{ggplot2::scale_fill_manual()}}.}
 }
 \description{
 aucmat fill colour scale (discrete)

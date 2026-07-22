@@ -10,3 +10,7 @@ vignettes/*.R
 !vignettes/lightbox.html
 .copilot/
 manuscript/
+
+# Raw source data for package datasets -- large, real trial data; the
+# cleaned/derived objects ship in data/*.rda, this stays local only.
+data-raw/*.csv

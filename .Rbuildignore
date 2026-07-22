@@ -11,6 +11,7 @@
 ^pkgdown$
 ^design$
 ^manuscript$
+^data-raw$
 ^generate_readme_plots\.R$
 ^METHODS\.md$
 ^cran-comments\.md$

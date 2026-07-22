@@ -75,6 +75,12 @@ reference:
   - simulate_hurdle_auc
   - plot_hurdle_diagnostics
 
+- title: Example Data
+  desc: Real biomarker data shipped with the package
+  contents:
+  - beatmg_baseline
+  - beatmg_ontreatment
+
 - title: Deprecated
   desc: Functions retained for backward compatibility
   contents:
@@ -91,6 +97,7 @@ articles:
   desc: In-depth guides
   contents:
   - simulating-biomarker-data
+  - real-data-beatmg
   - practical-screening
   - aucmat-manuscript
 

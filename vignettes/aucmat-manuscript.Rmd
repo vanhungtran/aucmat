@@ -297,6 +297,65 @@ power_auc_matrix(
 )
 ```
 
+# Real-Data Application
+
+The examples above use simulated data with known ground truth. aucmat also
+ships real biomarker data: plasma Olink proteomics from BeatMG (NeuroNEXT
+NN102), a randomized, double-blind, placebo-controlled trial of rituximab --
+an anti-CD20 monoclonal antibody that depletes B cells -- for myasthenia
+gravis. `data(beatmg_baseline)` and `data(beatmg_ontreatment)` provide 730
+Olink Inflammation-panel proteins, quality-controlled and reshaped into
+subject-by-protein matrices with randomized arm as the outcome, at the
+pre-treatment baseline visit (n = 48) and the latest well-powered
+on-treatment collection (n = 44).
+
+```{r realdata, eval=FALSE}
+data(beatmg_baseline)
+data(beatmg_ontreatment)
+protein_cols <- setdiff(names(beatmg_ontreatment), c("SampleID", "arm"))
+
+fit_baseline <- aucmat(as.matrix(beatmg_baseline[, protein_cols]),
+  beatmg_baseline$arm, positive = "Rituximab", ci = "delong", adjust = "BH")
+fit_rtx <- aucmat(as.matrix(beatmg_ontreatment[, protein_cols]),
+  beatmg_ontreatment$arm, positive = "Rituximab", ci = "delong", adjust = "BH")
+```
+
+Randomization implies no true baseline association between the proteome and
+treatment arm; screening the pre-treatment matrix is a real-data negative
+control. Zero of 730 proteins reach q < 0.05 at baseline. Screening
+on-treatment finds eight, all with AUC below 0.5 -- systematically lower
+under rituximab:
+
+| Protein | AUC | 95% CI | q |
+|---------|-----|--------|---|
+| FCRL2 | 0.035 | [-0.01, 0.08] | 1.1e-79 |
+| CD22 | 0.054 | [-0.01, 0.12] | 9.2e-41 |
+| TNFRSF13C (BAFF-R) | 0.066 | [-0.01, 0.14] | 4.0e-26 |
+| IL17F | 0.072 | [0.00, 0.14] | 5.9e-30 |
+| TNFRSF13B (TACI) | 0.147 | [0.04, 0.26] | 5.7e-08 |
+| SPINK2 | 0.159 | [0.04, 0.28] | 1.1e-06 |
+| CD79B | 0.199 | [0.07, 0.33] | 6.7e-04 |
+| CD72 | 0.219 | [0.08, 0.36] | 5.6e-03 |
+
+Table: Proteins significant at q < 0.05, rituximab vs. placebo on-treatment
+(Timepoint 3, n = 44).
+
+Six of the eight (FCRL2, CD22, TNFRSF13C/BAFF-R, TNFRSF13B/TACI, CD79B,
+CD72) are canonical B-cell surface or B-cell-survival-signaling proteins.
+Finding exactly these markers suppressed in a blinded, randomized comparison
+is the expected pharmacodynamic signature of anti-CD20 B-cell depletion, not
+a post hoc association fit to noise -- and the null baseline screen rules
+out a simple technical explanation, since a batch or plate artifact would
+appear at every timepoint rather than emerge only on-treatment. Bootstrap
+rank-stability analysis (`auc_stability()`, 1,000 replicates) shows FCRL2,
+CD22, IL17F, and TNFRSF13C are in the top 8 in 98.2-99.8% of resamples,
+while CD79B and CD72 are markedly less stable (30.8% and 15.8%) and warrant
+more caution. This demonstrates rituximab's expected pharmacodynamic effect
+on circulating B-cell markers; it is not a clinical efficacy result -- the
+shipped datasets carry randomized arm only, not the trial's clinical
+endpoints. Full validation detail and figures are in the `real-data-beatmg`
+vignette.
+
 # Benchmarking
 
 **Screening throughput.** On a desktop workstation (AMD Ryzen 3.5 GHz, 32 GB

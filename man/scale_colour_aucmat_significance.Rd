@@ -9,7 +9,7 @@ scale_colour_aucmat_significance(q_cutoff = 0.05, ...)
 \arguments{
 \item{q_cutoff}{Cutoff value for the legend label.}
 
-\item{...}{Passed to \code{\link[ggplot2:scale_colour_manual]{ggplot2::scale_colour_manual()}}.}
+\item{...}{Passed to \code{\link[ggplot2:scale_manual]{ggplot2::scale_colour_manual()}}.}
 }
 \description{
 Red for significant, grey for non-significant.

@@ -19,6 +19,31 @@ rank-stability analysis, and a multivariate simulation engine with validation.
 remotes::install_github("vanhungtran/aucmat")
 ```
 
+## Validated on Real Data
+
+`aucmat` ships real plasma Olink proteomics from BeatMG (NeuroNEXT NN102), a
+randomized, placebo-controlled trial of rituximab (an anti-CD20, B-cell-depleting
+antibody) for myasthenia gravis:
+
+```r
+data(beatmg_baseline)     # pre-treatment, n = 48
+data(beatmg_ontreatment)  # on-treatment, n = 44
+protein_cols <- setdiff(names(beatmg_ontreatment), c("SampleID", "arm"))
+
+fit <- aucmat(as.matrix(beatmg_ontreatment[, protein_cols]),
+  beatmg_ontreatment$arm, positive = "Rituximab", ci = "delong", adjust = "BH")
+```
+
+Screening the pre-treatment matrix finds **0/730** significant proteins
+(the expected null result under randomization). Screening on-treatment finds
+**8/730** at q < 0.05, all systematically lower under rituximab — six are
+canonical B-cell surface/signaling markers (`FCRL2`, `CD22`, `TNFRSF13C`/BAFF-R,
+`TNFRSF13B`/TACI, `CD79B`, `CD72`), the expected pharmacodynamic signature of
+anti-CD20 B-cell depletion. See the
+[Real-Data Application](https://vanhungtran.github.io/aucmat/articles/real-data-beatmg.html)
+vignette for the full analysis, DeLong-vs-bootstrap cross-check, and
+bootstrap rank-stability validation.
+
 ## Function Reference
 
 | Category | Function | Description |
@@ -609,6 +634,8 @@ compares to the existing ecosystem:
 
 - [Introduction to aucmat](https://vanhungtran.github.io/aucmat/articles/introduction-to-aucmat.html) — screening, visualization, comparisons, stability, missing data
 - [Simulating Biomarker Data](https://vanhungtran.github.io/aucmat/articles/simulating-biomarker-data.html) — mathematical foundations and comparison of all simulation engines
+- [Real-Data Application: BeatMG Proteomics](https://vanhungtran.github.io/aucmat/articles/real-data-beatmg.html) — screening real Olink proteomics from a randomized rituximab trial, with bootstrap validation
+- [Practical Biomarker Screening](https://vanhungtran.github.io/aucmat/articles/practical-screening.html) — full simulated workflow from screening through panels and power analysis
 
 ## Online Documentation
 

@@ -7,7 +7,7 @@
 scale_colour_aucmat_direction(...)
 }
 \arguments{
-\item{...}{Passed to \code{\link[ggplot2:scale_colour_manual]{ggplot2::scale_colour_manual()}}.}
+\item{...}{Passed to \code{\link[ggplot2:scale_manual]{ggplot2::scale_colour_manual()}}.}
 }
 \description{
 Maps \code{higher_in_positive} → blue, \code{lower_in_positive} → red.
