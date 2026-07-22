@@ -37,18 +37,17 @@ abstract: >
   Documentation: https://vanhungtran.github.io/aucmat.
   Dependencies: pROC (>= 1.18), mvtnorm, ggplot2, rlang.
 
-  **Contact:** tranhungydhcm@gmail.com
+  **Contact:** lucas.tran@ck-care.ch
 output:
   pdf_document:
     keep_tex: true
     citation_package: natbib
     toc: false
-bibliography: manuscript/refs.bib
+bibliography: refs.bib
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo=TRUE, warning=FALSE, message=FALSE, fig.width=6, fig.height=4.5)
-library(aucmat)
 ```
 
 # Introduction
@@ -480,5 +479,7 @@ Hadley Wickham's ggplot2 and the mvtnorm authors (Genz, Bretz, et al.) are
 gratefully acknowledged for the visualization and simulation backends. The
 Sun & Xu (2014) fast DeLong algorithm implemented in pROC since version 1.9
 informs aucmat's DeLong variance computation.
+
+Thank KUHNE foundation for financial support.
 
 # References
