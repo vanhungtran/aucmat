@@ -1,110 +1,99 @@
 /* ==========================================================================
-   aucmat pkgdown extras — GLightbox, reading bar, back-to-top
-   Uses GLightbox (same as Quarto) for click-to-zoom with smooth animation.
+   aucmat pkgdown extras — GLightbox zoom, reading bar, back-to-top
    ========================================================================== */
-
 (function() {
-
-  /* ========================================================================
-     Create DOM elements for progress bar and back-to-top
-     ======================================================================== */
-
-  var rpb = document.createElement('div');
-  rpb.id = 'rpb';
-  document.body.appendChild(rpb);
-
-  var btt = document.createElement('button');
-  btt.id = 'btt';
-  btt.title = 'Back to top';
-  btt.setAttribute('aria-label', 'Back to top');
+  /* ── DOM: progress bar + back-to-top ───────────── */
+  var rpb = document.createElement('div'), btt = document.createElement('button');
+  rpb.id = 'rpb'; btt.id = 'btt';
+  btt.title = 'Back to top'; btt.setAttribute('aria-label', 'Back to top');
   btt.innerHTML = '↑';
+  document.body.appendChild(rpb);
   document.body.appendChild(btt);
 
-  /* ── Progress bar ──────────────────────────────── */
   window.addEventListener('scroll', function() {
     var s = document.documentElement;
-    rpb.style.width = Math.min(
-      (s.scrollTop / (s.scrollHeight - s.clientHeight)) * 100, 100
-    ) + '%';
-  }, { passive: true });
-
-  /* ── Back to top ───────────────────────────────── */
-  window.addEventListener('scroll', function() {
+    rpb.style.width = Math.min((s.scrollTop / (s.scrollHeight - s.clientHeight)) * 100, 100) + '%';
     btt.classList.toggle('show', window.scrollY > 480);
   }, { passive: true });
-  btt.addEventListener('click', function() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  });
+  btt.addEventListener('click', function() { window.scrollTo({ top: 0, behavior: 'smooth' }); });
 
-  /* ========================================================================
-     GLightbox — load from CDN, init on all content images
-     ======================================================================== */
+  /* ── Load GLightbox CSS ────────────────────────── */
+  var css = document.createElement('link');
+  css.rel = 'stylesheet';
+  css.href = 'https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css';
+  document.head.appendChild(css);
 
-  function loadGLightbox(cb) {
-    /* CSS */
-    var css = document.createElement('link');
-    css.rel = 'stylesheet';
-    css.href = 'https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css';
-    document.head.appendChild(css);
-
-    /* JS */
-    var js = document.createElement('script');
-    js.src = 'https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js';
-    js.onload = cb;
-    document.head.appendChild(js);
-  }
-
-  function initLightbox() {
-    /* Wrap qualifying images in <a class="lightbox"> links so GLightbox
-       can bind to them.  Skip navbar icons, tiny images, and SVGs. */
-    var images = document.querySelectorAll(
-      'main img[src], article img[src], .figure img[src], ' +
-      '.section img[src], .content img[src]'
-    );
-
-    images.forEach(function(img) {
-      if (img.dataset.lbx) return;
-      if (img.closest && (img.closest('nav') || img.closest('.navbar') ||
-          img.closest('.glightbox'))) return;
-      if (!img.src || img.src.indexOf('data:image/svg') === 0) return;
-      if (img.naturalWidth < 60 && img.naturalHeight < 60) return;
+  /* ── Wrap images in .lightbox <a> tags ──────────── */
+  function wrapImages() {
+    if (wrapImages._done) return;
+    var imgs = document.querySelectorAll('img[src]');
+    for (var i = 0; i < imgs.length; i++) {
+      var img = imgs[i];
+      if (img.dataset.lbx) continue;
+      /* skip nav, navbar, icons, tiny images */
+      var p = img.closest && img.closest('nav,.navbar,.glightbox');
+      if (p) continue;
+      if (!img.src || /^data:/.test(img.src)) continue;
+      if (img.naturalWidth < 50 && img.naturalHeight < 50) continue;
 
       img.dataset.lbx = '1';
-
-      /* Create wrapper <a> if not already inside one */
       var parent = img.parentNode;
+      if (!parent) continue;
+
       if (parent.tagName === 'A') {
         parent.classList.add('lightbox');
-        return;
+        if (!parent.hasAttribute('data-gallery')) parent.setAttribute('data-gallery', 'aucmat');
+        continue;
       }
 
       var a = document.createElement('a');
       a.href = img.src;
       a.className = 'lightbox';
-      a.setAttribute('data-gallery', 'aucmat-gallery');
+      a.setAttribute('data-gallery', 'aucmat');
       if (img.alt) a.setAttribute('data-title', img.alt);
       parent.insertBefore(a, img);
       a.appendChild(img);
-    });
-
-    /* Init GLightbox with Quarto-like settings */
-    if (typeof GLightbox !== 'undefined') {
-      window._aucmatLightbox = GLightbox({
-        closeEffect: 'zoom',
-        descPosition: 'bottom',
-        loop: false,
-        openEffect: 'zoom',
-        selector: '.lightbox'
-      });
     }
+    wrapImages._done = true;
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-      loadGLightbox(initLightbox);
+  /* ── Init GLightbox ────────────────────────────── */
+  var _initTries = 0;
+  function tryInit() {
+    if (typeof GLightbox === 'undefined') {
+      if (++_initTries < 60) setTimeout(tryInit, 100);
+      return;
+    }
+    wrapImages();
+    window._lbx = GLightbox({
+      closeEffect: 'zoom',
+      descPosition: 'bottom',
+      loop: false,
+      openEffect: 'zoom',
+      selector: '.lightbox'
     });
-  } else {
-    loadGLightbox(initLightbox);
   }
 
+  /* Load GLightbox JS from CDN */
+  var js = document.createElement('script');
+  js.src = 'https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js';
+  js.onload = function() {
+    wrapImages();
+    window._lbx = GLightbox({
+      closeEffect: 'zoom',
+      descPosition: 'bottom',
+      loop: false,
+      openEffect: 'zoom',
+      selector: '.lightbox'
+    });
+  };
+  document.head.appendChild(js);
+
+  /* Fallback: poll if onload doesn't fire */
+  setTimeout(tryInit, 1500);
+
+  /* Also run on DOM ready as a safety net */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(tryInit, 200); });
+  }
 })();
