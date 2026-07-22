@@ -3,7 +3,7 @@ Title: Scalable and Statistically Principled ROC Analysis for High-Dimensional B
 Version: 0.2.0
 Date: 2026-07-22
 Authors@R:
-    person("Lucas", "VHH Tran", email = "tranhungydhcm@gmail.com", role = c("aut", "cre"))
+    person("Lucas", "VHH Tran", email = "lucas.tran@ck-care.ch", role = c("aut", "cre"))
 Description: Matrix-first ROC analysis for high-dimensional molecular biomarker data.
     Provides fast, direction-preserving AUC estimation over biomarker matrices with DeLong
     and stratified-bootstrap inference, multiplicity adjustment, paired comparisons on
