@@ -197,7 +197,6 @@ power_auc_matrix(target_aucs = 0.70, power = 0.80, prevalence = 0.3)
 # Benchmarking
 
 ```{r bench, echo=FALSE}
-# Load cached simulation results
 res <- readRDS("simulation_results.rds")
 ```
 
