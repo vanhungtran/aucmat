@@ -22,12 +22,14 @@ Imports:
 Suggests:
     GGally,
     glmnet,
+    hexSticker,
     matrixStats,
     knitr,
     mice,
     missForest,
     rmarkdown,
     scales,
+    showtext,
     testthat (>= 3.0.0),
     ggrepel
 Config/testthat/edition: 3

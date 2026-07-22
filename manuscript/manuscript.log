@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.5.20)  22 JUL 2026 14:12
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.5.20)  22 JUL 2026 15:34
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -460,8 +460,7 @@ LaTeX Font Info:    Trying to load font information for T1+lmr on input line 12
 3.
 (C:\Users\tranh\AppData\Local\Programs\MiKTeX\tex/latex/lm\t1lmr.fd
 File: t1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-)
-No file manuscript.aux.
+) (manuscript.aux)
 \openout1 = `manuscript.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 123.
@@ -610,93 +609,91 @@ LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 1
 File: t1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <9> on input line 149.
+(Font)              <9> on input line 151.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <5> on input line 149.
-
-Package natbib Warning: Citation `Hanley1982' on page 1 undefined on input line
- 161.
-
-
-Package natbib Warning: Citation `DeLong1988' on page 1 undefined on input line
- 161.
-
-
-Package natbib Warning: Citation `Robin2011' on page 1 undefined on input line 
-170.
-
-
-Package natbib Warning: Citation `Saito2017' on page 1 undefined on input line 
-172.
-
-
-Package natbib Warning: Citation `Tuszynski2024' on page 1 undefined on input l
-ine 173.
-
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10> on input line 183.
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <7> on input line 183.
-
-Package natbib Warning: Citation `DeLong1988' on page 1 undefined on input line
- 196.
-
+(Font)              <5> on input line 151.
 [1
 
 {C:/Users/tranh/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/tran
-h/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/lm/lm-ec.enc}{C:/Users/tranh/Ap
-pData/Local/Programs/MiKTeX/fonts/enc/dvips/lm/lm-mathit.enc}{C:/Users/tranh/Ap
-pData/Local/Programs/MiKTeX/fonts/enc/dvips/lm/lm-mathsy.enc}{C:/Users/tranh/Ap
-pData/Local/Programs/MiKTeX/fonts/enc/dvips/lm/lm-rm.enc}]
-Overfull \hbox (26.18503pt too wide) in paragraph at lines 244--250
-[]\T1/lmr/m/n/10 (-20) Structured er-ror classes (\T1/lmtt/m/n/10 aucmat_invali
-d_outcome\T1/lmr/m/n/10 (-20) , \T1/lmtt/m/n/10 aucmat_infeasible_targets\T1/lm
-r/m/n/10 (-20) , \T1/lmtt/m/n/10 aucmat_resampling_failure\T1/lmr/m/n/10 (-20) 
-)
+h/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/lm/lm-ec.enc}]
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <10> on input line 215.
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <7> on input line 215.
+[2{C:/Users/tranh/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/lm/lm-rm.enc}{C
+:/Users/tranh/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/lm/lm-mathsy.enc}{C
+:/Users/tranh/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/lm/lm-mathit.enc}{C
+:/Users/tranh/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/lm/lm-mathex.enc}] 
+[3]
+Underfull \hbox (badness 2221) in paragraph at lines 385--395
+[]\T1/lmr/m/n/10 (+20) Structured er-ror classes (in-her-it-ing from \T1/lmtt/m
+/n/10 error\T1/lmr/m/n/10 (+20) ) al-low pro-gram-matic han-dling of com-mon fa
+il-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 385--395
+\T1/lmr/m/n/10 (+20) ures: \T1/lmtt/m/n/10 aucmat_invalid_outcome\T1/lmr/m/n/10
+ (+20) , \T1/lmtt/m/n/10 aucmat_invalid_correlation\T1/lmr/m/n/10 (+20) , \T1/l
+mtt/m/n/10 aucmat_infeasible_targets\T1/lmr/m/n/10 (+20) ,
+ []
+
+
+Underfull \hbox (badness 6001) in paragraph at lines 385--395
+\T1/lmtt/m/n/10 aucmat_insufficient_sample\T1/lmr/m/n/10 (+20) , and \T1/lmtt/m
+/n/10 aucmat_resampling_failure\T1/lmr/m/n/10 (+20) . An RNG-safety mech-a-nism
+
  []
 
 LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <10> not available
-(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 257.
-[2{C:/Users/tranh/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/lm/lm-mathex.en
-c}]
-LaTeX Font Info:    Trying to load font information for TS1+lmtt on input line 
-308.
-(C:\Users\tranh\AppData\Local\Programs\MiKTeX\tex/latex/lm\ts1lmtt.fd
-File: ts1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-) [3{C:/Users/tranh/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/lm/lm-ts1.enc
+(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 411.
+[4]
+LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 4
+98.
+(C:\Users\tranh\AppData\Local\Programs\MiKTeX\tex/latex/lm\ts1lmr.fd
+File: ts1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+) [5{C:/Users/tranh/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/lm/lm-ts1.enc
 }]
 
-Package longtable Warning: Column widths have changed
-(longtable)                in table 1 on input line 365.
+LaTeX Warning: Reference `features' on page 6 undefined on input line 540.
 
 
-Package longtable Warning: Column widths have changed
-(longtable)                in table 2 on input line 404.
-
-No file manuscript.bbl.
-
-Package natbib Warning: There were undefined citations.
+Overfull \hbox (2.22067pt too wide) in paragraph at lines 566--567
+[]\T1/lmr/m/n/10 (-20) pROC  
+ []
 
 
-Package longtable Warning: Table widths have changed. Rerun LaTeX.
+Overfull \hbox (3.99007pt too wide) in paragraph at lines 570--571
+[]\T1/lmr/m/n/10 (-20) ROCR  
+ []
 
-[4] (manuscript.aux)
+
+Overfull \hbox (2.22067pt too wide) in paragraph at lines 584--585
+[]\T1/lmr/m/n/10 (-20) pROC  
+ []
+
+
+Overfull \hbox (3.99007pt too wide) in paragraph at lines 588--589
+[]\T1/lmr/m/n/10 (-20) ROCR  
+ []
+
+[6] (manuscript.bbl [7]) [8] (manuscript.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-24>
  ***********
 
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+LaTeX Warning: There were undefined references.
 
  ) 
 Here is how much of TeX's memory you used:
- 14909 strings out of 467871
- 234737 string characters out of 5418376
- 701118 words of memory out of 5000000
- 43384 multiletter control sequences out of 15000+600000
- 707878 words of font info for 169 fonts, out of 8000000 for 9000
+ 15065 strings out of 467871
+ 237409 string characters out of 5418376
+ 722038 words of memory out of 5000000
+ 43443 multiletter control sequences out of 15000+600000
+ 715159 words of font info for 204 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 83i,6n,93p,1009b,562s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 83i,7n,93p,1009b,578s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmbx10.pf
 b><C:/Users/tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmbx12.pf
 b><C:/Users/tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmbx9.pfb
@@ -708,21 +705,23 @@ C:/Users/tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmmib10.pfb>
 <C:/Users/tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr10.pfb><
 C:/Users/tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr12.pfb><C
 :/Users/tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr17.pfb><C:
-/Users/tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr7.pfb><C:/U
-sers/tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr9.pfb><C:/Use
-rs/tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmsy10.pfb><C:/Use
-rs/tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmsy7.pfb><C:/User
-s/tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmtk10.pfb><C:/User
-s/tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmtt10.pfb><C:/User
-s/tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmtt9.pfb><C:/Users
-/tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmtti10.pfb><C:/User
-s/tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm1
-0.pfb>
-Output written on manuscript.pdf (4 pages, 397421 bytes).
+/Users/tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr5.pfb><C:/U
+sers/tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr7.pfb><C:/Use
+rs/tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr9.pfb><C:/Users
+/tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmri10.pfb><C:/Users
+/tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmsy10.pfb><C:/Users
+/tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmsy7.pfb><C:/Users/
+tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmtk10.pfb><C:/Users/
+tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmtt10.pfb><C:/Users/
+tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmtt9.pfb><C:/Users/t
+ranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmtti10.pfb><C:/Users/
+tranh/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.
+pfb>
+Output written on manuscript.pdf (8 pages, 485224 bytes).
 PDF statistics:
- 217 PDF objects out of 1000 (max. 8388607)
- 23 named destinations out of 1000 (max. 500000)
- 43137 words of extra memory for PDF output out of 51595 (max. 10000000)
+ 316 PDF objects out of 1000 (max. 8388607)
+ 46 named destinations out of 1000 (max. 500000)
+ 47241 words of extra memory for PDF output out of 51595 (max. 10000000)
 
 
 ! pdflatex: major issue: So far, you have not checked for MiKTeX updates.

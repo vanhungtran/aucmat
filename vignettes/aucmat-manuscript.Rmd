@@ -16,7 +16,6 @@ vignette: >
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo=TRUE, warning=FALSE, message=FALSE, fig.width=6, fig.height=4.5)
-library(aucmat)
 ```
 
 # Introduction
@@ -191,7 +190,7 @@ that a simulator is calibrated.
 
 # Implementation
 
-aucmat is implemented in pure R (6,200 lines across 34 source files) with
+aucmat is implemented in pure R (~5,700 lines across 35 source files) with
 minimized dependencies. The primary function `aucmat()` performs six steps
 in sequence: (1) input validation (matrix dimensions, column names, outcome
 levels, infinite values); (2) outcome normalization via `.normalize_binary_y()`
@@ -305,23 +304,18 @@ RAM, R 4.5.1, Windows 11), aucmat screens 100, 1,000, and 10,000 biomarkers
 (n = 500, DeLong inference) in 0.54, 5.02, and 59.76 seconds respectively.
 The equivalent per-column pROC loop (`pROC::roc()` then `pROC::ci.auc()` with
 `method = "delong"`) on the same data requires 0.68, 6.42, and an estimated 64
-seconds -- a speedup of approximately 1.1--1.3× at moderate $p$, increasing at
-larger $p$ as aucmat's fixed per-call overhead is amortized over more columns.
-The speed advantage comes from avoiding repeated outcome encoding and from
-column-wise rank computation. At small $p$ (< 100), the difference is
+seconds. The speed advantage comes from avoiding repeated outcome encoding and
+from column-wise rank computation. At small $p$ (< 100), the difference is
 negligible; for wide matrices ($p > 1{,}000$), the per-column overhead of
 `pROC::roc()` and `pROC::ci.auc()` becomes meaningful.
 
-**Simulation calibration.** Across 27 simulation conditions (n = 100, 300,
-500; prevalence averaged over 0.2, 0.3, 0.5; target AUC = 0.65, 0.75, 0.85;
-200 replicates each; averaged over exchangeable and AR(1) correlation
-structures with $\rho = 0$ and $\rho = 0.3$), DeLong 95% confidence interval
-coverage ranged from 0.898 (at n = 100, AUC = 0.65) to 0.957 (at n = 500,
-AUC = 0.65), converging to the nominal 0.95 as sample size increased. Power
-exceeded 0.85 for AUC $\geq$ 0.65 at n = 100 and reached 1.0 for AUC $\geq$
-0.75 at n $\geq$ 300. The coverage is slightly below nominal for small $n$
-and extreme AUC values, consistent with the known finite-sample behavior of
-the DeLong variance estimator.
+**Simulation calibration.** Across 27 simulation conditions (n = 100, 300, 500;
+prevalence averaged over 0.2, 0.3, 0.5; target AUC = 0.65, 0.75, 0.85; 200
+replicates each), DeLong 95% confidence interval coverage ranged from 0.898 (at
+n = 100, AUC = 0.65) to 0.957 (at n = 500, AUC = 0.65), converging to the
+nominal 0.95 as sample size increased. The coverage is slightly below nominal
+for small $n$ and extreme AUC values, consistent with the known finite-sample
+behavior of the DeLong variance estimator.
 
 | AUC | n=100 | n=300 | n=500 |
 |-----|-------|-------|-------|
@@ -329,7 +323,7 @@ the DeLong variance estimator.
 | 0.75 | 0.915 | 0.943 | 0.933 |
 | 0.85 | 0.883 | 0.923 | 0.905 |
 
-Table: Empirical coverage of DeLong 95% confidence intervals, averaged across prevalence (0.2, 0.3, 0.5) and correlation structures (exchangeable, AR1) with 200 replicates each.
+Table: Coverage of DeLong 95% CI, averaged across 27 conditions (200 reps each).
 
 # Comparison with existing R packages
 
@@ -443,5 +437,7 @@ Hadley Wickham's ggplot2 and the mvtnorm authors (Genz, Bretz, et al.) are
 gratefully acknowledged for the visualization and simulation backends. The
 Sun & Xu (2014) fast DeLong algorithm implemented in pROC since version 1.9
 informs aucmat's DeLong variance computation.
+
+Thank KUHNE foundation for financial support.
 
 # References

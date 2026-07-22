@@ -28,11 +28,8 @@ plot_auc_rank <- function(fit, n_label = 20L, show_ci = TRUE) {
   p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$rank, y = .data$auc_strength)) +
     ggplot2::geom_point(ggplot2::aes(colour = .data$effect_direction),
                         size = 1.2, alpha = 0.7) +
-    ggplot2::scale_colour_manual(
-      values = c(higher_in_positive = "#2166AC", lower_in_positive = "#B2182B"),
-      na.value = "grey70", name = "Direction"
-    ) +
-    ggplot2::theme_minimal() +
+    scale_colour_aucmat_direction() +
+    theme_aucmat() +
     ggplot2::labs(x = "Rank", y = "Discrimination strength (AUC strength)",
                   title = "Biomarker discrimination strength by rank")
 
@@ -78,12 +75,8 @@ plot_auc_volcano <- function(fit, n_label = 20L, q_cutoff = 0.05) {
     ggplot2::geom_point(
       ggplot2::aes(colour = .data$sig), size = 1.5, alpha = 0.6
     ) +
-    ggplot2::scale_colour_manual(
-      values = c("FALSE" = "grey60", "TRUE" = "#B2182B"),
-      labels = c("FALSE" = "NS", "TRUE" = paste0("q < ", q_cutoff)),
-      name = NULL
-    ) +
-    ggplot2::theme_minimal() +
+    scale_colour_aucmat_significance(q_cutoff = q_cutoff) +
+    theme_aucmat() +
     ggplot2::labs(
       x = "Effect size |AUC - 0.5|",
       y = expression(-log[10](q)),
@@ -126,8 +119,8 @@ plot_auc_forest <- function(fit, biomarkers = "top", n = 20L) {
   p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$auc_raw, y = .data$biomarker)) +
     ggplot2::geom_vline(xintercept = 0.5, linetype = "dashed",
                         colour = "grey50", alpha = 0.6) +
-    ggplot2::geom_point(size = 2) +
-    ggplot2::theme_minimal() +
+    ggplot2::geom_point(size = 2, colour = aucmat_colors$primary) +
+    theme_aucmat() +
     ggplot2::labs(x = "AUC (raw)", y = NULL,
                   title = "Selected biomarker AUCs")
 
@@ -163,7 +156,7 @@ plot_auc_stability <- function(stability, n_label = 25L) {
       width = 0.3
     ) +
     ggplot2::coord_flip() +
-    ggplot2::theme_minimal() +
+    theme_aucmat() +
     ggplot2::labs(
       x = NULL, y = "Bootstrap rank (median and IQR)",
       title = "Rank stability of leading biomarkers"
@@ -233,12 +226,7 @@ plot_roc_top <- function(fit, X = NULL, y = NULL,
     labels <- paste0(biomarkers, " (AUC=", formatC(auc_vals, 3, format = "f"), ")")
   }
 
-  palette <- if (length(roc_list) <= 8L) {
-    c("#2166AC", "#B2182B", "#4DAF4A", "#FF7F00",
-      "#984EA3", "#A65628", "#F781BF", "#999999")[seq_along(roc_list)]
-  } else {
-    grDevices::rainbow(length(roc_list))
-  }
+  palette <- aucmat_colors$accent[seq_along(roc_list)]
 
   ggroc_obj <- pROC::ggroc(roc_list, legacy.axes = FALSE, size = 0.9)
 
@@ -267,7 +255,7 @@ plot_roc_top <- function(fit, X = NULL, y = NULL,
   }
 
   p <- ggroc_obj +
-    ggplot2::theme_minimal() +
+    theme_aucmat() +
     ggplot2::coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) +
     ggplot2::geom_abline(slope = 1, intercept = 0, linetype = "dashed",
                          alpha = 0.5, colour = "grey50") +

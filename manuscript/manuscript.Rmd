@@ -222,7 +222,7 @@ that a simulator is calibrated.
 
 # Implementation
 
-aucmat is implemented in pure R (6,200 lines across 34 source files) with
+aucmat is implemented in pure R (~5,700 lines across 35 source files) with
 minimized dependencies. The primary function `aucmat()` performs six steps
 in sequence: (1) input validation (matrix dimensions, column names, outcome
 levels, infinite values); (2) outcome normalization via `.normalize_binary_y()`

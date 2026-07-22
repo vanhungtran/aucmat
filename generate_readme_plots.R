@@ -27,29 +27,34 @@ fit <- aucmat(X, y, ci = "delong", adjust = "BH")
 stab <- auc_stability(X, y, times = 200, top_k = c(3, 5), seed = 42)
 
 # ---- 1. Rank plot ----
-png(file.path(fig, "README-rank.png"), width = 900, height = 480, res = 110)
+png(file.path(fig, "README-rank.png"), width = 1000, height = 550, res = 120,
+    bg = aucmat_colors$background)
 print(plot_auc_rank(fit, n_label = 4))
 dev.off()
 
 # ---- 2. Volcano plot ----
-png(file.path(fig, "README-volcano.png"), width = 900, height = 480, res = 110)
+png(file.path(fig, "README-volcano.png"), width = 1000, height = 550, res = 120,
+    bg = aucmat_colors$background)
 print(plot_auc_volcano(fit, q_cutoff = 0.05))
 dev.off()
 
 # ---- 3. Forest plot ----
-png(file.path(fig, "README-forest.png"), width = 900, height = 400, res = 110)
+png(file.path(fig, "README-forest.png"), width = 1000, height = 450, res = 120,
+    bg = aucmat_colors$background)
 print(plot_auc_forest(fit, n = 4))
 dev.off()
 
 # ---- 4. ROC curves with CI ribbons ----
-png(file.path(fig, "README-roc.png"), width = 600, height = 550, res = 110)
+png(file.path(fig, "README-roc.png"), width = 700, height = 600, res = 120,
+    bg = aucmat_colors$background)
 print(plot_roc_top(fit, X = X, y = y,
   biomarkers = head(fit$results$biomarker, 3),
   add_ci = TRUE, boot_n = 500))
 dev.off()
 
 # ---- 5. Stability ----
-png(file.path(fig, "README-stability.png"), width = 900, height = 450, res = 110)
+png(file.path(fig, "README-stability.png"), width = 1000, height = 500, res = 120,
+    bg = aucmat_colors$background)
 print(plot_auc_stability(stab, n_label = 8))
 dev.off()
 

@@ -52,6 +52,10 @@ reference:
   - plot_auc_pr
   - plot.aucmat_compare
   - plot.aucmat_simulation
+  - theme_aucmat
+  - scale_colour_aucmat_direction
+  - scale_fill_aucmat_direction
+  - scale_colour_aucmat_significance
 
 - title: Panels, CV & Power
   desc: Multivariable panels, cross-validation, and study planning
@@ -94,5 +98,3 @@ home:
   links:
   - text: pROC package
     href: https://xrobin.github.io/pROC/
-  - text: JSS (target journal)
-    href: https://www.jstatsoft.org/
