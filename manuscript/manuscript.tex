@@ -41,9 +41,11 @@ AUCs with DeLong or stratified-bootstrap confidence intervals for every column
 of a numeric matrix in a single call. The package supports Benjamini-Hochberg
 multiplicity adjustment, three hypothesis-testing frameworks (superiority,
 non-inferiority, equivalence via TOST), an omnibus Wald test for equality of
-multiple correlated AUCs via the joint DeLong covariance matrix, and bootstrap
-rank-stability analysis. A two-stage Hurdle-AUC model handles zero-inflated
-data (scRNA-seq, microbiome). Eight simulation generators produce correlated
+multiple correlated AUCs via the joint DeLong covariance matrix (testing,
+e.g., whether several candidate biomarkers have statistically
+indistinguishable AUCs before selecting a panel), and bootstrap
+rank-stability analysis. A two-stage Hurdle-AUC model handles highly
+zero-inflated omics data. Eight simulation generators produce correlated
 biomarkers with controlled properties under exchangeable, AR(1), block, or
 user-supplied correlation structures with built-in calibration diagnostics.
 Over a dozen visualization functions are provided. The package is freely
@@ -156,10 +158,15 @@ the squared paired-DeLong $z$-statistic within numerical tolerance.
 \subsection{Multiplicity and stability}
 
 Screening $p$ biomarkers produces $p$ tests. \texttt{aucmat} applies
-Benjamini-Hochberg \citep{Benjamini1995}, Holm, or Bonferroni correction,
-reporting adjusted $p$-values as $q$-values. For TOST equivalence
-\citep{Schuirmann1987}, $p_{\text{equiv}} = \max(p_{\text{lower}},
-p_{\text{upper}})$ with adjustment on this combined value.
+Benjamini-Hochberg \citep{Benjamini1995} (default), Holm, or Bonferroni
+correction via \texttt{stats::p.adjust()}, reporting adjusted $p$-values as
+$q$-values. For TOST equivalence \citep{Schuirmann1987}, the classic two
+one-sided tests procedure yields $p_{\text{equiv}} = \max(p_{\text{lower}},
+p_{\text{upper}})$; equivalence is declared when $p_{\text{equiv}} < \alpha$
+after multiplicity adjustment on this combined value. The default multiplicity
+method is BH for \texttt{aucmat()} screening and none for
+\texttt{compare\_auc()} (users should specify \texttt{adjust = "BH"} for
+pairwise comparisons).
 
 Bootstrap rank-stability (\texttt{auc\_stability()}) resamples data $B$ times
 (stratified by outcome), recomputes the full screening, and reports median/IQR
@@ -197,12 +204,18 @@ guarantees and distinguishes it from ad-hoc simulation approaches.
 
 \subsubsection{The equal-variance binormal model}
 
+These generators enable power and sample-size exploration, method benchmarking
+under controlled correlation structures, and fully reproducible vignettes.
 Under the standard binormal model \citep{Hanley1982}, for biomarker
 $k \in \{1,\ldots,p\}$:
 \begin{equation}
 X_k \mid Y = 0 \sim \mathcal{N}(\mu_{k0}, \sigma^2), \qquad
 X_k \mid Y = 1 \sim \mathcal{N}(\mu_{k1}, \sigma^2) \label{eq:binormal}
 \end{equation}
+The variance $\sigma^2$ is shared across classes and, unless otherwise
+specified, across biomarkers. Post-generation standardisation to zero mean
+and unit variance is an affine transform that preserves both AUC and Pearson
+correlation.
 The standardised mean separation $\delta_k = (\mu_{k1} - \mu_{k0})/\sigma$
 determines the AUC via:
 \begin{equation}
@@ -278,7 +291,11 @@ correlations are approximated from target AUCs:
 \end{equation}
 Each column is rank-transformed to uniform quantiles, then probit-transformed
 to standard normal scores. This copula step preserves rank correlations
-exactly regardless of marginal distributions.
+exactly regardless of marginal distributions, making
+\texttt{simulate\_auc\_copula} the recommended choice when non-Gaussian
+marginals are desired or when decoupling AUC control from correlation
+structure is critical (e.g., for stress-testing methods under
+distributional misspecification).
 
 \textbf{Phase~2 -- Iterative Perturbation.} After Phase~1, each biomarker's
 empirical AUC, $\widehat{\text{AUC}}_k$, is compared to its target. The gap
@@ -319,7 +336,14 @@ X_{ij} \mid X_{ij} > 0, Y_i = c \sim
   \text{LogNormal}\!\left(\mu_c, \sigma^2\right) \label{eq:lognormal_hurdle}
 \end{equation}
 where $\mu_1 - \mu_0$ is set by the binormal shift. Values are clipped to
-$[0, \infty)$.
+$[0, \infty)$. The log-normal magnitude model is a pragmatic choice for
+positive-valued omics measurements; users may apply monotone transforms to
+approximate alternative marginal shapes if needed. The Hurdle-AUC reflects
+the joint discriminative ability of the probability of being expressed and
+the magnitude among expressed observations, rather than treating zeros as
+tied minimal values as standard AUC does. Users should inspect both
+components (hurdle and magnitude) via \texttt{plot\_hurdle\_diagnostics()}
+whenever Hurdle-AUC and standard AUC differ substantially.
 
 \subsubsection{Other simulators}
 
@@ -450,11 +474,20 @@ AUC & $n=100$ & $n=300$ & $n=500$ \\
 The equivalent per-column \texttt{pROC} loop requires 0.68, 6.42, and an
 estimated 64~seconds.
 
-\textbf{Simulation calibration.} Across 27 conditions ($n = 100, 300, 500$;
-prevalence $= 0.2, 0.3, 0.5$; AUC $= 0.65, 0.75, 0.85$; 200~reps each),
-DeLong coverage ranged from 0.898 to 0.957, converging to 0.95 as $n$
-increased (Table~\ref{tab:coverage}). Power exceeded 0.85 for AUC $\geq 0.65$
-at $n=100$ and reached 1.0 for AUC $\geq 0.75$ at $n \geq 300$.
+\textbf{Simulation calibration.} We assessed DeLong inference calibration
+using \texttt{simulate\_auc\_matrix()} with three biomarkers per replicate
+(equal target AUCs of 0.65, 0.75, or 0.85), exchangeable and AR(1)
+correlation structures ($\rho = 0, 0.3$), outcome generated in exact mode,
+and 200 independent replicates per condition. Coverage of the first
+biomarker's 95\% CI was recorded. Across 27 conditions ($n = 100, 300, 500$;
+prevalence $= 0.2, 0.3, 0.5$; AUC $= 0.65, 0.75, 0.85$; averaged over
+correlation structures), DeLong coverage ranged from 0.898 to 0.957,
+converging to 0.95 as $n$ increased (Table~\ref{tab:coverage}). The
+slightly liberal coverage at small $n$ is consistent with the known
+finite-sample behaviour of the DeLong estimator, motivating the
+recommendation of bootstrap CIs when $n < 100$ per class. Power exceeded
+0.85 for AUC $\geq 0.65$ at $n=100$ and reached 1.0 for AUC $\geq 0.75$
+at $n \geq 300$.
 
 % ===========================================================================
 \section{Comparison with existing packages}
@@ -463,8 +496,9 @@ at $n=100$ and reached 1.0 for AUC $\geq 0.75$ at $n \geq 300$.
 \begin{table*}[t]
 \centering
 \caption{Feature comparison of R packages for ROC analysis and biomarker
-  screening. \texttt{+} = supported; \texttt{--} = not supported. Verified
-  against CRAN documentation as of July 2026.}
+  screening. \texttt{+} = natively supported without user-side loops or custom
+  coding; \texttt{--} = not supported or requires manual implementation.
+  Verified against CRAN documentation as of July 2026.}
 \label{tab:features}
 \small
 \begin{tabular}{@{}lcccccc@{}}
@@ -496,14 +530,24 @@ Group-stratified screening   & $+$ & $-$ & $-$ & $-$ & $-$ & $-$ \\
 \end{tabular}
 \end{table*}
 
-Five capabilities are unique to \texttt{aucmat}: (i)~matrix-first screening
-with direction-preserving AUC and multiplicity adjustment; (ii)~non-inferiority
-and equivalence tests for paired AUCs; (iii)~omnibus Wald test for three or
-more correlated AUCs; (iv)~bootstrap rank-stability analysis; and (v)~Hurdle-AUC
-for zero-inflated data.
+To our knowledge, no other single R package natively provides all of the
+following in one integrated workflow without requiring user-side loops or
+custom scripting: (i)~single-call, matrix-wide AUC estimation with integrated
+DeLong inference and multiplicity adjustment while preserving the observed
+biomarker direction; (ii)~non-inferiority and equivalence (TOST) hypothesis
+tests for paired AUC comparisons; (iii)~an omnibus Wald test for three or
+more correlated AUCs via the joint DeLong covariance matrix; (iv)~bootstrap
+rank-stability analysis with top-$k$ selection probabilities and pairwise
+co-selection frequencies; and (v)~a two-stage Hurdle-AUC model for highly
+zero-inflated omics data that recovers discriminative signal where standard
+AUC degrades to near chance.
 
 For a single biomarker with smoothed ROC curves, \texttt{pROC} remains the
-standard. For speed on $>10^5$ columns, \texttt{colAUC} is recommended. For
+standard. For speed on $>10^5$ columns, \texttt{colAUC}'s Wilcoxon-based computation is
+recommended, though it sacrifices inference for throughput; \texttt{aucmat}
+is optimised for matrix-scale inference up to at least $10^4$ biomarkers on
+commodity hardware, with screening time scaling approximately linearly in $p$
+at fixed $n$. For
 precision-recall of imbalanced data, \texttt{precrec} is preferred. For
 combining two biomarkers, \texttt{dtComb} provides the most exhaustive methods.
 For end-to-end biomarker screening with full inference, \texttt{aucmat} is the
