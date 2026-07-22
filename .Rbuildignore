@@ -10,6 +10,7 @@
 ^_pkgdown\.yml$
 ^pkgdown$
 ^design$
+^manuscript$
 ^generate_readme_plots\.R$
 ^METHODS\.md$
 ^cran-comments\.md$
