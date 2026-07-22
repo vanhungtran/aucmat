@@ -39,6 +39,7 @@
 #'   |achieved - target| < tol.  Default 0.02.
 #' @param verify Logical.  If TRUE (default), verify achieved AUCs and
 #'   correlations.
+#' @param seed Optional integer seed for reproducibility.
 #'
 #' @return An object of class `aucmat_simulation` with components `data`,
 #'   `target_aucs`, `achieved_aucs`, `requested_correlation`,
@@ -82,8 +83,21 @@ simulate_auc_copula <- function(n,
                                  n_iterations    = 5,
                                  step_decay      = 0.5,
                                  convergence_tol = 0.02,
-                                 verify          = TRUE) {
+                                 verify          = TRUE,
+                                 seed            = NULL) {
 
+  p <- length(target_aucs)
+
+  # ---- Seed handling ----
+  with_seed(seed, {
+    .simulate_auc_copula_body(n, prevalence, target_aucs, corr_matrix,
+      n_iterations, step_decay, convergence_tol, verify)
+  })
+}
+
+.simulate_auc_copula_body <- function(n, prevalence, target_aucs, corr_matrix,
+                                       n_iterations, step_decay,
+                                       convergence_tol, verify) {
   p <- length(target_aucs)
 
   # ---- Validate ----

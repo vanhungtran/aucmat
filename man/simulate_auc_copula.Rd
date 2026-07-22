@@ -12,7 +12,8 @@ simulate_auc_copula(
   n_iterations = 5,
   step_decay = 0.5,
   convergence_tol = 0.02,
-  verify = TRUE
+  verify = TRUE,
+  seed = NULL
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ Default 0.5.}
 
 \item{verify}{Logical.  If TRUE (default), verify achieved AUCs and
 correlations.}
+
+\item{seed}{Optional integer seed for reproducibility.}
 }
 \value{
 An object of class \code{aucmat_simulation} with components \code{data},
