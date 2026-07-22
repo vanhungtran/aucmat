@@ -86,7 +86,7 @@ generate_data_analytical <- function(n, prevalence, target_aucs, corr_matrix) {
   data_df$truth <- truth
 
   # --- Step 4: Final verification and return ---
-  achieved_aucs <- sapply(1:p, function(j) pROC::auc(pROC::roc(data_df$truth, data_df[, j], quiet = TRUE)))
+  achieved_aucs <- vapply(1:p, function(j) as.numeric(pROC::auc(pROC::roc(data_df$truth, data_df[, j], quiet = TRUE))), numeric(1L))
   achieved_correlations <- cor(data_df[, 1:p])
 
   return(list(
