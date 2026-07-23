@@ -1,6 +1,7 @@
 ---
 title: "aucmat: Matrix-First ROC Analysis"
 author: "Lucas VH Huynh-Tran"
+bibliography: refs.bib
 output:
   rmarkdown::html_vignette:
     toc: true
@@ -160,6 +161,41 @@ Simulation confirms recovery from standard AUC $\approx$ 0.53 to Hurdle-AUC
 $\approx$ 0.90 on zero-inflated biomarkers by acknowledging that "expression
 on/off" and "expression level when on" are separate biological processes.
 
+## Multivariable panel construction
+
+Screening ranks biomarkers individually; combining several into one score
+is a distinct problem, addressed by `fit_auc_panel()`. Four of its six
+methods are ridge, lasso, elastic-net, and unpenalized logistic regression
+on centred and scaled predictors, the penalized variants fit via glmnet
+[@Friedman2010]. A fifth, `su_liu`, is the closed-form linear combination
+that maximizes AUC under the common-covariance multivariate normal model
+[@Su1993]: for class-conditional means $\boldsymbol{\mu}_1,
+\boldsymbol{\mu}_0$ and pooled within-class covariance $\boldsymbol{\Sigma}$,
+the AUC-maximizing direction is $\mathbf{w} = \boldsymbol{\Sigma}^{-1}
+(\boldsymbol{\mu}_1 - \boldsymbol{\mu}_0)$ -- the same direction as Fisher's
+linear discriminant, and a natural counterpart to the binormal model
+already used by aucmat's simulation engine. Because $\boldsymbol{\Sigma}$ is
+frequently ill-conditioned when biomarkers are collinear or $p$ approaches
+$n$, the pooled covariance is shrunk toward its diagonal,
+$\boldsymbol{\Sigma}_\lambda = (1-\lambda)\boldsymbol{\Sigma} +
+\lambda\,\mathrm{diag}(\boldsymbol{\Sigma})$ for a user-set $\lambda \in
+[0,1]$, with a reciprocal-condition-number guard that fails informatively
+rather than returning an unstable solution. A sixth, `unweighted`, sums
+direction-aligned, standardized biomarkers with equal weight and fits no
+parameters at all -- an assumption-light baseline for judging whether the
+fitted methods earn their added complexity.
+
+All six methods share one **nested** cross-validation procedure for the
+reported out-of-fold AUC: centering, scaling, and (for the penalized
+methods) penalty selection are re-derived from each outer fold's training
+portion alone, including for the final full-data model's own internal
+penalty search, so nothing derived from a held-out fold ever contributes
+to the model evaluated on it. `compare_panel_auc()` reuses the DeLong or
+bootstrap paired-comparison engine from `compare_auc()` to test the
+panel's honest cross-validated score against each individual biomarker
+used to build it, on the same subjects, and `plot_roc_panel()` plots the
+corresponding ROC curves together.
+
 ## Multivariate simulation
 
 Under the equal-variance binormal model, $X_k \mid Y \sim \mathcal{N}(\mu_{kY},
@@ -190,7 +226,7 @@ that a simulator is calibrated.
 
 # Implementation
 
-aucmat is implemented in pure R (~5,700 lines across 35 source files) with
+aucmat is implemented in pure R (~6,900 lines across 37 source files) with
 minimized dependencies. The primary function `aucmat()` performs six steps
 in sequence: (1) input validation (matrix dimensions, column names, outcome
 levels, infinite values); (2) outcome normalization via `.normalize_binary_y()`
@@ -286,9 +322,16 @@ print(fit_hur)
 # Cross-validated AUC (honest out-of-fold estimates)
 cv <- cv_aucmat(X, y, n_folds = 5, seed = 42)
 
-# Combine top biomarkers into a penalized panel
-panel <- fit_auc_panel(X[, head(cv$results$biomarker, 4)], y,
-  method = "ridge", n_folds = 5)
+# Combine top biomarkers into a panel -- six methods, all honestly
+# nested-cross-validated
+top4 <- X[, head(cv$results$biomarker, 4)]
+panel    <- fit_auc_panel(top4, y, method = "ridge",      n_folds = 5)
+panel_su <- fit_auc_panel(top4, y, method = "su_liu",     n_folds = 5)
+panel_uw <- fit_auc_panel(top4, y, method = "unweighted", n_folds = 5)
+
+# Does the panel actually beat its individual components?
+compare_panel_auc(panel, top4, y)
+plot_roc_panel(panel, top4, y)
 
 # Sample size for 80% power to detect AUC = 0.70
 power_auc_matrix(
@@ -386,7 +429,7 @@ Table: Coverage of DeLong 95% CI, averaged across 27 conditions (200 reps each).
 
 # Comparison with existing R packages
 
-Table \ref{features} compares aucmat (v0.2.0) with five established R packages
+The table below compares aucmat (v0.2.0) with five established R packages
 for ROC analysis and biomarker evaluation. Features are verified against each
 package's CRAN documentation and published literature as of July 2026.
 
@@ -407,7 +450,9 @@ features <- data.frame(
     "Multivariate simulation engine",
     "Simulation calibration diagnostics",
     "Cross-validated AUC screening",
-    "Penalized panel models (ridge/lasso)",
+    "Multivariable panel combination (6 methods)",
+    "Honest nested CV for panel scores",
+    "Panel vs. component significance test",
     "Hurdle-AUC (zero-inflated data)",
     "Precision-Recall curves",
     "Power / sample size computation",
@@ -415,31 +460,32 @@ features <- data.frame(
     "ROC smoothing (binormal/density)",
     "Group-stratified screening"
   ),
-  aucmat = rep("+", 21),
-  pROC = c("-", "-", "+", "+", "-", "+", "+", "-", "-", "-",
-           "+", "-", "-", "-", "-", "-", "-", "+", "+", "+", "-"),
-  precrec = c("-", "-", "-", "-", "-", "-", "-", "-", "-", "-",
-              "+", "-", "-", "-", "-", "-", "+", "-", "-", "-", "-"),
-  ROCR = c("-", "-", "-", "-", "-", "-", "-", "-", "-", "-",
-           "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-"),
-  colAUC = c("+", "-", "-", "-", "-", "-", "-", "-", "-", "-",
-              "-", "-", "-", "-", "-", "-", "-", "-", "+", "-", "-"),
-  dtComb = c("-", "-", "-", "+", "-", "-", "+", "-", "-", "-",
-             "-", "-", "-", "+", "+", "-", "-", "-", "-", "-", "-")
+  aucmat = rep("+", 23),
+  pROC = c("-", "-", "+", "+", "-", "+", "+", "-", "-", "-", "+", "-",
+           "-", "-", "-", "-", "-", "-", "-", "+", "+", "+", "-"),
+  precrec = c("-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "+", "-",
+              "-", "-", "-", "-", "-", "-", "+", "-", "-", "-", "-"),
+  ROCR = rep("-", 23),
+  colAUC = c("+", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-",
+             "-", "-", "-", "-", "-", "-", "-", "-", "+", "-", "-"),
+  dtComb = c("-", "-", "-", "+", "-", "-", "+", "-", "-", "-", "-", "-",
+             "-", "+", "+", "-", "-", "-", "-", "-", "-", "-", "-")
 )
 knitr::kable(features, caption = "Feature comparison of R packages for ROC analysis and biomarker screening.  \\\\texttt{+} = supported; \\\\texttt{-} = not supported or requires manual implementation.  Verified against CRAN documentation as of July 2026.  pROC supports unpaired comparisons via \\\\texttt{roc.test(paired=FALSE)}; aucmat requires common subjects for all comparisons.",
   label = "features", booktabs = TRUE)
 ```
 
-**What aucmat uniquely provides.** Five capabilities are, to our knowledge,
+**What aucmat uniquely provides.** Six capabilities are, to our knowledge,
 not available in any other single R package: (i) matrix-first screening with
 direction-preserving AUC and multiplicity adjustment in one call; (ii)
 non-inferiority and equivalence (TOST) tests for paired AUC comparisons; (iii)
 an omnibus Wald test for three or more correlated AUCs via the joint DeLong
 covariance matrix; (iv) bootstrap rank-stability analysis with top-$k$
-selection probabilities and pairwise co-selection frequencies; and (v) a
+selection probabilities and pairwise co-selection frequencies; (v) a
 two-stage Hurdle-AUC model for zero-inflated data that recovers discriminative
-signal where standard AUC fails.
+signal where standard AUC fails; and (vi) multivariable panel combination
+with honestly nested cross-validation and a dedicated significance test of
+whether the combined panel outperforms its individual components.
 
 **When to use what.** For a single biomarker with smoothed ROC curves, pROC
 remains the gold standard, offering binormal and density smoothing, partial AUC
@@ -448,10 +494,15 @@ comparison [@Venkatraman2000]. For speed on extremely wide matrices (>100k
 columns), colAUC's Wilcoxon-based column-wise computation is recommended,
 though it provides no inference. For precision-recall analysis of highly
 imbalanced data, precrec's C++ backend offers fast and accurate PR curves with
-confidence bands for multiple test sets. For combining two biomarkers into an
-optimal composite score, dtComb's library of 142 methods covers virtually all
-published linear, non-linear, mathematical, and machine-learning combination
-approaches. For end-to-end screening of hundreds to tens of thousands of
+confidence bands for multiple test sets. For an exhaustive search over
+composite scores for exactly two biomarkers, dtComb's library of 142 methods
+covers virtually all published linear, non-linear, mathematical, and
+machine-learning combination approaches; aucmat's own `fit_auc_panel()`
+targets a smaller set of statistically transparent combination methods
+(penalized regression, a closed-form AUC-maximizing linear combination, and
+an assumption-light unweighted baseline) for panels of any size, always
+honestly nested-cross-validated, with a built-in test of whether combining
+helped. For end-to-end screening of hundreds to tens of thousands of
 biomarkers with full statistical inference, multiplicity adjustment, comparison
 testing, stability assessment, validation, and study planning in a single
 coherent workflow, aucmat is the recommended tool.
@@ -462,8 +513,10 @@ aucmat provides a unified, statistically principled framework for biomarker
 screening against binary outcomes in R. Its matrix-first design reduces the
 code burden for high-dimensional ROC analysis from dozens of bespoke scripting
 steps to a handful of function calls with consistent S3 interfaces.
-Cross-validated screening and penalized panel models address same-data
-optimism, while power analysis tools support prospective study design.
+Cross-validated screening and multivariable panel models address same-data
+optimism -- the latter via a fully nested procedure that re-derives every
+outcome-dependent step, including preprocessing, from each fold's training
+portion alone -- while power analysis tools support prospective study design.
 
 **Limitations.** The current version (0.2.0) is restricted to binary outcomes
 for the primary screening workflow (multiclass is available experimentally via
@@ -478,15 +531,16 @@ variance estimator shows slightly liberal coverage at small sample sizes
 finite-sample behavior; bootstrap intervals are recommended when n < 100 per
 class.
 
-**Future work.** The development roadmap targets four major extensions: version
-0.3 will add multivariable penalized panel models with honest nested
-cross-validation to prevent information leakage across preprocessing, feature
-selection, and tuning steps; version 0.4 will extend the framework to multiclass
-outcomes with one-versus-rest, one-versus-one, and Hand-Till estimators; version
-0.5 will incorporate cumulative/dynamic time-dependent AUCs for censored
-survival outcomes [@Heagerty2000; @Blanche2013]; and version 0.6 will introduce
-sparse-matrix and on-disk backends for genomics-scale data exceeding available
-RAM.
+**Future work.** Version 0.2.0 closed the honest-nested-cross-validation gap
+for panel models identified in the previous release and added two
+combination methods (a closed-form AUC-maximizing linear combination and an
+unweighted baseline) alongside the existing penalized-regression panels. The
+development roadmap targets three further extensions: version 0.3 will
+extend the framework to multiclass outcomes with one-versus-rest,
+one-versus-one, and Hand-Till estimators; version 0.4 will incorporate
+cumulative/dynamic time-dependent AUCs for censored survival outcomes
+[@Heagerty2000; @Blanche2013]; and version 0.5 will introduce sparse-matrix
+and on-disk backends for genomics-scale data exceeding available RAM.
 
 # Acknowledgements
 

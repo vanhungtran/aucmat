@@ -66,7 +66,10 @@ bootstrap rank-stability validation.
 | | `generate_auc_vector()` | Single score with exact empirical AUC |
 | | `generate_auc_cor_vector()` | Single score with exact AUC + approximate Pearson r |
 | | `simulate_auc_correlation()` | Monte Carlo sampling distribution of (AUC, r) |
-| **Panels & Power** | `fit_auc_panel()` | Multivariable panel scores (ridge/lasso/elastic-net) |
+| **Panels & Power** | `fit_auc_panel()` | Combine biomarkers into a panel score (ridge/lasso/elastic-net/logistic/Su-Liu/unweighted) |
+| | `predict()` | Apply a fitted panel to new subjects |
+| | `plot_roc_panel()` | ROC curve of the combined panel vs. its components |
+| | `compare_panel_auc()` | Does the panel beat its individual biomarkers? |
 | | `power_auc_matrix()` | Sample size and power for AUC comparisons |
 | **Visualization** | `plot_auc_rank()` | Ordered discrimination strengths with CIs |
 | | `plot_auc_volcano()` | Effect magnitude vs statistical evidence |
@@ -77,6 +80,9 @@ bootstrap rank-stability validation.
 | | `plot_auc_pr()` | Precision-Recall curves for imbalanced data |
 | | `plot_correlation_heatmap()` | Requested vs achieved correlation |
 | | `plot_hurdle_diagnostics()` | Zero-inflation vs magnitude discrimination |
+| | `theme_aucmat()` | Shared ggplot2 theme used by all aucmat plots |
+| | `scale_colour_aucmat_direction()`, `scale_fill_aucmat_direction()` | Colour/fill scale for `higher_in_positive`/`lower_in_positive` |
+| | `scale_colour_aucmat_significance()` | Colour scale for significant/non-significant results |
 | **S3 Methods** | `print()`, `summary()` | Display and summarise results |
 | | `as.data.frame()` | Convert screening results to data.frame |
 | | `plot()` | Default plot per object class |
@@ -359,13 +365,104 @@ plot_hurdle_diagnostics(fit_hur)
 | Biomarker 2 | ~0.65 | **~0.72** | 30%→10% zero rate shift + moderate signal |
 | Biomarker 3 | ~0.52 | ~0.55 | 80%→70% zero rate shift (weak discrimination) |
 
-## 7. Simulation
+## 7. Multivariable Panels: Combining Biomarkers into a Score
+
+A single biomarker rarely discriminates as well as several combined.
+`fit_auc_panel()` combines a small set of biomarkers (typically the top
+candidates from `aucmat()`/`cv_aucmat()`) into one score, reports an
+**honest, nested** cross-validated AUC, and — via `compare_panel_auc()` —
+tests whether the combination actually beats its individual components,
+rather than leaving you to eyeball two AUC numbers.
+
+### 7.1 Combination methods
+
+| `method` | Approach | Assumptions | Dependency |
+|----------|----------|-------------|------------|
+| `"ridge"` (default) | Penalized logistic regression, L2 | None on distribution; shrinks correlated markers together | glmnet |
+| `"lasso"` | Penalized logistic regression, L1 | Sparse solution (drops weak markers) | glmnet |
+| `"elasticnet"` | L1/L2 blend (`alpha`, default 0.5) | Between ridge and lasso | glmnet |
+| `"logistic"` | Unpenalized logistic regression | Needs `n` comfortably `>` number of markers | None |
+| `"su_liu"` | Closed-form linear combination maximizing AUC under the binormal model (Su & Liu, 1993) | Multivariate normal, common covariance across classes | None |
+| `"unweighted"` | Equal-weight sum of direction-aligned, standardized markers | None — no fitted parameters at all | None |
+
+```r
+# Select top biomarkers by cross-validated AUC, then combine them
+cv  <- cv_aucmat(X, y, n_folds = 5, seed = 42)
+top <- head(cv$results$biomarker, 4)
+
+panel_ridge <- fit_auc_panel(X[, top], y, method = "ridge",       n_folds = 5, seed = 1)
+panel_su    <- fit_auc_panel(X[, top], y, method = "su_liu",      n_folds = 5, seed = 1)
+panel_uw    <- fit_auc_panel(X[, top], y, method = "unweighted",  n_folds = 5, seed = 1)
+
+print(panel_ridge)
+plot(panel_ridge)   # coefficient dot-plot
+```
+
+`"su_liu"` and `"unweighted"` add no dependency and no tuning step, which
+makes them useful sanity checks against the penalized/fitted methods —
+if a heavily-tuned ridge panel barely beats the parameter-free unweighted
+sum, the tuning is not buying you much.
+
+### 7.2 Honest, nested cross-validation
+
+`auc_cv` is computed by re-deriving *everything* that looks at the outcome
+— penalty selection for the penalized methods, and centering/scaling for
+every method — from each fold's training portion alone. Nothing about the
+held-out fold, including its contribution to preprocessing statistics,
+ever leaks into the model evaluated on it. `auc_train` (in-sample) is
+still reported alongside it so you can see the optimism gap directly:
+
+```r
+print(panel_ridge)
+#> AUC (training): 0.882
+#> AUC (CV):       0.876
+#> Optimism:       0.007
+```
+
+### 7.3 Visualizing the panel
+
+```r
+plot_roc_panel(panel_ridge, X, y)                      # panel vs. top 3 components
+plot_roc_panel(panel_ridge, X, y, biomarkers = top)     # panel vs. a specific set
+plot_roc_panel(panel_ridge, X, y, add_ci = TRUE)        # + bootstrap CI ribbons
+```
+
+![Panel ROC plot](man/figures/README-panel-roc.png)
+
+By default the panel's *honest* out-of-fold score is plotted (falling back
+to the in-sample score, with a warning, only if the panel was fit with
+`n_folds = 0`).
+
+### 7.4 Does combining actually help?
+
+```r
+compare_panel_auc(panel_ridge, X, y)
+```
+
+Reuses the same DeLong/bootstrap paired-comparison engine as
+`compare_auc()` to test the panel's honest CV score against each
+individual biomarker on the same subjects — a confidence interval and
+p-value for "did combining help", not just two point estimates side by
+side. It is common (and expected) for the panel to beat weak biomarkers
+convincingly while barely edging out the single strongest one.
+
+### 7.5 Predicting on new subjects
+
+```r
+panel <- fit_auc_panel(X_train[, top], y_train, method = "ridge", n_folds = 5)
+predict(panel, X_test[, top])   # panel scores for new subjects
+```
+
+`predict()` reuses the centering/scaling stored from the training fit, so
+new data does not need to be standardized by hand.
+
+## 8. Simulation
 
 `aucmat` provides nine simulation functions. The core distinction is whether
 AUC and between-biomarker correlation are **independent** (free parameters) or
 **linked** (determined by the binormal constraint).
 
-### 7.1 Simulator Comparison
+### 8.1 Simulator Comparison
 
 | Function | AUC + Correlation | Approach | Speed |
 |----------|-------------------|----------|-------|
@@ -379,7 +476,7 @@ AUC and between-biomarker correlation are **independent** (free parameters) or
 | `simulate_auc_correlation()` | Sampling distribution | Monte Carlo over binormal draws | Moderate |
 | `validate_simulation()` | Calibration check | Repeated independent draws + diagnostics | Slow |
 
-### 6.2 `simulate_auc_matrix()` — Recommended General-Purpose Simulator
+### 8.2 `simulate_auc_matrix()` — Recommended General-Purpose Simulator
 
 Draws biomarkers class-conditionally: X\|Y=0 ~ MVN(μ₀, R), X\|Y=1 ~ MVN(μ₁, R).
 The outcome Y is fixed **before** any biomarker is drawn — supplied outcomes
@@ -439,7 +536,7 @@ positive definite, `feasibility = "error"` (default) stops with a structured
 condition. `feasibility = "nearest"` projects to the nearest valid matrix and
 reports the adjustment magnitude in `$feasibility`.
 
-### 6.3 `validate_simulation()` — Calibration Check
+### 8.3 `validate_simulation()` — Calibration Check
 
 Repeats a `simulate_auc_matrix()` specification across many independent draws
 and reports bias, RMSE, Monte Carlo standard error, and target-interval hit
@@ -461,7 +558,7 @@ print(val)
 A bias that stays large relative to the Monte Carlo SE across replicates
 signals a calibration problem, not sampling noise.
 
-### 6.4 Other Simulators
+### 8.4 Other Simulators
 
 ```r
 # Latent probit: independent AUC + correlation (numerical calibration)
@@ -482,7 +579,7 @@ generate_auc_cor_vector(y, target_auc = 0.80, target_cor = 0.45)
 simulate_auc_correlation(y, target_auc = c(0.7, 0.8, 0.9), n_sim = 500)
 ```
 
-### 6.5 How Simulation Works
+### 8.5 How Simulation Works
 
 Under the **binormal model**, biomarker values are normally distributed in
 each class, shifted apart:
@@ -506,7 +603,7 @@ control.
 
 ---
 
-## 7. Missing Data
+## 9. Missing Data
 
 Two strategies via `na_action`:
 
@@ -525,7 +622,7 @@ imputation.
 
 ---
 
-## 8. Reproducibility
+## 10. Reproducibility
 
 All functions with randomness accept a `seed` argument. With an explicit seed,
 the global `.Random.seed` is restored on exit (present or absent), even on error:
@@ -538,7 +635,7 @@ identical(fit1$results$auc_raw, fit2$results$auc_raw)  # TRUE
 
 ---
 
-## 9. Comparison with Other R Packages
+## 11. Comparison with Other R Packages
 
 `aucmat` is designed for **matrix-first biomarker screening** — screen, infer,
 compare, validate, and plan a follow-up study in one package. Here's how it
@@ -562,7 +659,9 @@ compares to the existing ecosystem:
 | Multivariate simulation | ✔ | | | | | | |
 | Simulation validation | ✔ | | | | | | |
 | Cross-validated AUC | ✔ | | | | | ✔ | ✔ |
-| Panel scores (ridge/lasso) | ✔ | | | | | | ✔ |
+| Panel scores (ridge/lasso/EN/logistic/Su-Liu/unweighted) | ✔ | | | | | | ✔ |
+| Honest *nested* CV for panel scores | ✔ | | | | | | |
+| Panel vs. component-biomarker significance test | ✔ | | | | | | |
 | Precision-Recall curves | ✔ | | | ✔ | | | |
 | Power / sample size | ✔ | ✔ | | | | | |
 | ROC smoothing | | ✔ | | | | | |
@@ -596,12 +695,13 @@ compares to the existing ecosystem:
 | Precision-Recall for rare events | **aucmat** or **precrec** | PR curves when prevalence << 0.5 |
 | Multiclass outcome | **pROC** | Hand-Till, macro/micro averaging |
 | Survival/censored outcome | **timeROC** | Cumulative/dynamic AUC |
-| Combine 3+ markers into a score | **dtComb** | 140+ combination methods |
+| Combine biomarkers with honest nested CV + a significance test | **aucmat** | `fit_auc_panel()` + `compare_panel_auc()`; see [Panels](#7-multivariable-panels-combining-biomarkers-into-a-score) below |
+| Exhaustive search over 100+ combination methods for exactly 2 markers | **dtComb** | 140+ linear/non-linear/ML combination methods, cutoff optimization |
 | Study planning (power) | **aucmat** or **pROC** | Both compute n for target AUC |
 
 ---
 
-## 10. Documentation & Help
+## 12. Documentation & Help
 
 ```r
 # Package-level help

@@ -198,7 +198,11 @@ head(data.frame(
 
 ## 8. Build a Multivariable Panel
 
-Combine the top biomarkers into a single score:
+Combine the top biomarkers into a single score. `fit_auc_panel()` reports
+both an in-sample AUC and an **honest, nested** cross-validated AUC:
+penalty selection and centering/scaling are re-derived from each fold's
+training portion alone, so the held-out fold never leaks into the model
+evaluated on it.
 
 ```{r panel}
 # Select top 4 biomarkers by CV AUC
@@ -211,6 +215,44 @@ print(panel)
 
 ```{r panel_plot, fig.width=7, fig.height=3}
 plot(panel)
+```
+
+### 8.1 Other combination methods
+
+Ridge is one of six options. `"su_liu"` is a closed-form linear
+combination that maximizes AUC under the multivariate-normal (binormal)
+model -- fast, no `glmnet` dependency, and a natural fit alongside this
+package's own binormal simulation engine. `"unweighted"` sums
+direction-aligned, standardized biomarkers with equal weight and fits
+nothing at all -- a useful baseline for judging whether the fitted methods
+are earning their complexity.
+
+```{r panel_methods}
+panel_su <- fit_auc_panel(X_panel, y, method = "su_liu", n_folds = 5, seed = 123)
+panel_uw <- fit_auc_panel(X_panel, y, method = "unweighted", n_folds = 5, seed = 123)
+
+data.frame(
+  method   = c("ridge", "su_liu", "unweighted"),
+  auc_train = c(panel$auc_train, panel_su$auc_train, panel_uw$auc_train),
+  auc_cv    = c(panel$auc_cv, panel_su$auc_cv, panel_uw$auc_cv)
+)
+```
+
+### 8.2 Panel ROC vs. individual biomarkers
+
+```{r panel_roc, fig.width=7, fig.height=5}
+plot_roc_panel(panel, X_panel, y)
+```
+
+### 8.3 Does combining actually help?
+
+`compare_panel_auc()` tests the panel's honest cross-validated score
+against each individual biomarker on the same subjects -- a confidence
+interval and p-value for whether combining helped, rather than two AUC
+numbers to eyeball.
+
+```{r panel_compare}
+compare_panel_auc(panel, X_panel, y)
 ```
 
 ---
@@ -242,5 +284,7 @@ print(pwr)
 | Global test | `compare_auc_global()` | Omnibus Wald test |
 | Stability | `auc_stability()` | Bootstrap rank distributions |
 | Cross-validate | `cv_aucmat()` | Out-of-fold AUCs, optimism |
-| Panel | `fit_auc_panel()` | Combined biomarker score |
+| Panel | `fit_auc_panel()` | Combined biomarker score, honest nested CV AUC |
+| Panel ROC | `plot_roc_panel()` | Panel vs. individual-biomarker ROC curves |
+| Panel comparison | `compare_panel_auc()` | Does the panel beat its components? |
 | Power | `power_auc_matrix()` | Sample size for next study |

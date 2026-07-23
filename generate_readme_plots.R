@@ -58,6 +58,13 @@ png(file.path(fig, "README-stability.png"), width = 1000, height = 500, res = 12
 print(plot_auc_stability(stab, n_label = 8))
 dev.off()
 
+# ---- 5b. Panel ROC: combined panel vs. its components ----
+panel <- fit_auc_panel(X, y, method = "ridge", n_folds = 5, seed = 42)
+png(file.path(fig, "README-panel-roc.png"), width = 800, height = 600, res = 120,
+    bg = aucmat_colors$background)
+print(plot_roc_panel(panel, X, y))
+dev.off()
+
 # ---- 6. Simulator comparison: achieved vs target ----
 # Use simulate_auc_matrix with all 4 structures to show flexibility
 set.seed(1)

@@ -62,6 +62,9 @@ reference:
   contents:
   - cv_aucmat
   - fit_auc_panel
+  - predict.aucmat_panel
+  - plot_roc_panel
+  - compare_panel_auc
   - power_auc_matrix
   - aucmat_by
   - aucmat_multiclass
