@@ -10,6 +10,7 @@
 ^_pkgdown\.yml$
 ^pkgdown$
 ^design$
+^logo$
 ^manuscript$
 ^data-raw$
 ^generate_readme_plots\.R$
