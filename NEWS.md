@@ -40,6 +40,9 @@
 - `fit_auc_panel()`'s `fitted_model` component is now a list of
   `coefficients`/`means`/`sds` (used by `predict.aucmat_panel()`) instead of
   the raw `glmnet`/`glm` fit object, for all methods uniformly.
+- `plot_roc_top()` and `plot_roc_panel()` now default to `add_ci = TRUE`
+  (bootstrap confidence ribbons shown), matching `plot_roc_smooth()`'s
+  existing default. Pass `add_ci = FALSE` for a faster, ribbon-free plot.
 
 # aucmat 0.1.0
 

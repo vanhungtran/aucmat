@@ -59,8 +59,10 @@ negative control and bootstrap validation of the findings -- see the
 | | `plot_auc_volcano()` | Effect magnitude vs statistical evidence |
 | | `plot_auc_forest()` | Selected AUCs with confidence intervals |
 | | `plot_auc_stability()` | Bootstrap rank distributions |
-| | `plot_roc_top()` | ROC curves for selected biomarkers |
+| | `plot_roc_top()` | ROC curves for selected biomarkers (CI ribbons by default) |
+| | `plot_auc_pr()` | Precision-Recall curves for imbalanced data |
 | **S3 Methods** | `print()`, `summary()`, `as.data.frame()`, `plot()`, `subset()` | For `aucmat_screen` objects |
+| | `plot()` | Also dispatches on `aucmat_compare` (forest of pairwise differences) |
 
 ---
 
@@ -414,13 +416,13 @@ plot_auc_forest(fit, n = 4)
 
 ### 4.4 ROC Curves — `plot_roc_top()`
 
-Empirical ROC curves for deliberately selected biomarkers. Optional
-bootstrap CI ribbons show estimation uncertainty.
+Empirical ROC curves for deliberately selected biomarkers. Bootstrap CI
+ribbons showing estimation uncertainty are on by default
+(`add_ci = TRUE`); pass `add_ci = FALSE` to skip them for a faster plot.
 
 ```{r plot_roc, fig.width=5.5, fig.height=5}
 plot_roc_top(fit, X = X, y = y,
-  biomarkers = head(fit$results$biomarker, 3),
-  add_ci = TRUE, boot_n = 500)
+  biomarkers = head(fit$results$biomarker, 3))
 ```
 
 ### 4.5 Stability Plot — `plot_auc_stability()`
@@ -431,6 +433,23 @@ Bootstrap rank distributions: median (point) and IQR (error bar).
 stab <- auc_stability(X, y, times = 200, top_k = c(3, 5), seed = 42)
 plot_auc_stability(stab, n_label = 8)
 ```
+
+A biomarker with a tight bar near rank 1 is a dependable top candidate; a
+wide bar means its ranking is sensitive to which subjects happened to be
+sampled -- worth caution before committing it to a follow-up study.
+
+### 4.6 Precision-Recall Curves — `plot_auc_pr()`
+
+ROC curves can look deceptively good when positives are rare; precision-recall
+curves don't. Prefer this view whenever prevalence is well below 0.5.
+
+```{r plot_pr, fig.width=5.5, fig.height=5}
+plot_auc_pr(X, y, biomarkers = head(fit$results$biomarker, 3))
+```
+
+The dashed line marks the prevalence -- the precision a random classifier
+would achieve. A useful biomarker's curve sits well above it across most of
+the recall range.
 
 ---
 
@@ -488,6 +507,19 @@ compare_auc(fit, X, y, reference = "X1", adjust = "holm")
 compare_auc(fit, X, y, biomarkers = c("X1", "X2", "X4"),
   adjust = "bonferroni")
 ```
+
+### 5.4 Visualizing Comparisons
+
+`compare_auc()`'s result has its own `plot()` method:
+
+```{r compare_plot, fig.width=7, fig.height=3.5}
+plot(cmp_ref)
+```
+
+Each row is one pairwise `auc_diff` (reference minus the other biomarker)
+with its CI. The dashed line at 0 is "no difference" -- a CI that doesn't
+cross it is a statistically supported difference at the chosen
+`alternative`/`hypothesis`.
 
 ---
 

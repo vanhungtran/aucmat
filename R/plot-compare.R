@@ -37,7 +37,7 @@ plot.aucmat_compare <- function(x, ...) {
     ggplot2::geom_vline(xintercept = 0, linetype = "dashed",
                         colour = "grey50", alpha = 0.6) +
     ggplot2::geom_point(size = 2.5, colour = "#2c7da0") +
-    ggplot2::theme_minimal() +
+    theme_aucmat() +
     ggplot2::labs(x = "AUC difference", y = NULL,
       title = paste0("Paired AUC comparisons (", df$hypothesis[1],
         if (!is.na(df$margin[1]) && df$margin[1] > 0)

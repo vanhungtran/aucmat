@@ -309,7 +309,7 @@ plot.aucmat_panel <- function(x, ...) {
                         colour = "grey50", alpha = 0.5) +
     ggplot2::geom_point(size = 2.5,
       colour = ifelse(df$coefficient >= 0, "#2166AC", "#B2182B")) +
-    ggplot2::theme_minimal() +
+    theme_aucmat() +
     ggplot2::labs(
       x = "Coefficient", y = NULL,
       title = paste0("Panel coefficients (", x$settings$method, ")"),

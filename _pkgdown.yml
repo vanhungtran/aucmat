@@ -39,17 +39,20 @@ reference:
   - compare_auc
   - compare_auc_global
   - auc_stability
+  - roc_test
 
 - title: Visualization
-  desc: Publication-quality graphics
+  desc: Publication-quality graphics -- every ROC/panel-ROC plot shows
+    bootstrap confidence ribbons by default
   contents:
   - plot_auc_rank
   - plot_auc_volcano
   - plot_auc_forest
   - plot_auc_stability
   - plot_roc_top
-  - plot_correlation_heatmap
+  - plot_roc_smooth
   - plot_auc_pr
+  - plot_correlation_heatmap
   - plot.aucmat_compare
   - plot.aucmat_simulation
   - theme_aucmat
@@ -57,19 +60,21 @@ reference:
   - scale_fill_aucmat_direction
   - scale_colour_aucmat_significance
 
-- title: Panels, CV & Power
-  desc: Multivariable panels, cross-validation, and study planning
+- title: Multivariable Panels
+  desc: Combine biomarkers into a single score, with honest nested
+    cross-validation
   contents:
-  - cv_aucmat
   - fit_auc_panel
   - predict.aucmat_panel
   - plot_roc_panel
   - compare_panel_auc
+
+- title: Cross-Validation & Study Planning
+  contents:
+  - cv_aucmat
   - power_auc_matrix
   - aucmat_by
   - aucmat_multiclass
-  - roc_test
-  - plot_roc_smooth
 
 - title: Hurdle-AUC
   desc: Two-stage model for zero-inflated biomarker data
@@ -97,11 +102,15 @@ articles:
   - introduction-to-aucmat
 
 - title: Tutorials
-  desc: In-depth guides
+  desc: In-depth, task-focused guides
   contents:
   - simulating-biomarker-data
   - real-data-beatmg
   - practical-screening
+
+- title: Background
+  desc: Methodology and citation
+  contents:
   - aucmat-manuscript
 
 home:

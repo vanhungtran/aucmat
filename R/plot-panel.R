@@ -27,7 +27,7 @@
 #'   score; `"train"` plots the in-sample (optimistic) score. Falls back
 #'   to `"train"` with a warning if `panel` was fit with `n_folds < 2`.
 #' @param add_ci Add bootstrap sensitivity confidence ribbons. Default
-#'   `FALSE`.
+#'   `TRUE` -- set `FALSE` for a faster, ribbon-free plot.
 #' @param boot_n Bootstrap replicates for CI ribbons. Default 500.
 #' @param seed Optional seed for CI bootstrap reproducibility.
 #'
@@ -46,7 +46,7 @@
 plot_roc_panel <- function(panel, X, y, positive = NULL,
                             biomarkers = NULL, n_top = 3L,
                             use = c("cv", "train"),
-                            add_ci = FALSE, boot_n = 500, seed = NULL) {
+                            add_ci = TRUE, boot_n = 500, seed = NULL) {
   if (!inherits(panel, "aucmat_panel"))
     stop("panel must be an 'aucmat_panel' object from fit_auc_panel().")
   use <- match.arg(use)

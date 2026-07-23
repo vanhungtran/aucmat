@@ -10,7 +10,7 @@ plot_roc_top(
   y = NULL,
   biomarkers = NULL,
   show_auc = TRUE,
-  add_ci = FALSE,
+  add_ci = TRUE,
   boot_n = 500
 )
 }
@@ -27,7 +27,7 @@ by \code{auc_strength}.}
 \item{show_auc}{Add AUC values to the legend.  Default \code{TRUE}.}
 
 \item{add_ci}{Add confidence ribbons to ROC curves via bootstrap.
-Default \code{FALSE}.}
+Default \code{TRUE} -- set \code{FALSE} for a faster, ribbon-free plot.}
 
 \item{boot_n}{Number of bootstrap replicates for CI ribbons.  Default 500.}
 }

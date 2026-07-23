@@ -160,7 +160,7 @@ plot_auc_pr <- function(X, y, biomarkers = NULL, show_auc = TRUE,
     ggplot2::geom_line(linewidth = 0.9) +
     ggplot2::scale_colour_manual(values = palette, name = "Biomarker") +
     ggplot2::coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) +
-    ggplot2::theme_minimal() +
+    theme_aucmat() +
     ggplot2::labs(x = "Recall (Sensitivity)", y = "Precision (PPV)",
       title = "Precision-Recall curves for selected biomarkers")
 

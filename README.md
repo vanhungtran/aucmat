@@ -175,18 +175,28 @@ subset(fit, auc_strength > 0.8)  # filter by discrimination
 ## 2. Visualization
 
 Every plot returns a `ggplot2` object and labels only a limited subset of
-biomarkers (via `ggrepel`) to keep wide-matrix views readable.
+biomarkers (via `ggrepel`) to keep wide-matrix views readable. Plots that
+draw a curve (ROC, panel ROC) show **bootstrap confidence ribbons by
+default** (`add_ci = TRUE`) — pass `add_ci = FALSE` if you want the faster,
+ribbon-free version.
 
 ### 2.1 Rank Plot — `plot_auc_rank()`
 
-Ordered discrimination strengths with optional DeLong CI error bars.
-Colour indicates effect direction (blue = higher in positives, red = lower).
+Ordered discrimination strengths with DeLong CI error bars. Colour indicates
+effect direction (blue = higher in positives, red = lower).
 
 ```r
 plot_auc_rank(fit, n_label = 20, show_ci = TRUE)
 ```
 
 ![Rank plot](man/figures/README-rank.png)
+
+**How to read it:** each point is one biomarker's `auc_strength`, sorted
+left-to-right from strongest to weakest discriminator. The vertical error
+bar is the DeLong 95% CI — biomarkers with tight bars near the top are
+your most *reliably* strong candidates, not just the highest point
+estimate. Colour tells you the biological direction without needing to
+check `effect_direction` in the table.
 
 ### 2.2 Volcano Plot — `plot_auc_volcano()`
 
@@ -199,6 +209,12 @@ plot_auc_volcano(fit, n_label = 20, q_cutoff = 0.05)
 
 ![Volcano plot](man/figures/README-volcano.png)
 
+**How to read it:** the x-axis is *how big* the effect is, the y-axis is
+*how sure* you are it's real. Points in the upper-right are strong and
+well-supported. A biomarker far to the right but low on the y-axis is a
+big-looking effect you can't yet trust (small sample, high variance) —
+worth a second look before it goes in a panel.
+
 ### 2.3 Forest Plot — `plot_auc_forest()`
 
 Point estimates with confidence intervals for selected biomarkers.
@@ -210,18 +226,30 @@ plot_auc_forest(fit, biomarkers = c("X1", "X2"))     # specific set
 
 ![Forest plot](man/figures/README-forest.png)
 
+**How to read it:** the dashed line at 0.5 is chance-level discrimination.
+Biomarkers whose CI crosses it aren't distinguishable from noise at this
+sample size. This is the plot to screenshot for a talk or paper figure —
+it answers "how good, and how sure" for a hand-picked shortlist in one
+glance.
+
 ### 2.4 ROC Curves — `plot_roc_top()`
 
-Empirical ROC curves for deliberately selected biomarkers. Supports optional
-bootstrap CI ribbons.
+Empirical ROC curves for deliberately selected biomarkers, with bootstrap
+CI ribbons shown by default.
 
 ```r
-plot_roc_top(fit, X = X, y = y)                            # top 6 by default
+plot_roc_top(fit, X = X, y = y)                            # top 6, with CI ribbons
 plot_roc_top(fit, X = X, y = y, biomarkers = c("X1", "X2"))
-plot_roc_top(fit, X = X, y = y, add_ci = TRUE, boot_n = 500)  # with CI ribbons
+plot_roc_top(fit, X = X, y = y, add_ci = FALSE)             # faster, no ribbons
 ```
 
 ![ROC curves](man/figures/README-roc.png)
+
+**How to read it:** a curve that hugs the top-left corner discriminates
+well; the diagonal is chance. The shaded ribbon is the bootstrap
+sensitivity CI at each specificity — where ribbons for two biomarkers
+don't overlap, that's a visual cue (not a formal test) that they likely
+differ; use `compare_auc()` for the actual hypothesis test.
 
 ### 2.5 Stability Plot — `plot_auc_stability()`
 
@@ -232,6 +260,27 @@ plot_auc_stability(stab, n_label = 20)
 ```
 
 ![Stability plot](man/figures/README-stability.png)
+
+**How to read it:** each biomarker's rank position is resampled hundreds
+of times; the point is the median rank, the bar is the interquartile
+range. A biomarker with a tight bar near rank 1 is a dependable top
+candidate. A wide bar means its ranking is sensitive to which subjects
+happened to be sampled — a warning sign before committing it to a panel
+or a follow-up study.
+
+### 2.6 Precision-Recall Curves — `plot_auc_pr()`
+
+```r
+plot_auc_pr(X, y, biomarkers = c("X1", "X2", "X3"))
+```
+
+![Precision-Recall curves](man/figures/README-pr.png)
+
+**How to read it:** when positives are rare, ROC curves can look
+deceptively good — PR curves don't. The dashed line marks the prevalence
+(precision of a random classifier); a useful biomarker's curve sits well
+above it. Prefer this view over ROC whenever your outcome is imbalanced
+(prevalence well below 0.5).
 
 ---
 
@@ -281,6 +330,23 @@ compare_auc(fit, X, y, reference = "X1",
 
 When `top_n` selects and tests on the same data, the result carries
 `selection_status = "same_data"` and a warning that inference is exploratory.
+
+### Visualizing Comparisons — `plot()`
+
+`compare_auc()`'s result has its own `plot()` method:
+
+```r
+cmp <- compare_auc(fit, X, y, reference = "X1")
+plot(cmp)
+```
+
+![Comparison forest plot](man/figures/README-compare.png)
+
+**How to read it:** each row is one pairwise `auc_diff` (reference minus
+the other biomarker) with its CI. The dashed line at 0 is "no difference."
+A CI that doesn't cross it is a statistically supported difference at your
+chosen `alternative`/`hypothesis`; one that does cross it means you can't
+yet distinguish the two biomarkers on this data.
 
 ### Multiplicity Adjustment
 
@@ -359,6 +425,17 @@ fit_hur <- hurdle_auc(as.matrix(sim$data[, 1:3]), sim$data$truth)
 plot_hurdle_diagnostics(fit_hur)
 ```
 
+![Hurdle-AUC diagnostics](man/figures/README-hurdle.png)
+
+**How to read it:** each point is one biomarker. The x-axis is how well
+its *zero/nonzero pattern* discriminates class; the y-axis is how well its
+*magnitude, given it's nonzero* discriminates class; point size is the
+overall zero rate; colour is the combined Hurdle AUC. A biomarker sitting
+far right but near the dashed 0.5 line on the y-axis (like the example's
+weaker markers) is getting essentially all of its signal from *whether*
+it's expressed, not *how much* — exactly the story a standard AUC would
+have missed entirely.
+
 | Metric | Standard AUC | Hurdle AUC | Why |
 |--------|:-----------:|:----------:|-----|
 | Biomarker 1 | ~0.53 | **~0.90** | 55%→25% zero rate shift + strong nonzero signal |
@@ -398,6 +475,15 @@ print(panel_ridge)
 plot(panel_ridge)   # coefficient dot-plot
 ```
 
+![Panel coefficients](man/figures/README-panel-coef.png)
+
+**How to read it:** each point is one biomarker's fitted weight in the
+combined score. Blue (positive) means higher values push the score toward
+the positive class; red (negative) means the opposite. Distance from the
+dashed zero line is how much that biomarker contributes once the others
+are accounted for — not the same as its own solo `auc_strength`, since
+correlated biomarkers can trade weight with each other.
+
 `"su_liu"` and `"unweighted"` add no dependency and no tuning step, which
 makes them useful sanity checks against the penalized/fitted methods —
 if a heavily-tuned ridge panel barely beats the parameter-free unweighted
@@ -422,16 +508,20 @@ print(panel_ridge)
 ### 7.3 Visualizing the panel
 
 ```r
-plot_roc_panel(panel_ridge, X, y)                      # panel vs. top 3 components
-plot_roc_panel(panel_ridge, X, y, biomarkers = top)     # panel vs. a specific set
-plot_roc_panel(panel_ridge, X, y, add_ci = TRUE)        # + bootstrap CI ribbons
+plot_roc_panel(panel_ridge, X, y)                       # panel vs. top 3 components, with CI ribbons
+plot_roc_panel(panel_ridge, X, y, biomarkers = top)      # panel vs. a specific set
+plot_roc_panel(panel_ridge, X, y, add_ci = FALSE)        # faster, no ribbons
 ```
 
 ![Panel ROC plot](man/figures/README-panel-roc.png)
 
-By default the panel's *honest* out-of-fold score is plotted (falling back
-to the in-sample score, with a warning, only if the panel was fit with
-`n_folds = 0`).
+**How to read it:** same ROC-curve reading as the ROC Curves plot in
+section 2 above, but now the combined panel (dark curve) is drawn on top
+of its individual components for direct comparison. By default the panel's
+*honest* out-of-fold score is plotted (falling back to the in-sample
+score, with a warning, only if the panel was fit with `n_folds = 0`) — the
+curve you see is genuinely how the panel would perform on new subjects,
+not an optimistic in-sample view.
 
 ### 7.4 Does combining actually help?
 
@@ -732,10 +822,19 @@ compares to the existing ecosystem:
 
 ## Vignettes
 
-- [Introduction to aucmat](https://vanhungtran.github.io/aucmat/articles/introduction-to-aucmat.html) — screening, visualization, comparisons, stability, missing data
+**Get started**
+
+- [Introduction to aucmat](https://vanhungtran.github.io/aucmat/articles/introduction-to-aucmat.html) — screening, every visualization (rank, volcano, forest, ROC, PR, stability), comparisons, global test, stability, missing data
+
+**Tutorials**
+
 - [Simulating Biomarker Data](https://vanhungtran.github.io/aucmat/articles/simulating-biomarker-data.html) — mathematical foundations and comparison of all simulation engines
 - [Real-Data Application: BeatMG Proteomics](https://vanhungtran.github.io/aucmat/articles/real-data-beatmg.html) — screening real Olink proteomics from a randomized rituximab trial, with bootstrap validation
-- [Practical Biomarker Screening](https://vanhungtran.github.io/aucmat/articles/practical-screening.html) — full simulated workflow from screening through panels and power analysis
+- [Practical Biomarker Screening](https://vanhungtran.github.io/aucmat/articles/practical-screening.html) — full simulated workflow from screening through multivariable panels (all six combination methods) and power analysis
+
+**Background**
+
+- [aucmat: Matrix-First ROC Analysis](https://vanhungtran.github.io/aucmat/articles/aucmat-manuscript.html) — the methods paper: statistical foundations, benchmarking, and comparison with the wider R ecosystem
 
 ## Online Documentation
 

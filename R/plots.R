@@ -198,7 +198,7 @@ plot_auc_stability <- function(stability, n_label = 25L) {
 #'   by `auc_strength`.
 #' @param show_auc Add AUC values to the legend.  Default `TRUE`.
 #' @param add_ci Add confidence ribbons to ROC curves via bootstrap.
-#'   Default `FALSE`.
+#'   Default `TRUE` -- set `FALSE` for a faster, ribbon-free plot.
 #' @param boot_n Number of bootstrap replicates for CI ribbons.  Default 500.
 #'
 #' @return A `ggplot2` object.
@@ -214,7 +214,7 @@ plot_auc_stability <- function(stability, n_label = 25L) {
 #' @export
 plot_roc_top <- function(fit, X = NULL, y = NULL,
                           biomarkers = NULL, show_auc = TRUE,
-                          add_ci = FALSE, boot_n = 500) {
+                          add_ci = TRUE, boot_n = 500) {
   # Resolve data
   if (!is.null(fit$X) && !is.null(fit$y)) {
     X <- fit$X; y <- fit$y

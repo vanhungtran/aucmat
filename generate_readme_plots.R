@@ -44,7 +44,7 @@ png(file.path(fig, "README-forest.png"), width = 1000, height = 450, res = 120,
 print(plot_auc_forest(fit, n = 4))
 dev.off()
 
-# ---- 4. ROC curves with CI ribbons ----
+# ---- 4. ROC curves with CI ribbons (add_ci = TRUE is now the default) ----
 png(file.path(fig, "README-roc.png"), width = 700, height = 600, res = 120,
     bg = aucmat_colors$background)
 print(plot_roc_top(fit, X = X, y = y,
@@ -58,11 +58,43 @@ png(file.path(fig, "README-stability.png"), width = 1000, height = 500, res = 12
 print(plot_auc_stability(stab, n_label = 8))
 dev.off()
 
-# ---- 5b. Panel ROC: combined panel vs. its components ----
+# ---- 5b. Precision-Recall curves ----
+png(file.path(fig, "README-pr.png"), width = 700, height = 600, res = 120,
+    bg = aucmat_colors$background)
+print(plot_auc_pr(X, y, biomarkers = head(fit$results$biomarker, 3)))
+dev.off()
+
+# ---- 5c. Comparison forest plot: reference vs. others ----
+cmp_ref <- compare_auc(fit, X, y, reference = "X1")
+png(file.path(fig, "README-compare.png"), width = 1000, height = 450, res = 120,
+    bg = aucmat_colors$background)
+print(plot(cmp_ref))
+dev.off()
+
+# ---- 5d. Hurdle-AUC diagnostics ----
+sim_hur <- simulate_hurdle_auc(
+  n = 400, prevalence = 0.3,
+  target_hurdle_aucs = c(0.85, 0.72, 0.55),
+  zero_rate_neg = c(0.55, 0.30, 0.80),
+  zero_rate_pos = c(0.25, 0.10, 0.70), seed = 1
+)
+fit_hur <- hurdle_auc(as.matrix(sim_hur$data[, 1:3]), sim_hur$data$truth)
+png(file.path(fig, "README-hurdle.png"), width = 1100, height = 550, res = 120,
+    bg = aucmat_colors$background)
+print(plot_hurdle_diagnostics(fit_hur))
+dev.off()
+
+# ---- 5e. Panel ROC: combined panel vs. its components ----
 panel <- fit_auc_panel(X, y, method = "ridge", n_folds = 5, seed = 42)
 png(file.path(fig, "README-panel-roc.png"), width = 800, height = 600, res = 120,
     bg = aucmat_colors$background)
 print(plot_roc_panel(panel, X, y))
+dev.off()
+
+# ---- 5f. Panel coefficients ----
+png(file.path(fig, "README-panel-coef.png"), width = 900, height = 450, res = 120,
+    bg = aucmat_colors$background)
+print(plot(panel))
 dev.off()
 
 # ---- 6. Simulator comparison: achieved vs target ----

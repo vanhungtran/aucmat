@@ -234,7 +234,7 @@ plot_hurdle_diagnostics <- function(fit, n_label = 15L) {
       data = df[df$label != "", ],
       ggplot2::aes(label = .data$label), size = 2.8, max.overlaps = 30,
       show.legend = FALSE) +
-    ggplot2::theme_minimal() +
+    theme_aucmat() +
     ggplot2::labs(
       x = "Zero AUC (expression probability discrimination)",
       y = "Nonzero AUC (magnitude discrimination)",

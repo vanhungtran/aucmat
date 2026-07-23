@@ -12,7 +12,7 @@ plot_roc_panel(
   biomarkers = NULL,
   n_top = 3L,
   use = c("cv", "train"),
-  add_ci = FALSE,
+  add_ci = TRUE,
   boot_n = 500,
   seed = NULL
 )
@@ -38,7 +38,7 @@ score; \code{"train"} plots the in-sample (optimistic) score. Falls back
 to \code{"train"} with a warning if \code{panel} was fit with \code{n_folds < 2}.}
 
 \item{add_ci}{Add bootstrap sensitivity confidence ribbons. Default
-\code{FALSE}.}
+\code{TRUE} -- set \code{FALSE} for a faster, ribbon-free plot.}
 
 \item{boot_n}{Bootstrap replicates for CI ribbons. Default 500.}
 
