@@ -1,7 +1,7 @@
 # aucmat
 
 <p align="center">
-<img src="man/figures/logo.png" width="280" alt="aucmat logo" />
+<img src="https://vanhungtran.github.io/aucmat/logo.png" width="280" alt="aucmat logo" />
 </p>
 
 <p align="center">
