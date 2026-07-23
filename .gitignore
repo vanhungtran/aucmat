@@ -14,3 +14,8 @@ manuscript/
 # Raw source data for package datasets -- large, real trial data; the
 # cleaned/derived objects ship in data/*.rda, this stays local only.
 data-raw/*.csv
+
+# Logo generation code stays local; the rendered SVG/PNG assets it
+# produces (logo/aucmat_*.{svg,png}) are still tracked and published.
+logo/generate-logo.R
+logo/test-logo-generation.R
