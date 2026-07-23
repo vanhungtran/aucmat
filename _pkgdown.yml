@@ -3,6 +3,12 @@ template:
   bootstrap: 5
   bootswatch: flatly
   light-switch: true
+  includes:
+    before_body: |
+      <p style="text-align:center; margin-top: 0.6em; margin-bottom: 0;">
+        <img src="https://vanhungtran.github.io/aucmat/logo.png"
+             alt="aucmat logo" style="width:90px; max-width:30%;" />
+      </p>
 
 title: aucmat
 subtitle: Scalable ROC Analysis for High-Dimensional Biomarker Matrices
