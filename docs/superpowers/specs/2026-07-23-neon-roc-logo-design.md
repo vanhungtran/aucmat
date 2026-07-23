@@ -47,12 +47,13 @@ The script will generate:
 - `logo/aucmat_hex.svg` and `logo/aucmat_hex.png`
 - `man/figures/logo.png`
 - `docs/logo.png`
-- PNG favicon sizes used by the pkgdown site
+- `pkgdown/favicon/favicon.svg` and `pkgdown/favicon/favicon.ico`
+- all PNG favicon sizes used by the pkgdown site
 
 All paths are relative to the repository root. The script will check for the
-required renderer, create missing output directories, use an SVG-safe generic
+required renderers, create missing output directories, use an SVG-safe generic
 sans-serif font stack, and fail with a clear installation message when `rsvg`
-is unavailable.
+or `magick` is unavailable.
 
 ## Validation
 
