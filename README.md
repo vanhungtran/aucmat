@@ -1,8 +1,14 @@
-# aucmat <img src="man/figures/logo.png" align="right" height="139" alt="aucmat logo" />
+# aucmat
 
-[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html)
-[![R-CMD-check](https://github.com/vanhungtran/aucmat/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/vanhungtran/aucmat/actions/workflows/R-CMD-check.yaml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<p align="center">
+<img src="man/figures/logo.png" width="280" alt="aucmat logo" />
+</p>
+
+<p align="center">
+<a href="https://lifecycle.r-lib.org/articles/stages.html"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle: experimental" /></a>
+<a href="https://github.com/vanhungtran/aucmat/actions/workflows/R-CMD-check.yaml"><img src="https://github.com/vanhungtran/aucmat/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check" /></a>
+<a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
+</p>
 
 **Scalable and statistically principled ROC analysis for high-dimensional biomarker matrices in R.**
 
