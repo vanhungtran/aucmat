@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Rscript:*)",
+      "Bash(powershell -Command \"Rscript -e ''roxygen2::roxygenise()''\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

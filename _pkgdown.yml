@@ -21,6 +21,22 @@ authors:
 development:
   mode: auto
 
+navbar:
+  structure:
+    left:
+    - reference
+    - articles
+    - news
+    right:
+    - search
+    - icon: fa-file-pdf
+      text: Manuscript
+      href: https://vanhungtran.github.io/aucmat/manuscript/manuscript.tex
+      aria-label: LaTeX manuscript
+    - icon: fa-github
+      href: https://github.com/vanhungtran/aucmat/
+    - lightswitch
+
 reference:
 - title: Matrix Screening
   desc: Screen a biomarker matrix against a binary outcome
@@ -114,11 +130,6 @@ articles:
   - simulating-biomarker-data
   - real-data-beatmg
   - practical-screening
-
-- title: Background
-  desc: Methodology and citation
-  contents:
-  - aucmat-manuscript
 
 home:
   links:
