@@ -1,0 +1,13 @@
+pandoc: 3.8.3
+pkgdown: 2.2.1
+pkgdown_sha: ~
+articles:
+  aucmat-manuscript: aucmat-manuscript.html
+  introduction-to-aucmat: introduction-to-aucmat.html
+  practical-screening: practical-screening.html
+  real-data-beatmg: real-data-beatmg.html
+  simulating-biomarker-data: simulating-biomarker-data.html
+last_built: 2026-07-24T09:46Z
+urls:
+  reference: https://vanhungtran.github.io/aucmat/reference
+  article: https://vanhungtran.github.io/aucmat/articles

@@ -1,0 +1,35 @@
+/* ==========================================================================
+   aucmat pkgdown extras — reading bar, back-to-top, figure hover
+   ========================================================================== */
+
+/* ── Reading progress bar ─────────────────────────── */
+#rpb {
+  position: fixed; top: 0; left: 0; height: 3px; width: 0;
+  background: linear-gradient(90deg, #2c7da0, #61a5c2);
+  z-index: 20000; transition: width .12s linear;
+}
+
+/* ── Back to top ──────────────────────────────────── */
+#btt {
+  position: fixed; bottom: 2em; right: 1.8em; width: 42px; height: 42px;
+  background: #2c7da0; color: #fff; border: none; border-radius: 50%;
+  font-size: 20px; line-height: 42px; text-align: center; cursor: pointer;
+  opacity: 0; pointer-events: none;
+  transition: opacity .28s, background .2s, transform .2s;
+  box-shadow: 0 3px 12px rgba(0,0,0,.28); z-index: 9000;
+}
+#btt.show { opacity: 1; pointer-events: auto; }
+#btt:hover { background: #61a5c2; transform: translateY(-3px); }
+
+/* ── Figure hover lift ────────────────────────────── */
+main img, article img, .figure img, p img {
+  cursor: zoom-in;
+  transition: transform .28s cubic-bezier(.34,1.56,.64,1),
+              box-shadow .28s ease, filter .28s ease;
+}
+main img:hover, article img:hover,
+.figure img:hover, p img:hover {
+  transform: scale(1.025) translateY(-4px);
+  box-shadow: 0 14px 40px rgba(44,125,160,.3);
+  filter: brightness(1.04) saturate(1.06);
+}

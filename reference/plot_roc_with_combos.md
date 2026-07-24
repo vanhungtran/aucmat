@@ -1,0 +1,43 @@
+# (Deprecated) Plot ROC curves for predictor combinations
+
+`plot_roc_with_combos()` is deprecated and will be removed in a future
+version. Use
+[`plot_roc_top()`](https://vanhungtran.github.io/aucmat/reference/plot_roc_top.md)
+for focused ROC visualisation of selected biomarkers.
+
+## Usage
+
+``` r
+plot_roc_with_combos(
+  data,
+  outcome,
+  predictors,
+  show_auc_labels = FALSE,
+  label_fpr = 0.25,
+  label_size = 3.5,
+  label_nudge_x = 0.02,
+  combo_sizes = NULL,
+  positive = NULL,
+  add_ci = TRUE,
+  conf_level = 0.95,
+  boot_n = 2000,
+  ci_points = 201,
+  legacy_axes = FALSE,
+  ribbon_alpha = 0.2,
+  line_size = 0.9,
+  palette = NULL,
+  reorder_by_auc = TRUE,
+  max_curves = Inf,
+  title = "ROC: Sensitivity vs 1 - Specificity with CI ribbons",
+  seed = NULL,
+  skip_ci_for_auc1 = TRUE,
+  auc1_eps = 1e-12,
+  auc_digits = 3,
+  legend_position = "right",
+  legend_ncol = 1,
+  use_ggrepel = FALSE,
+  show_auc_sd = TRUE,
+  sd_digits = NULL,
+  show_chance_line = FALSE
+)
+```
