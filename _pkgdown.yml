@@ -3,7 +3,7 @@ template:
   bootstrap: 5
   bootswatch: flatly
   light-switch: true
-  math-rendering: mathjax
+  math-rendering: katex
   includes:
     before_body: |
       <p style="text-align:center; margin-top: 0.6em; margin-bottom: 0;">
